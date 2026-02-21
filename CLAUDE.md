@@ -9,7 +9,7 @@
 
 MishaTravel e un tour operator italiano (mishatravel.com). Stiamo ricostruendo il loro sito WordPress come applicazione React moderna con admin panel e area riservata agenzie.
 
-**Stack**: Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS 4 + shadcn/ui + Supabase (PostgreSQL, Auth, Storage) + Brevo (email)
+**Stack**: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4 + shadcn/ui + Supabase (PostgreSQL, Auth, Storage) + Brevo (email)
 
 **Deploy**: Vercel (auto-deploy da GitHub) + Supabase Cloud
 
@@ -66,8 +66,18 @@ All'inizio di ogni sessione, DEVI leggere questi 5 file per avere il contesto co
 ### Durante lo Sviluppo
 1. **Prima di iniziare una task**: Verifica le dipendenze nel SPRINT_PLAN.md
 2. **Durante una task**: Se incontri un errore, registralo nel CHANGELOG.md
-3. **Dopo ogni task completata**: Aggiorna CHANGELOG.md (stato task, data, note)
+3. **Dopo OGNI micro-modifica**: Aggiorna TUTTI i file MD pertinenti (CHANGELOG.md, CLAUDE.md sezione "Stato Attuale", SPRINT_PLAN.md). NON aspettare la fine dello sprint o di un blocco di task. Ogni singola modifica al codice → aggiornamento immediato dei file MD.
 4. **Dopo ogni commit**: Fai sempre `git push` (istruzione globale dell'utente)
+
+### ⚠️ REGOLA CRITICA: Aggiornamento File MD
+**Alla fine di OGNI micro-modifica devi aggiornare i file MD.**
+Questo significa:
+- Ogni nuovo file creato → aggiorna CHANGELOG.md e struttura in CLAUDE.md se necessario
+- Ogni componente completato → aggiorna stato task in CHANGELOG.md
+- Ogni errore incontrato → registra in CHANGELOG.md sezione errori
+- Ogni dipendenza installata → aggiorna lista in CLAUDE.md
+- Ogni modifica strutturale (route, layout) → aggiorna struttura progetto in CLAUDE.md
+- **MAI accumulare modifiche senza aggiornare i file MD**
 
 ### Quando l'Utente Chiede Modifiche al Piano
 1. Aggiorna `PROJECT_OVERVIEW.md` e/o `SPRINT_PLAN.md`
@@ -104,32 +114,66 @@ MISHATRAVEL/
 ├── CREDENTIALS.md               ← Credenziali (GITIGNORED)
 ├── .env.local                   ← Variabili d'ambiente (GITIGNORED)
 │
+├── supabase/
+│   └── migrations/
+│       └── 001_initial_schema.sql  ← Schema DB completo (38 tabelle, RLS, triggers)
+│
 ├── src/
-│   ├── app/                     ← Next.js App Router (27 pagine gia costruite)
-│   │   ├── layout.tsx           ← Layout root (TopBar + Header + Footer)
-│   │   ├── page.tsx             ← Homepage
-│   │   ├── tours/               ← Tour (lista + [slug])
-│   │   ├── crociere/            ← Crociere fluviali (lista + [slug])
-│   │   ├── flotta/              ← Flotta navi (lista + [slug])
-│   │   ├── destinazioni/        ← Destinazioni (lista + [slug])
-│   │   ├── blog/                ← Blog (lista + [slug])
-│   │   ├── calendario-partenze/ ← Calendario partenze
-│   │   ├── cataloghi/           ← Cataloghi PDF
-│   │   ├── login/               ← Login agenzie (UI pronta, no backend)
-│   │   ├── registrazione/       ← Registrazione (UI pronta, no backend)
-│   │   ├── reset/               ← Reset password (UI pronta, no backend)
-│   │   ├── contatti/            ← Contatti
-│   │   ├── diventa-partner/     ← Diventa partner
-│   │   ├── trova-agenzia/       ← Trova agenzia
-│   │   └── [pagine legali]/     ← Privacy, Cookie, T&C, etc.
+│   ├── app/
+│   │   ├── layout.tsx           ← Layout root minimale (fonts + html/body)
+│   │   │
+│   │   ├── (public)/            ← Route group sito pubblico (URL invariati)
+│   │   │   ├── layout.tsx       ← Layout pubblico (TopBar + Header + Footer)
+│   │   │   ├── page.tsx         ← Homepage
+│   │   │   ├── tours/           ← Tour (lista + [slug])
+│   │   │   ├── crociere/        ← Crociere fluviali (lista + [slug])
+│   │   │   ├── flotta/          ← Flotta navi (lista + [slug])
+│   │   │   ├── destinazioni/    ← Destinazioni (lista + [slug])
+│   │   │   ├── blog/            ← Blog (lista + [slug])
+│   │   │   ├── calendario-partenze/
+│   │   │   ├── cataloghi/
+│   │   │   ├── login/           ← Login agenzie (UI pronta, no backend)
+│   │   │   ├── registrazione/
+│   │   │   ├── reset/
+│   │   │   ├── contatti/
+│   │   │   ├── diventa-partner/
+│   │   │   ├── trova-agenzia/
+│   │   │   └── [pagine legali]/ ← Privacy, Cookie, T&C, etc.
+│   │   │
+│   │   └── admin/               ← Admin panel (layout separato, noindex)
+│   │       ├── layout.tsx       ← Layout admin (AdminShell)
+│   │       ├── page.tsx         ← Dashboard con statistiche
+│   │       ├── destinazioni/    ← CRUD destinazioni (lista + nuovo + modifica)
+│   │       ├── tours/           ← CRUD tours (lista + nuovo + modifica, form 8 tab)
+│   │       ├── crociere/        ← Placeholder
+│   │       ├── flotta/          ← Placeholder
+│   │       ├── partenze/        ← Placeholder
+│   │       ├── blog/            ← Placeholder
+│   │       ├── cataloghi/       ← Placeholder
+│   │       ├── media/           ← Placeholder
+│   │       ├── agenzie/         ← Placeholder
+│   │       ├── preventivi/      ← Placeholder
+│   │       ├── estratti-conto/  ← Placeholder
+│   │       └── utenti/          ← Placeholder
 │   │
 │   ├── components/
 │   │   ├── layout/              ← TopBar, Header, Footer, PageHero
 │   │   ├── cards/               ← TourCard, CruiseCard, DestinationCard, BlogCard, ShipCard
-│   │   └── ui/                  ← 14 componenti shadcn/ui
+│   │   ├── admin/               ← Componenti admin panel
+│   │   │   ├── AdminShell.tsx   ← Shell con sidebar collassabile + mobile sheet
+│   │   │   ├── AdminSidebar.tsx ← Sidebar 16 voci, 3 sezioni
+│   │   │   ├── AdminHeader.tsx  ← Header con notifiche e user menu
+│   │   │   ├── ImageUpload.tsx  ← Upload immagini drag&drop con preview
+│   │   │   ├── FileUpload.tsx   ← Upload file (PDF) con progress
+│   │   │   ├── RichTextEditor.tsx ← Editor Tiptap con toolbar
+│   │   │   └── forms/
+│   │   │       ├── DestinationForm.tsx ← Form destinazione con Zod
+│   │   │       └── TourForm.tsx       ← Form tour 8 tab con useFieldArray
+│   │   └── ui/                  ← 19 componenti shadcn/ui
 │   │
 │   ├── lib/
 │   │   ├── data.ts              ← Dati mock (1935 righe) - DA SOSTITUIRE CON SUPABASE
+│   │   ├── types.ts             ← 40 interfacce TypeScript + 3 tipi compositi
 │   │   ├── utils.ts             ← Utility (cn helper)
 │   │   └── supabase/
 │   │       ├── client.ts        ← Supabase client per browser
@@ -140,7 +184,7 @@ MISHATRAVEL/
 ├── public/
 │   └── images/                  ← Immagini locali (logo, hero, tour, crociere, navi)
 │
-├── package.json                 ← Dipendenze: next, react, supabase, shadcn, radix, lucide
+├── package.json
 ├── next.config.ts
 ├── tsconfig.json
 ├── components.json              ← Config shadcn/ui
@@ -151,11 +195,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 0 quasi completato, pronto per Sprint 1
-- **Ultima azione**: Consolidato frontend esistente, configurato Supabase, creato CHANGELOG
-- **Prossimo step**: Sprint 1 - Schema database Supabase + Admin Panel
-- **Bloccanti**: Nessuno
-- **Da chiedere all'utente**: Service Role Key di Supabase (per operazioni admin lato server)
+- **Sprint corrente**: Sprint 1 - Database + Admin Base (80% completato)
+- **Ultima azione**: Creati admin panel completo, schema SQL, types, componenti form
+- **Prossimo step**: Eseguire schema SQL su Supabase (serve connection string dal dashboard)
+- **Bloccanti**: 🔴 Connessione a Supabase DB - serve la Connection String URI dal Dashboard > Settings > Database
+- **Progresso totale**: ~30% (13/65 task completate)
 
 ---
 
@@ -194,21 +238,25 @@ MISHATRAVEL/
 {
   "@supabase/supabase-js": "^2.97.0",
   "@supabase/ssr": "^0.8.0",
+  "@hookform/resolvers": "^5.0.1",
+  "@tiptap/extension-image": "^2.12.0",
+  "@tiptap/extension-link": "^2.12.0",
+  "@tiptap/pm": "^2.12.0",
+  "@tiptap/react": "^2.12.0",
+  "@tiptap/starter-kit": "^2.12.0",
   "class-variance-authority": "^0.7.1",
   "clsx": "^2.1.1",
+  "date-fns": "^4.1.0",
   "lucide-react": "^0.575.0",
   "next": "16.1.6",
   "radix-ui": "^1.4.3",
   "react": "19.2.3",
   "react-dom": "19.2.3",
-  "tailwind-merge": "^3.5.0"
+  "react-hook-form": "^7.56.4",
+  "tailwind-merge": "^3.5.0",
+  "zod": "^3.25.11"
 }
 ```
-
-### Da installare (Sprint 1):
-- `react-hook-form` + `zod` (form e validazione per admin panel)
-- `@tiptap/react` + estensioni (rich text editor per admin)
-- `date-fns` (formattazione date)
 
 ---
 

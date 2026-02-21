@@ -37,6 +37,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "playwright": "^1.58.2",
     "postgres": "^3.4.8",
     "react-scan": "^0.5.3",
     "shadcn": "^3.8.5",

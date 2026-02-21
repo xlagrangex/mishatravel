@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ████░░░░░░░░░░░░░░░░ 15% |
-| **Sprint Corrente** | Sprint 0 - Setup e Configurazione |
-| **Task Completate** | 5 / ~65 |
-| **Task In Corso** | 1 |
-| **Task Bloccate** | 1 |
+| **Progresso Totale** | ██████░░░░░░░░░░░░░░ 30% |
+| **Sprint Corrente** | Sprint 1 - Database + Admin Base |
+| **Task Completate** | 13 / ~65 |
+| **Task In Corso** | 1 (Schema DB - in attesa connection string) |
+| **Task Bloccate** | 1 (Schema DB - serve connection string Supabase) |
 | **Ultima Attivita** | 2026-02-21 |
 
 ---
@@ -21,16 +21,16 @@
 
 | Sprint | Titolo | Stato | Progresso | Note |
 |--------|--------|-------|-----------|------|
-| 0 | Setup e Configurazione | 🟡 In corso | ████████░░ 80% | Progetto consolidato, Supabase configurato, manca solo deploy Vercel |
-| 1 | Database + Admin Base | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
-| 2 | Admin Crociere + Flotta | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 0 | Setup e Configurazione | ✅ Completato | ██████████ 100% | Tutte le credenziali fornite, progetto configurato, repo su GitHub |
+| 1 | Database + Admin Base | 🟡 In corso | ████████░░ 80% | Admin panel completo (layout, dashboard, CRUD destinazioni+tour, upload, editor). Schema SQL pronto, in attesa esecuzione su Supabase. |
+| 2 | Admin Crociere + Flotta | 🟡 Parziale | ██░░░░░░░░ 20% | Pagine placeholder create per tutte le sezioni |
 | 3 | Sito Pubblico - Pagine Core | 🟡 Parziale | ██████████ 95% | 27 pagine gia costruite con dati mock, manca solo collegamento DB |
 | 4 | Calendario + Destinazioni + Blog | 🟡 Parziale | ████████░░ 80% | Pagine esistenti, manca collegamento DB |
 | 5 | Autenticazione Agenzie | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 6 | Area Riservata Agenzie | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 7 | Flusso Preventivi + Gestione Utenti | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 8 | Email Transazionali (Brevo) | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
-| 9 | Migrazione Dati WordPress | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
 | 10 | SEO, Performance, Deploy | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 
 ---
@@ -41,64 +41,64 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 0.0 | Raccolta Credenziali Iniziali | 🟡 Parziale | - | GitHub OK. Supabase OK (anon key). Vercel: deploy automatico da GitHub. |
+| 0.0 | Raccolta Credenziali Iniziali | ✅ Completata | 2026-02-21 | GitHub OK. Supabase OK (URL + anon key + service_role key + DB password). Vercel: auto-deploy. |
 | 0.1 | Inizializzazione progetto Next.js | ✅ Completata | 2026-02-21 | Frontend esistente consolidato alla root. Next.js 16.1.6, React 19.2.3, TypeScript, Tailwind CSS 4, shadcn/ui |
-| 0.2 | Installazione dipendenze | ✅ Completata | 2026-02-21 | @supabase/supabase-js, @supabase/ssr, radix-ui, lucide-react, cva, tailwind-merge. Mancano ancora: tiptap, react-hook-form, zod, date-fns (Sprint 1) |
+| 0.2 | Installazione dipendenze | ✅ Completata | 2026-02-21 | Tutte installate: supabase, shadcn, radix, lucide, tiptap, react-hook-form, zod, date-fns, postgres |
 | 0.3 | Configurazione Supabase client | ✅ Completata | 2026-02-21 | Client browser + server creati, middleware per refresh sessione, .env.local configurato |
-| 0.4 | Struttura cartelle e layout base | ✅ Completata | 2026-02-21 | 27 pagine, 5 card components, 4 layout components, 14 shadcn/ui. Consolidato da frontend/ a root. |
+| 0.4 | Struttura cartelle e layout base | ✅ Completata | 2026-02-21 | Route groups: (public) per sito, admin/ per pannello. 27 pagine spostate in (public)/ senza cambiare URL. |
 | 0.5 | Setup repository GitHub e primo push | ✅ Completata | 2026-02-21 | Repo: github.com/xlagrangex/mishatravel, branch: main |
-| 0.6 | Deploy iniziale su Vercel | 🟡 In attesa | - | Deploy automatico da GitHub configurato dall'utente |
+| 0.6 | Deploy iniziale su Vercel | ✅ Completata | 2026-02-21 | Deploy automatico da GitHub configurato dall'utente |
 
 ### SPRINT 1 - Database + Admin Base
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 1.1 | Schema DB (Core) | ⚪ Da fare | - | |
-| 1.2 | Schema DB (Crociere/Flotta) | ⚪ Da fare | - | |
-| 1.3 | Schema DB (Agenzie/Preventivi) | ⚪ Da fare | - | |
-| 1.4 | Supabase Storage buckets | ⚪ Da fare | - | |
-| 1.5 | Layout Admin Panel | ⚪ Da fare | - | |
-| 1.6 | Admin Dashboard | ⚪ Da fare | - | |
-| 1.7 | Componente Upload Immagini | ⚪ Da fare | - | |
-| 1.8 | Componente Rich Text Editor | ⚪ Da fare | - | |
-| 1.9 | Admin: Gestione Destinazioni | ⚪ Da fare | - | |
-| 1.10 | Admin: Gestione Tour | ⚪ Da fare | - | |
+| 1.1 | Schema DB (Core) | 🟡 SQL pronto | - | File SQL creato (supabase/migrations/001_initial_schema.sql). In attesa connection string per esecuzione. 38 tabelle, RLS, indexes, triggers, functions. |
+| 1.2 | Schema DB (Crociere/Flotta) | 🟡 SQL pronto | - | Incluso nel file 001_initial_schema.sql insieme a 1.1 e 1.3 |
+| 1.3 | Schema DB (Agenzie/Preventivi) | 🟡 SQL pronto | - | Incluso nel file 001_initial_schema.sql insieme a 1.1 e 1.2 |
+| 1.4 | Supabase Storage buckets | ⚪ Da fare | - | In attesa schema DB |
+| 1.5 | Layout Admin Panel | ✅ Completata | 2026-02-21 | AdminShell, AdminSidebar (collapsible, tooltip), AdminHeader (notifiche, user menu). Responsive con Sheet su mobile. |
+| 1.6 | Admin Dashboard | ✅ Completata | 2026-02-21 | 8 card statistiche, ultimi preventivi, prossime partenze, stato sistema. Dati placeholder. |
+| 1.7 | Componente Upload Immagini | ✅ Completata | 2026-02-21 | ImageUpload (drag&drop, preview, multi, reorder) + FileUpload (PDF). TODO: collegare Supabase Storage. |
+| 1.8 | Componente Rich Text Editor | ✅ Completata | 2026-02-21 | Tiptap con toolbar: bold, italic, headings, liste, link, immagini, undo/redo. |
+| 1.9 | Admin: Gestione Destinazioni | ✅ Completata | 2026-02-21 | Lista con ricerca + form nuovo/modifica con zod validation. Slug auto-generato. Mock data. |
+| 1.10 | Admin: Gestione Tour | ✅ Completata | 2026-02-21 | Form complesso a 8 tab: Info Base, Programma, Alberghi, Partenze, Supplementi&Extra, Incluso/Escluso, Termini&Penali, Gallery&PDF. useFieldArray per liste dinamiche. ~700 righe. |
 
 ### SPRINT 2 - Admin Crociere + Flotta
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 2.1 | Admin: Gestione Flotta/Navi | ⚪ Da fare | - | |
-| 2.2 | Admin: Gestione Crociere Fluviali | ⚪ Da fare | - | |
-| 2.3 | Admin: Calendario Partenze | ⚪ Da fare | - | |
-| 2.4 | Admin: Gestione Blog | ⚪ Da fare | - | |
-| 2.5 | Admin: Gestione Cataloghi | ⚪ Da fare | - | |
-| 2.6 | Admin: Libreria Media | ⚪ Da fare | - | |
+| 2.1 | Admin: Gestione Flotta/Navi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata, CRUD da implementare |
+| 2.2 | Admin: Gestione Crociere Fluviali | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
+| 2.3 | Admin: Calendario Partenze | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
+| 2.4 | Admin: Gestione Blog | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
+| 2.5 | Admin: Gestione Cataloghi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
+| 2.6 | Admin: Libreria Media | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
 
 ### SPRINT 3 - Sito Pubblico - Pagine Core
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 3.1 | Header e Navigazione pubblica | ⚪ Da fare | - | |
-| 3.2 | Footer | ⚪ Da fare | - | |
-| 3.3 | Homepage | ⚪ Da fare | - | |
-| 3.4 | Pagina Lista Tour | ⚪ Da fare | - | |
-| 3.5 | Pagina Dettaglio Tour | ⚪ Da fare | - | |
-| 3.6 | Pagina Lista Crociere | ⚪ Da fare | - | |
-| 3.7 | Pagina Dettaglio Crociera | ⚪ Da fare | - | |
-| 3.8 | Pagina Lista Flotta | ⚪ Da fare | - | |
-| 3.9 | Pagina Dettaglio Nave | ⚪ Da fare | - | |
+| 3.1 | Header e Navigazione pubblica | ✅ Gia presente | 2026-02-21 | Mega menu, responsive, TopBar. Consolidato da frontend. |
+| 3.2 | Footer | ✅ Gia presente | 2026-02-21 | Footer completo con contatti, link, social. |
+| 3.3 | Homepage | ✅ UI pronta | 2026-02-21 | Hero slider, destinazioni, tour, crociere. Dati mock. |
+| 3.4 | Pagina Lista Tour | ✅ UI pronta | 2026-02-21 | Griglia card, filtri. Dati mock. |
+| 3.5 | Pagina Dettaglio Tour | ✅ UI pronta | 2026-02-21 | Gallery, itinerario, partenze, incluso/escluso. Dati mock. |
+| 3.6 | Pagina Lista Crociere | ✅ UI pronta | 2026-02-21 | Griglia card. Dati mock. |
+| 3.7 | Pagina Dettaglio Crociera | ✅ UI pronta | 2026-02-21 | Completa. Dati mock. |
+| 3.8 | Pagina Lista Flotta | ✅ UI pronta | 2026-02-21 | Griglia navi. Dati mock. |
+| 3.9 | Pagina Dettaglio Nave | ✅ UI pronta | 2026-02-21 | Completa. Dati mock. |
 
 ### SPRINT 4 - Calendario + Destinazioni + Blog + Cataloghi
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 4.1 | Calendario Partenze Pubblico | ⚪ Da fare | - | |
-| 4.2 | Pagina Destinazioni | ⚪ Da fare | - | |
-| 4.3 | Pagina Singola Destinazione | ⚪ Da fare | - | |
-| 4.4 | Blog Pubblico | ⚪ Da fare | - | |
-| 4.5 | Cataloghi | ⚪ Da fare | - | |
-| 4.6 | Pagine Statiche | ⚪ Da fare | - | |
+| 4.1 | Calendario Partenze Pubblico | ✅ UI pronta | 2026-02-21 | Dati mock. |
+| 4.2 | Pagina Destinazioni | ✅ UI pronta | 2026-02-21 | Griglia destinazioni. Dati mock. |
+| 4.3 | Pagina Singola Destinazione | ✅ UI pronta | 2026-02-21 | Dati mock. |
+| 4.4 | Blog Pubblico | ✅ UI pronta | 2026-02-21 | Lista + singolo articolo. Dati mock. |
+| 4.5 | Cataloghi | ✅ UI pronta | 2026-02-21 | Dati mock. |
+| 4.6 | Pagine Statiche | ✅ UI pronta | 2026-02-21 | Contatti, diventa-partner, trova-agenzia, legali. |
 
 ### SPRINT 5 - Autenticazione Agenzie
 
@@ -128,13 +128,13 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 7.1 | Admin: Lista Preventivi | ⚪ Da fare | - | |
+| 7.1 | Admin: Lista Preventivi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder |
 | 7.2 | Admin: Dettaglio Richiesta + Timeline | ⚪ Da fare | - | |
 | 7.3 | Admin: Modifica Richiesta e Crea Offerta | ⚪ Da fare | - | |
 | 7.4 | Admin: Invio Estremi Pagamento | ⚪ Da fare | - | |
 | 7.5 | Admin: Conferma Pagamento e Rifiuto | ⚪ Da fare | - | |
-| 7.6 | Admin: Gestione Agenzie | ⚪ Da fare | - | |
-| 7.7 | Admin: Gestione Utenti e Ruoli | ⚪ Da fare | - | |
+| 7.6 | Admin: Gestione Agenzie | 🟡 Placeholder | 2026-02-21 | Pagina placeholder |
+| 7.7 | Admin: Gestione Utenti e Ruoli | 🟡 Placeholder | 2026-02-21 | Pagina placeholder |
 | 7.8 | Hook Sidebar dinamica permessi | ⚪ Da fare | - | |
 | 7.9 | Sistema Notifiche In-App | ⚪ Da fare | - | |
 
@@ -152,8 +152,8 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 9.0 | Raccolta Credenziali/Dati WordPress | ⚪ Da fare | - | |
-| 9.1 | Analisi struttura dati WP/ACF | ⚪ Da fare | - | |
+| 9.0 | Raccolta Credenziali/Dati WordPress | ✅ Parziale | 2026-02-21 | ACF export JSON fornito e analizzato |
+| 9.1 | Analisi struttura dati WP/ACF | ✅ Completata | 2026-02-21 | 5 field groups analizzati: Tours (19 campi), Crociere (22 campi), Imbarcazioni (8 campi), Destinazioni (1 campo), Estratti Conto (4 campi). Mapping ACF→Supabase completato. |
 | 9.2 | Script importazione Tour | ⚪ Da fare | - | |
 | 9.3 | Script importazione Crociere + Flotta | ⚪ Da fare | - | |
 | 9.4 | Script importazione Blog + Dest. + Cat. | ⚪ Da fare | - | |
@@ -179,12 +179,31 @@
 | 2026-02-21 | 0.1 | `create-next-app` rifiuta nomi con maiuscole (MISHATRAVEL) | Creato in /tmp come `mishatravel-app` e copiato nella cartella progetto | ✅ Risolto |
 | 2026-02-21 | 0.1 | Porta 3000 gia occupata | Next.js ha usato automaticamente porta 3001 | ✅ Risolto |
 | 2026-02-21 | 0.0 | Chiave Supabase iniziale (sb_publishable_...) non era la anon key JWT | Utente ha fornito la chiave JWT corretta (eyJ...) | ✅ Risolto |
+| 2026-02-21 | 1.1 | Connessione diretta al DB Supabase fallisce (IPv6 only, no route to host) | Pooler "Tenant not found". Connection string dal dashboard necessario. | 🔴 Aperto |
+| 2026-02-21 | 0.4 | Vecchia cartella frontend/ con node_modules non rimovibile (permessi) | Aggiunta a .gitignore e esclusa da tsconfig. Build funziona. | 🟡 Workaround |
 
 ---
 
 ## Storico Modifiche al Piano
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
+
+### Modifica #3 - Ristrutturazione Route Groups + Schema DB da ACF
+- **Data**: 2026-02-21
+- **File modificati**: Struttura progetto, supabase/migrations/001_initial_schema.sql, src/lib/types.ts
+- **Richiesto da**: Necessita tecnica + analisi ACF export
+- **Motivo**: (1) Separare layout pubblico da admin richiede route groups in Next.js. (2) Lo schema DB nel sprint plan era generico; l'analisi dell'ACF export ha rivelato la struttura reale dei campi WordPress.
+- **Cosa e cambiato**:
+  - Pagine pubbliche spostate in `src/app/(public)/` (URL invariati)
+  - Root layout reso minimale (solo html/body/fonts)
+  - Nuovo layout `(public)/layout.tsx` con TopBar + Header + Footer
+  - Nuovo layout `admin/layout.tsx` con AdminShell (sidebar + header)
+  - Schema DB ridisegnato da zero basandosi su ACF export: 38 tabelle (vs ~20 previste)
+  - Aggiunte tabelle mancanti: tour_locations, tour_hotels, tour_supplements, tour_terms, tour_penalties, tour_optional_excursions, cruise_cabins, ship_suitable_for, ship_activities, ship_cabin_details, account_statements
+  - Creato file TypeScript types (src/lib/types.ts) con 40 interfacce
+  - Installate dipendenze Sprint 1: react-hook-form, zod, @hookform/resolvers, date-fns, tiptap
+- **Impatto sul piano**: Sprint 1 quasi completato lato UI. Schema DB piu accurato e fedele a WordPress.
+- **Versione piano**: v1.3
 
 ### Modifica #2 - Consolidamento Frontend Esistente
 - **Data**: 2026-02-21
@@ -222,10 +241,46 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | Data | Servizio | Stato | Note |
 |------|----------|-------|------|
 | 2026-02-21 | GitHub | ✅ Configurato | Repo: github.com/xlagrangex/mishatravel |
-| 2026-02-21 | Supabase | ✅ Completo | URL + anon key + service_role key configurati. |
-| - | Vercel | 🟡 Auto-deploy | Deploy automatico da GitHub, configurato dall'utente |
+| 2026-02-21 | Supabase | ✅ Completo | URL + anon key + service_role key + DB password configurati. Connection string pooler ancora mancante. |
+| 2026-02-21 | Vercel | ✅ Auto-deploy | Deploy automatico da GitHub, configurato dall'utente |
 | - | Brevo | ⏳ In attesa | Serve per Sprint 8 |
-| - | WordPress | ⏳ In attesa | Serve per Sprint 9 |
+| - | WordPress | 🟡 Parziale | ACF export JSON fornito. Mancano export XML completo e accesso immagini per Sprint 9. |
+
+---
+
+## File Creati in Questa Sessione
+
+| File | Tipo | Descrizione |
+|------|------|-------------|
+| `supabase/migrations/001_initial_schema.sql` | SQL | Schema completo DB (38 tabelle, enum, RLS, indexes, triggers, functions) |
+| `src/lib/types.ts` | TypeScript | 40 interfacce + 3 tipi compositi per tutto lo schema DB |
+| `src/app/(public)/layout.tsx` | Layout | Layout pubblico (TopBar + Header + Footer) |
+| `src/app/admin/layout.tsx` | Layout | Layout admin (AdminShell con sidebar) |
+| `src/app/admin/page.tsx` | Page | Dashboard admin |
+| `src/components/admin/AdminShell.tsx` | Component | Shell admin con sidebar desktop + mobile |
+| `src/components/admin/AdminSidebar.tsx` | Component | Sidebar collapsible con tooltip |
+| `src/components/admin/AdminHeader.tsx` | Component | Header admin con notifiche e user menu |
+| `src/components/admin/ImageUpload.tsx` | Component | Upload immagini drag&drop con preview e reorder |
+| `src/components/admin/FileUpload.tsx` | Component | Upload file (PDF) drag&drop |
+| `src/components/admin/RichTextEditor.tsx` | Component | Editor Tiptap con toolbar completa |
+| `src/components/admin/forms/DestinationForm.tsx` | Form | Form CRUD destinazione con zod validation |
+| `src/components/admin/forms/TourForm.tsx` | Form | Form CRUD tour a 8 tab (~700 righe) |
+| `src/app/admin/destinazioni/page.tsx` | Page | Lista destinazioni admin |
+| `src/app/admin/destinazioni/nuovo/page.tsx` | Page | Nuova destinazione |
+| `src/app/admin/destinazioni/[id]/modifica/page.tsx` | Page | Modifica destinazione |
+| `src/app/admin/tours/page.tsx` | Page | Lista tour admin |
+| `src/app/admin/tours/nuovo/page.tsx` | Page | Nuovo tour |
+| `src/app/admin/tours/[id]/modifica/page.tsx` | Page | Modifica tour |
+| `src/app/admin/crociere/page.tsx` | Page | Placeholder crociere |
+| `src/app/admin/flotta/page.tsx` | Page | Placeholder flotta |
+| `src/app/admin/partenze/page.tsx` | Page | Placeholder partenze |
+| `src/app/admin/blog/page.tsx` | Page | Placeholder blog |
+| `src/app/admin/cataloghi/page.tsx` | Page | Placeholder cataloghi |
+| `src/app/admin/media/page.tsx` | Page | Placeholder media |
+| `src/app/admin/agenzie/page.tsx` | Page | Placeholder agenzie |
+| `src/app/admin/preventivi/page.tsx` | Page | Placeholder preventivi |
+| `src/app/admin/estratti-conto/page.tsx` | Page | Placeholder estratti conto |
+| `src/app/admin/utenti/page.tsx` | Page | Placeholder utenti |
 
 ---
 
@@ -242,4 +297,4 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 ---
 
 *Ultimo aggiornamento: 2026-02-21*
-*Versione piano: v1.2*
+*Versione piano: v1.3*
