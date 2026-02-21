@@ -107,10 +107,6 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-poppins), system-ui, sans-serif;
   }
-  /* Narrower container on desktop for better readability */
-  .container {
-    max-width: 1200px;
-  }
 }
 
 /* ========================================
@@ -213,4 +209,9 @@ html {
 }
 .nav-link-underline:hover::after {
   width: 100%;
+}
+
+/* Narrower container on desktop — outside @layer for higher specificity */
+.container {
+  max-width: 1200px !important;
 }
