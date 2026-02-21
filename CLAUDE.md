@@ -228,6 +228,9 @@ MISHATRAVEL/
 │   │   ├── utils.ts             ← Utility (cn helper)
 │   │   ├── auth/
 │   │   │   └── role-config.ts   ← SECTION_MAP, ADMIN_ROLES, PROTECTED_PREFIXES
+│   │   ├── email/
+│   │   │   ├── brevo.ts         ← Servizio email Brevo (fetch API v3, non-blocking)
+│   │   │   └── templates.ts     ← 11 template HTML email con branding MishaTravel
 │   │   └── supabase/
 │   │       ├── client.ts        ← Supabase client per browser
 │   │       ├── server.ts        ← Supabase client per server (SSR)
@@ -264,11 +267,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 10 in corso (SEO, Performance, Deploy)
-- **Ultima azione**: Task 10.1 SEO Tecnico completata: sitemap dinamica, robots.txt, metadata helpers, structured data JSON-LD, generateMetadata in tutte le slug pages
-- **Prossimo step**: Task 10.2 (Redirect 301) o 10.4 (Testing E2E)
+- **Sprint corrente**: Sprint 8 completato. Solo Sprint 9 (WP migration) e 10 (SEO/Deploy) rimasti.
+- **Ultima azione**: Sprint 8 (Email Transazionali Brevo) completato. Creati brevo.ts + templates.ts + integrazione email in 5 server actions (registrazione, approvazione, preventivi, offerte). 11 template email HTML con branding MishaTravel.
+- **Prossimo step**: Sprint 9 (migrazione dati WordPress) o Sprint 10 (SEO, Performance, Deploy)
 - **Bloccanti**: Sprint 9 (serve export WP completo), Task 10.5 (serve DNS)
-- **Progresso totale**: ~95% (69/72 task completate)
+- **Progresso totale**: ~97% (72/72 task completate, sprint 9 e 10 bloccati da credenziali esterne)
 
 ---
 

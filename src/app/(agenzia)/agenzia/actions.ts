@@ -3,6 +3,11 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendTransactionalEmail, sendAdminNotification } from "@/lib/email/brevo";
+import {
+  quoteRequestSubmittedEmail,
+  adminNewQuoteRequestEmail,
+} from "@/lib/email/templates";
 
 // ---------------------------------------------------------------------------
 // Zod Schemas
@@ -151,6 +156,60 @@ export async function createQuoteRequest(
     if (timelineError) {
       console.error("Error inserting quote_timeline:", timelineError);
       // Non-blocking
+    }
+
+    // --- Emails: confirmation to agency + notification to admin ---
+    try {
+      // Fetch agency details and product name for the email
+      const { data: agencyData } = await admin
+        .from("agencies")
+        .select("business_name, email")
+        .eq("id", agency.id)
+        .single();
+
+      let productName = "N/D";
+      if (isTour) {
+        const { data: tour } = await admin
+          .from("tours")
+          .select("title")
+          .eq("id", (validated as TourQuoteInput).tour_id)
+          .single();
+        productName = tour?.title ?? "Tour";
+      } else {
+        const { data: cruise } = await admin
+          .from("cruises")
+          .select("title")
+          .eq("id", (validated as CruiseQuoteInput).cruise_id)
+          .single();
+        productName = cruise?.title ?? "Crociera";
+      }
+
+      const agName = agencyData?.business_name ?? "Agenzia";
+      const agEmail = agencyData?.email;
+
+      // Email to agency: quote request submitted
+      if (agEmail) {
+        await sendTransactionalEmail(
+          { email: agEmail, name: agName },
+          "Richiesta preventivo inviata - MishaTravel",
+          quoteRequestSubmittedEmail(agName, productName, validated.request_type, quoteId)
+        );
+      }
+
+      // Email to admin: new quote request
+      await sendAdminNotification(
+        `Nuova richiesta preventivo da ${agName}`,
+        adminNewQuoteRequestEmail(
+          agName,
+          productName,
+          validated.request_type,
+          quoteId,
+          validated.participants_adults,
+          validated.participants_children
+        )
+      );
+    } catch (emailErr) {
+      console.error("Error sending quote emails:", emailErr);
     }
 
     return { success: true, quoteId };

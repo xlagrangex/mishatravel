@@ -2,6 +2,8 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { sendTransactionalEmail } from '@/lib/email/brevo'
+import { agencyApprovedEmail } from '@/lib/email/templates'
 
 type ActionResult = { success: true } | { success: false; error: string }
 
@@ -35,10 +37,10 @@ export async function approveAgencyFromDashboard(
 ): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  // First get the agency to find the user_id and business_name
+  // First get the agency to find the user_id, business_name and email
   const { data: agency, error: fetchError } = await supabase
     .from('agencies')
-    .select('user_id, business_name')
+    .select('user_id, business_name, email')
     .eq('id', agencyId)
     .single()
 
@@ -61,6 +63,19 @@ export async function approveAgencyFromDashboard(
     message: `La tua agenzia "${agency.business_name}" è stata approvata. Puoi ora accedere all'area riservata.`,
     link: '/agenzia/dashboard',
   })
+
+  // --- Email: notify agency that account is approved ---
+  try {
+    if (agency.email) {
+      await sendTransactionalEmail(
+        { email: agency.email, name: agency.business_name },
+        'Il tuo account MishaTravel è stato approvato!',
+        agencyApprovedEmail(agency.business_name)
+      )
+    }
+  } catch (emailErr) {
+    console.error('Error sending agency approved email:', emailErr)
+  }
 
   revalidatePath('/admin')
   revalidatePath('/admin/agenzie')

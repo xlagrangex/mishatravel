@@ -1,6 +1,8 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendTransactionalEmail, sendAdminNotification } from "@/lib/email/brevo";
+import { welcomeAgencyEmail, adminNewAgencyEmail } from "@/lib/email/templates";
 
 export interface AgencyData {
   business_name: string;
@@ -80,6 +82,32 @@ export async function createAgencyRecord(
     } catch (notifErr) {
       // Don't fail the registration if notification fails
       console.error("Error sending admin notifications:", notifErr);
+    }
+
+    // --- Email: welcome email to the agency ---
+    try {
+      await sendTransactionalEmail(
+        { email: data.email, name: data.business_name },
+        "Benvenuto su MishaTravel!",
+        welcomeAgencyEmail(data.business_name)
+      );
+    } catch (emailErr) {
+      console.error("Error sending welcome email:", emailErr);
+    }
+
+    // --- Email: notify admin of new agency registration ---
+    try {
+      await sendAdminNotification(
+        `Nuova agenzia registrata: ${data.business_name}`,
+        adminNewAgencyEmail(
+          data.business_name,
+          data.contact_name,
+          data.email,
+          data.city
+        )
+      );
+    } catch (emailErr) {
+      console.error("Error sending admin notification email:", emailErr);
     }
 
     return { error: null };

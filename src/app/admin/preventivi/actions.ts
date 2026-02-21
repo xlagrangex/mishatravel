@@ -3,6 +3,12 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { sendTransactionalEmail } from '@/lib/email/brevo'
+import {
+  newOfferReceivedEmail,
+  paymentDetailsSentEmail,
+  quoteRejectedEmail,
+} from '@/lib/email/templates'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -15,6 +21,49 @@ type ActionResult =
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Fetch agency details and product name for a given quote request.
+ * Used to populate email templates.
+ */
+async function getQuoteEmailContext(
+  supabase: ReturnType<typeof createAdminClient>,
+  requestId: string
+): Promise<{
+  agencyName: string
+  agencyEmail: string | null
+  productName: string
+} | null> {
+  try {
+    const { data: request } = await supabase
+      .from('quote_requests')
+      .select(`
+        request_type,
+        agency:agencies!agency_id(business_name, email),
+        tour:tours!tour_id(title),
+        cruise:cruises!cruise_id(title)
+      `)
+      .eq('id', requestId)
+      .single()
+
+    if (!request) return null
+
+    const agency = request.agency as any
+    const tour = request.tour as any
+    const cruise = request.cruise as any
+
+    return {
+      agencyName: agency?.business_name ?? 'Agenzia',
+      agencyEmail: agency?.email ?? null,
+      productName:
+        request.request_type === 'tour'
+          ? tour?.title ?? 'Tour'
+          : cruise?.title ?? 'Crociera',
+    }
+  } catch {
+    return null
+  }
+}
 
 async function addTimelineEntry(
   supabase: ReturnType<typeof createAdminClient>,
@@ -177,6 +226,25 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
         'Offerta inviata all\'agenzia',
         null
       )
+
+      // --- Email: notify agency of new offer ---
+      try {
+        const ctx = await getQuoteEmailContext(supabase, request_id)
+        if (ctx?.agencyEmail) {
+          await sendTransactionalEmail(
+            { email: ctx.agencyEmail, name: ctx.agencyName },
+            'Nuova offerta ricevuta - MishaTravel',
+            newOfferReceivedEmail(
+              ctx.agencyName,
+              ctx.productName,
+              total_price,
+              offer_expiry
+            )
+          )
+        }
+      } catch (emailErr) {
+        console.error('Error sending new offer email:', emailErr)
+      }
     }
 
     revalidatePath('/admin/preventivi')
@@ -253,6 +321,26 @@ export async function sendPaymentDetails(
       'Estremi di pagamento inviati',
       `Importo: EUR ${amount.toFixed(2)} - Causale: ${reference}`
     )
+
+    // --- Email: send payment details to agency ---
+    try {
+      const ctx = await getQuoteEmailContext(supabase, request_id)
+      if (ctx?.agencyEmail) {
+        await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Estremi di pagamento - MishaTravel',
+          paymentDetailsSentEmail(
+            ctx.agencyName,
+            ctx.productName,
+            bank_details,
+            amount,
+            reference
+          )
+        )
+      }
+    } catch (emailErr) {
+      console.error('Error sending payment details email:', emailErr)
+    }
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
@@ -353,6 +441,20 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
       'Richiesta rifiutata',
       motivation
     )
+
+    // --- Email: notify agency that quote was rejected ---
+    try {
+      const ctx = await getQuoteEmailContext(supabase, request_id)
+      if (ctx?.agencyEmail) {
+        await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Aggiornamento sulla tua richiesta - MishaTravel',
+          quoteRejectedEmail(ctx.agencyName, ctx.productName, motivation)
+        )
+      }
+    } catch (emailErr) {
+      console.error('Error sending quote rejected email:', emailErr)
+    }
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
