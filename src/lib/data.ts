@@ -1793,8 +1793,10 @@ export const footerLinkSections: FooterLinkSection[] = [
       { label: "Cookie Policy", href: "/cookie-policy" },
       { label: "Termini e Condizioni", href: "/termini-condizioni" },
       { label: "Condizioni Generali di Vendita", href: "/condizioni-vendita" },
+      { label: "Informativa GDPR", href: "/gdpr" },
       { label: "Cancellazioni e Penali", href: "/cancellazioni-e-penali" },
       { label: "Fondo di Garanzia", href: "/fondo-di-garanzia" },
+      { label: "Reclami", href: "/reclami" },
     ],
   },
   {
@@ -1810,6 +1812,7 @@ export const footerLinkSections: FooterLinkSection[] = [
   {
     title: "Area Agenzie",
     links: [
+      { label: "Guida per le Agenzie", href: "/guida-agenzie" },
       { label: "Diventa Partner", href: "/diventa-partner" },
       { label: "Login Agenzie", href: "/login" },
       { label: "Registrati", href: "/registrazione" },
