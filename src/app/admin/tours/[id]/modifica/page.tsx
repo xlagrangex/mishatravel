@@ -1,6 +1,7 @@
+import { notFound } from "next/navigation";
 import TourForm from "@/components/admin/forms/TourForm";
-
-// TODO: Fetch tour data from Supabase by ID and pass as `initialData` to TourForm
+import { getTourById } from "@/lib/supabase/queries/tours";
+import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
 
 interface ModificaTourPageProps {
   params: Promise<{ id: string }>;
@@ -9,6 +10,13 @@ interface ModificaTourPageProps {
 export default async function ModificaTourPage({ params }: ModificaTourPageProps) {
   const { id } = await params;
 
+  const [tour, destinations] = await Promise.all([
+    getTourById(id),
+    getDestinationOptions(),
+  ]);
+
+  if (!tour) notFound();
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,12 +24,11 @@ export default async function ModificaTourPage({ params }: ModificaTourPageProps
           Modifica Tour
         </h1>
         <p className="text-sm text-muted-foreground">
-          Modifica i dettagli del tour (ID: {id})
+          Modifica i dettagli di &ldquo;{tour.title}&rdquo;
         </p>
       </div>
 
-      {/* TODO: Pass initialData={tourData} once Supabase is connected */}
-      <TourForm />
+      <TourForm initialData={tour} destinations={destinations} />
     </div>
   );
 }

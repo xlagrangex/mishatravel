@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Destination } from "@/lib/types";
+import { saveDestination } from "@/app/admin/destinazioni/actions";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -108,10 +110,19 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
     }
   }, [nameValue, initialData, setValue]);
 
-  const onSubmit = (data: DestinationFormValues) => {
-    // TODO: Replace with Supabase insert/update
-    console.log("Destination data:", data);
-    alert("Destinazione salvata!");
+  const [serverError, setServerError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const onSubmit = async (data: DestinationFormValues) => {
+    setServerError(null);
+    const result = await saveDestination({
+      ...data,
+      id: initialData?.id,
+    });
+    if (!result.success) {
+      setServerError(result.error);
+    }
+    // On success, the server action redirects to /admin/destinazioni
   };
 
   return (
@@ -272,10 +283,17 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
         </div>
       </div>
 
+      {/* Error Message */}
+      {serverError && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {serverError}
+        </div>
+      )}
+
       {/* Form Actions */}
       <div className="flex items-center gap-3 border-t pt-6">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Salvataggio..." : "Salva"}
+          {isSubmitting ? "Salvataggio..." : initialData ? "Aggiorna" : "Crea Destinazione"}
         </Button>
         <Button variant="outline" asChild>
           <Link href="/admin/destinazioni">Annulla</Link>

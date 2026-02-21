@@ -1,6 +1,9 @@
 import TourForm from "@/components/admin/forms/TourForm";
+import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
 
-export default function NuovoTourPage() {
+export default async function NuovoTourPage() {
+  const destinations = await getDestinationOptions();
+
   return (
     <div className="space-y-6">
       <div>
@@ -8,11 +11,11 @@ export default function NuovoTourPage() {
           Nuovo Tour
         </h1>
         <p className="text-sm text-muted-foreground">
-          Compila i dettagli per creare un nuovo tour
+          Crea un nuovo tour
         </p>
       </div>
 
-      <TourForm />
+      <TourForm destinations={destinations} />
     </div>
   );
 }

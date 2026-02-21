@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ██████░░░░░░░░░░░░░░ 30% |
-| **Sprint Corrente** | Sprint 1 - Database + Admin Base |
-| **Task Completate** | 13 / ~65 |
-| **Task In Corso** | 1 (Schema DB - in attesa connection string) |
-| **Task Bloccate** | 1 (Schema DB - serve connection string Supabase) |
+| **Progresso Totale** | ███████░░░░░░░░░░░░░ 35% |
+| **Sprint Corrente** | Sprint 2 - Admin Crociere + Flotta |
+| **Task Completate** | 15 / ~65 |
+| **Task In Corso** | 2 (Collegamento admin Supabase) |
+| **Task Bloccate** | 0 |
 | **Ultima Attivita** | 2026-02-21 |
 
 ---
@@ -22,7 +22,7 @@
 | Sprint | Titolo | Stato | Progresso | Note |
 |--------|--------|-------|-----------|------|
 | 0 | Setup e Configurazione | ✅ Completato | ██████████ 100% | Tutte le credenziali fornite, progetto configurato, repo su GitHub |
-| 1 | Database + Admin Base | 🟡 In corso | ████████░░ 80% | Admin panel completo (layout, dashboard, CRUD destinazioni+tour, upload, editor). Schema SQL pronto, in attesa esecuzione su Supabase. |
+| 1 | Database + Admin Base | ✅ Completato | ██████████ 100% | Schema DB eseguito su Supabase (43 tabelle, 12 enum, RLS, triggers, functions). Admin panel collegato a Supabase. |
 | 2 | Admin Crociere + Flotta | 🟡 Parziale | ██░░░░░░░░ 20% | Pagine placeholder create per tutte le sezioni |
 | 3 | Sito Pubblico - Pagine Core | 🟡 Parziale | ██████████ 95% | 27 pagine gia costruite con dati mock, manca solo collegamento DB |
 | 4 | Calendario + Destinazioni + Blog | 🟡 Parziale | ████████░░ 80% | Pagine esistenti, manca collegamento DB |
@@ -53,10 +53,10 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 1.1 | Schema DB (Core) | 🟡 SQL pronto | - | File SQL creato (supabase/migrations/001_initial_schema.sql). In attesa connection string per esecuzione. 38 tabelle, RLS, indexes, triggers, functions. |
-| 1.2 | Schema DB (Crociere/Flotta) | 🟡 SQL pronto | - | Incluso nel file 001_initial_schema.sql insieme a 1.1 e 1.3 |
-| 1.3 | Schema DB (Agenzie/Preventivi) | 🟡 SQL pronto | - | Incluso nel file 001_initial_schema.sql insieme a 1.1 e 1.2 |
-| 1.4 | Supabase Storage buckets | ⚪ Da fare | - | In attesa schema DB |
+| 1.1 | Schema DB (Core) | ✅ Completata | 2026-02-21 | 43 tabelle, 12 enum, RLS, triggers, functions - eseguito via MCP Supabase |
+| 1.2 | Schema DB (Crociere/Flotta) | ✅ Completata | 2026-02-21 | Incluso nella migrazione Supabase |
+| 1.3 | Schema DB (Agenzie/Preventivi) | ✅ Completata | 2026-02-21 | Incluso nella migrazione Supabase |
+| 1.4 | Supabase Storage buckets | ⚪ Da fare | - | Storage buckets da configurare |
 | 1.5 | Layout Admin Panel | ✅ Completata | 2026-02-21 | AdminShell, AdminSidebar (collapsible, tooltip), AdminHeader (notifiche, user menu). Responsive con Sheet su mobile. |
 | 1.6 | Admin Dashboard | ✅ Completata | 2026-02-21 | 8 card statistiche, ultimi preventivi, prossime partenze, stato sistema. Dati placeholder. |
 | 1.7 | Componente Upload Immagini | ✅ Completata | 2026-02-21 | ImageUpload (drag&drop, preview, multi, reorder) + FileUpload (PDF). TODO: collegare Supabase Storage. |
@@ -179,7 +179,7 @@
 | 2026-02-21 | 0.1 | `create-next-app` rifiuta nomi con maiuscole (MISHATRAVEL) | Creato in /tmp come `mishatravel-app` e copiato nella cartella progetto | ✅ Risolto |
 | 2026-02-21 | 0.1 | Porta 3000 gia occupata | Next.js ha usato automaticamente porta 3001 | ✅ Risolto |
 | 2026-02-21 | 0.0 | Chiave Supabase iniziale (sb_publishable_...) non era la anon key JWT | Utente ha fornito la chiave JWT corretta (eyJ...) | ✅ Risolto |
-| 2026-02-21 | 1.1 | Connessione diretta al DB Supabase fallisce (IPv6 only, no route to host) | Pooler "Tenant not found". Connection string dal dashboard necessario. | 🔴 Aperto |
+| 2026-02-21 | 1.1 | Connessione diretta al DB Supabase fallisce (IPv6 only, no route to host) | Usato MCP Supabase plugin per applicare migrazioni direttamente. Non serve connection string. | ✅ Risolto |
 | 2026-02-21 | 0.4 | Vecchia cartella frontend/ con node_modules non rimovibile (permessi) | Aggiunta a .gitignore e esclusa da tsconfig. Build funziona. | 🟡 Workaround |
 
 ---
@@ -187,6 +187,23 @@
 ## Storico Modifiche al Piano
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
+
+### Modifica #4 - Feature Trova Agenzia con Mappa + Connessione DB Supabase
+- **Data**: 2026-02-21
+- **File modificati**: PROJECT_OVERVIEW.md, CHANGELOG.md, schema DB
+- **Richiesto da**: Utente
+- **Motivo**: (1) L'utente ha richiesto una pagina Trova Agenzia con mappa interattiva, ricerca e filtri. (2) Schema DB eseguito su Supabase e admin panel in fase di collegamento.
+- **Cosa e cambiato**:
+  - Aggiunta descrizione dettagliata pagina Trova Agenzia in PROJECT_OVERVIEW.md
+  - Aggiunti campi latitude, longitude, region alla tabella agencies
+  - Aggiunta RLS policy per lettura pubblica agenzie attive
+  - Aggiunto indice geospaziale per performance
+  - Schema DB eseguito su Supabase Cloud (43 tabelle, 12 enum, RLS, triggers, functions)
+  - Fix security warnings su functions (search_path)
+  - Admin client Supabase con service_role key creato
+  - CRUD Destinazioni collegato a Supabase
+  - CRUD Tour in fase di collegamento a Supabase
+- **Versione piano**: v1.4
 
 ### Modifica #3 - Ristrutturazione Route Groups + Schema DB da ACF
 - **Data**: 2026-02-21
@@ -297,4 +314,4 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 ---
 
 *Ultimo aggiornamento: 2026-02-21*
-*Versione piano: v1.3*
+*Versione piano: v1.4*

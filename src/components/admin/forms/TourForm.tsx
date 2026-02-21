@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { saveTour } from "@/app/admin/tours/actions";
 import {
   Plus,
   Trash2,
@@ -125,19 +128,6 @@ const tourFormSchema = z.object({
 type TourFormValues = z.infer<typeof tourFormSchema>;
 
 // =============================================================================
-// Mock destinations - TODO: Replace with Supabase query
-// =============================================================================
-
-const mockDestinations = [
-  { id: "dest-1", name: "Grecia" },
-  { id: "dest-2", name: "Marocco" },
-  { id: "dest-3", name: "Giordania" },
-  { id: "dest-4", name: "Egitto" },
-  { id: "dest-5", name: "Tunisia" },
-  { id: "dest-6", name: "Turchia" },
-];
-
-// =============================================================================
 // Helpers
 // =============================================================================
 
@@ -156,13 +146,14 @@ function slugify(text: string): string {
 
 interface TourFormProps {
   initialData?: TourWithRelations;
+  destinations?: { id: string; name: string; slug: string; coordinate: string | null }[];
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export default function TourForm({ initialData }: TourFormProps) {
+export default function TourForm({ initialData, destinations = [] }: TourFormProps) {
   // ---------------------------------------------------------------------------
   // Form setup
   // ---------------------------------------------------------------------------
@@ -245,7 +236,7 @@ export default function TourForm({ initialData }: TourFormProps) {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<TourFormValues>({
     resolver: zodResolver(tourFormSchema),
     defaultValues,
@@ -274,10 +265,19 @@ export default function TourForm({ initialData }: TourFormProps) {
   // Submit
   // ---------------------------------------------------------------------------
 
-  function onSubmit(data: TourFormValues) {
-    // TODO: Save to Supabase
-    console.log("Tour form data:", data);
-  }
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const onSubmit = async (data: TourFormValues) => {
+    setServerError(null);
+    const result = await saveTour({
+      ...data,
+      id: initialData?.id,
+    });
+    if (!result.success) {
+      setServerError(result.error);
+    }
+    // On success, the server action redirects to /admin/tours
+  };
 
   // ---------------------------------------------------------------------------
   // Helpers for reordering
@@ -397,7 +397,7 @@ export default function TourForm({ initialData }: TourFormProps) {
                         <SelectValue placeholder="Seleziona destinazione" />
                       </SelectTrigger>
                       <SelectContent>
-                        {mockDestinations.map((dest) => (
+                        {destinations.map((dest) => (
                           <SelectItem key={dest.id} value={dest.id}>
                             {dest.name}
                           </SelectItem>
@@ -1213,6 +1213,12 @@ export default function TourForm({ initialData }: TourFormProps) {
       {/* ================================================================= */}
       <Separator />
 
+      {serverError && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {serverError}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <Button variant="outline" asChild>
           <Link href="/admin/tours">
@@ -1220,9 +1226,9 @@ export default function TourForm({ initialData }: TourFormProps) {
             Annulla
           </Link>
         </Button>
-        <Button type="submit">
+        <Button type="submit" disabled={isSubmitting}>
           <Save className="mr-2 size-4" />
-          Salva Tour
+          {isSubmitting ? "Salvataggio..." : initialData ? "Aggiorna Tour" : "Crea Tour"}
         </Button>
       </div>
     </form>

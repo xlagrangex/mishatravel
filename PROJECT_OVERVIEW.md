@@ -193,7 +193,14 @@ Pagina per sfogliare e scaricare i cataloghi PDF del tour operator:
 #### 4.1.9 Pagine Statiche
 
 - **Diventa Partner**: Pagina informativa con i vantaggi di diventare agenzia partner, requisiti, e pulsante per la registrazione
-- **Trova Agenzia**: Ricerca di agenzie partner sul territorio (citta, regione)
+- **Trova Agenzia** (/trova-agenzia): Pagina interattiva per trovare le agenzie partner MishaTravel sul territorio italiano. Contiene:
+  - **Mappa interattiva**: Mappa (Leaflet + OpenStreetMap) con pin/marker per ogni agenzia partner attiva. Popup con nome agenzia, indirizzo, telefono.
+  - **Barra di ricerca**: Ricerca per nome agenzia, citta o provincia. Risultati filtrati in tempo reale.
+  - **Filtri**: Per regione, provincia, citta.
+  - **Lista agenzie**: Panel laterale (desktop) o sotto la mappa (mobile) con lista scrollabile.
+  - **Interazione mappa-lista**: Click su pin evidenzia nella lista e viceversa.
+  - **Geolocalizzazione**: Pulsante per centrare sulla posizione dell'utente.
+  - **Dati**: Agenzie da Supabase (tabella agencies con latitude, longitude, region), solo status "active".
 - **Contatti**: Indirizzo, telefono, email, mappa, form di contatto generico
 - **Chi Siamo**: Presentazione del tour operator (se presente sul sito attuale)
 

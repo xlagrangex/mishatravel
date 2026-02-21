@@ -1,7 +1,6 @@
+import { notFound } from "next/navigation";
 import DestinationForm from "@/components/admin/forms/DestinationForm";
-
-// TODO: Fetch destination data by ID from Supabase and pass as initialData prop
-// For now, render the form with empty data
+import { getDestinationById } from "@/lib/supabase/queries/destinations";
 
 interface ModificaDestinazionePageProps {
   params: Promise<{ id: string }>;
@@ -11,6 +10,9 @@ export default async function ModificaDestinazionePage({
   params,
 }: ModificaDestinazionePageProps) {
   const { id } = await params;
+  const destination = await getDestinationById(id);
+
+  if (!destination) notFound();
 
   return (
     <div className="space-y-6">
@@ -19,12 +21,11 @@ export default async function ModificaDestinazionePage({
           Modifica Destinazione
         </h1>
         <p className="text-sm text-muted-foreground">
-          Modifica i dettagli della destinazione (ID: {id})
+          Modifica i dettagli di &ldquo;{destination.name}&rdquo;
         </p>
       </div>
 
-      {/* TODO: Replace with actual Supabase fetch: const destination = await getDestination(id) */}
-      <DestinationForm />
+      <DestinationForm initialData={destination} />
     </div>
   );
 }

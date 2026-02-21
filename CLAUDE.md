@@ -195,11 +195,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 1 - Database + Admin Base (80% completato)
-- **Ultima azione**: Creati admin panel completo, schema SQL, types, componenti form
-- **Prossimo step**: Eseguire schema SQL su Supabase (serve connection string dal dashboard)
-- **Bloccanti**: 🔴 Connessione a Supabase DB - serve la Connection String URI dal Dashboard > Settings > Database
-- **Progresso totale**: ~30% (13/65 task completate)
+- **Sprint corrente**: Sprint 1 completato, Sprint 2 prossimo
+- **Ultima azione**: Schema DB eseguito su Supabase (43 tabelle), CRUD Destinazioni e Tour collegati a Supabase
+- **Prossimo step**: Completare collegamento admin panel a Supabase (crociere, flotta, blog)
+- **Bloccanti**: Nessuno
+- **Progresso totale**: ~35% (15/65 task completate)
 
 ---
 
@@ -261,4 +261,4 @@ MISHATRAVEL/
 ---
 
 *Ultimo aggiornamento: 2026-02-21*
-*Versione piano: v1.2*
+*Versione piano: v1.4*
