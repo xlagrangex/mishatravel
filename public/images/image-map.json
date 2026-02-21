@@ -1,0 +1,156 @@
+{
+  "logo": [
+    {
+      "filename": "logo.webp",
+      "path": "/images/logo/logo.webp",
+      "alt": "Misha Travel Logo",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/Progetto-senza-titolo-89.webp",
+      "parentHref": ""
+    },
+    {
+      "filename": "logo.png",
+      "path": "/images/logo/logo.png",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/logo.png",
+      "parentHref": "https://mishatravel.com"
+    }
+  ],
+  "hero": [
+    {
+      "filename": "hero-background.png",
+      "path": "/images/hero/hero-background.png",
+      "alt": "hero-background",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/06/bgrios-1.png",
+      "parentHref": ""
+    }
+  ],
+  "destinations": [],
+  "tours": [
+    {
+      "filename": "icon-001.gif",
+      "path": "/images/tours/icon-001.gif",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/icon-001.gif",
+      "parentHref": "https://mishatravel.com/tours/"
+    }
+  ],
+  "cruises": [
+    {
+      "filename": "output-onlinegiftools.gif",
+      "path": "/images/cruises/output-onlinegiftools.gif",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/output-onlinegiftools.gif",
+      "parentHref": "https://mishatravel.com/crociere/"
+    }
+  ],
+  "blog": [],
+  "ships": [],
+  "cataloghi": [],
+  "misc": [
+    {
+      "filename": "cropped-cropped-progetto-senza-titolo-88.webp",
+      "path": "/images/misc/cropped-cropped-progetto-senza-titolo-88.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/cropped-cropped-Progetto-senza-titolo-88.webp",
+      "parentHref": "https://mishatravel.com"
+    },
+    {
+      "filename": "statue-liberty-new-york-city-skyline-usa-scaled.jpg",
+      "path": "/images/misc/statue-liberty-new-york-city-skyline-usa-scaled.jpg",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2026/01/statue-liberty-new-york-city-skyline-usa-scaled.jpg",
+      "parentHref": ""
+    },
+    {
+      "filename": "trans-siberian-railroad-5220319_1280.jpg",
+      "path": "/images/misc/trans-siberian-railroad-5220319_1280.jpg",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2026/01/trans-siberian-railroad-5220319_1280.jpg",
+      "parentHref": ""
+    },
+    {
+      "filename": "petra-4971956_1280.jpg",
+      "path": "/images/misc/petra-4971956_1280.jpg",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/11/petra-4971956_1280.jpg",
+      "parentHref": ""
+    },
+    {
+      "filename": "sanctuary-1641539_1280.jpg",
+      "path": "/images/misc/sanctuary-1641539_1280.jpg",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/09/sanctuary-1641539_1280.jpg",
+      "parentHref": ""
+    },
+    {
+      "filename": "screenshot-2025-08-04-alle-18.37.32.png",
+      "path": "/images/misc/screenshot-2025-08-04-alle-18.37.32.png",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/08/Screenshot-2025-08-04-alle-18.37.32.png",
+      "parentHref": ""
+    },
+    {
+      "filename": "screenshot-2025-08-04-alle-17.11.14.png",
+      "path": "/images/misc/screenshot-2025-08-04-alle-17.11.14.png",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/08/Screenshot-2025-08-04-alle-17.11.14.png",
+      "parentHref": ""
+    },
+    {
+      "filename": "unnamed-file.webp",
+      "path": "/images/misc/unnamed-file.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/unnamed-file.webp",
+      "parentHref": ""
+    },
+    {
+      "filename": "unnamed-file-1771705235507.webp",
+      "path": "/images/misc/unnamed-file-1771705235507.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/unnamed-file.webp",
+      "parentHref": ""
+    },
+    {
+      "filename": "unnamed-file-1771705235579.webp",
+      "path": "/images/misc/unnamed-file-1771705235579.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/unnamed-file.webp",
+      "parentHref": ""
+    },
+    {
+      "filename": "thumbnail-ms-fidelio2-2.webp",
+      "path": "/images/misc/thumbnail-ms-fidelio2-2.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/Thumbnail-Ms-Fidelio2-2.webp",
+      "parentHref": ""
+    },
+    {
+      "filename": "thumbnail-ms-fidelio2-2-1771705235724.webp",
+      "path": "/images/misc/thumbnail-ms-fidelio2-2-1771705235724.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/Thumbnail-Ms-Fidelio2-2.webp",
+      "parentHref": ""
+    },
+    {
+      "filename": "2023-fidelio_budapest-parliament-scaled-2.webp",
+      "path": "/images/misc/2023-fidelio_budapest-parliament-scaled-2.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/2023-Fidelio_Budapest-Parliament-scaled-2.webp",
+      "parentHref": ""
+    },
+    {
+      "filename": "progetto-senza-titolo-89.webp",
+      "path": "/images/misc/progetto-senza-titolo-89.webp",
+      "alt": "",
+      "originalSrc": "https://mishatravel.com/wp-content/uploads/2025/05/Progetto-senza-titolo-89.webp",
+      "parentHref": "https://mishatravel.com"
+    },
+    {
+      "filename": "favicon.png",
+      "path": "/images/misc/favicon.png",
+      "alt": "favicon",
+      "originalSrc": "https://i.ibb.co/XkFvvj94/favicon.png",
+      "parentHref": "https://bizstudio.it"
+    }
+  ]
+}

@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ██░░░░░░░░░░░░░░░░░░ 5% |
+| **Progresso Totale** | ████░░░░░░░░░░░░░░░░ 15% |
 | **Sprint Corrente** | Sprint 0 - Setup e Configurazione |
-| **Task Completate** | 2 / ~65 |
-| **Task In Corso** | 0 |
-| **Task Bloccate** | 0 |
+| **Task Completate** | 5 / ~65 |
+| **Task In Corso** | 1 |
+| **Task Bloccate** | 1 |
 | **Ultima Attivita** | 2026-02-21 |
 
 ---
@@ -21,11 +21,11 @@
 
 | Sprint | Titolo | Stato | Progresso | Note |
 |--------|--------|-------|-----------|------|
-| 0 | Setup e Configurazione | 🟡 In corso | ██░░░░░░░░ 20% | Progetto creato, repo GitHub pronta |
+| 0 | Setup e Configurazione | 🟡 In corso | ████████░░ 80% | Progetto consolidato, Supabase configurato, manca solo deploy Vercel |
 | 1 | Database + Admin Base | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 2 | Admin Crociere + Flotta | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
-| 3 | Sito Pubblico - Pagine Core | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
-| 4 | Calendario + Destinazioni + Blog | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 3 | Sito Pubblico - Pagine Core | 🟡 Parziale | ██████████ 95% | 27 pagine gia costruite con dati mock, manca solo collegamento DB |
+| 4 | Calendario + Destinazioni + Blog | 🟡 Parziale | ████████░░ 80% | Pagine esistenti, manca collegamento DB |
 | 5 | Autenticazione Agenzie | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 6 | Area Riservata Agenzie | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 7 | Flusso Preventivi + Gestione Utenti | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
@@ -41,13 +41,13 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 0.0 | Raccolta Credenziali Iniziali | 🟡 Parziale | - | GitHub OK. Supabase e Vercel in attesa. |
-| 0.1 | Inizializzazione progetto Next.js | ✅ Completata | 2026-02-21 | Next.js 16.1.6, React 19.2.3, TypeScript, Tailwind CSS 4 |
-| 0.2 | Installazione dipendenze | ⚪ Da fare | - | shadcn/ui, Supabase, Tiptap, react-hook-form, zod, date-fns, lucide-react |
-| 0.3 | Configurazione Supabase client | ⚪ Bloccata | - | ⚠️ In attesa credenziali Supabase dall'utente |
-| 0.4 | Struttura cartelle e layout base | ⚪ Da fare | - | |
+| 0.0 | Raccolta Credenziali Iniziali | 🟡 Parziale | - | GitHub OK. Supabase OK (anon key). Vercel: deploy automatico da GitHub. |
+| 0.1 | Inizializzazione progetto Next.js | ✅ Completata | 2026-02-21 | Frontend esistente consolidato alla root. Next.js 16.1.6, React 19.2.3, TypeScript, Tailwind CSS 4, shadcn/ui |
+| 0.2 | Installazione dipendenze | ✅ Completata | 2026-02-21 | @supabase/supabase-js, @supabase/ssr, radix-ui, lucide-react, cva, tailwind-merge. Mancano ancora: tiptap, react-hook-form, zod, date-fns (Sprint 1) |
+| 0.3 | Configurazione Supabase client | ✅ Completata | 2026-02-21 | Client browser + server creati, middleware per refresh sessione, .env.local configurato |
+| 0.4 | Struttura cartelle e layout base | ✅ Completata | 2026-02-21 | 27 pagine, 5 card components, 4 layout components, 14 shadcn/ui. Consolidato da frontend/ a root. |
 | 0.5 | Setup repository GitHub e primo push | ✅ Completata | 2026-02-21 | Repo: github.com/xlagrangex/mishatravel, branch: main |
-| 0.6 | Deploy iniziale su Vercel | ⚪ Bloccata | - | ⚠️ In attesa configurazione Vercel dall'utente |
+| 0.6 | Deploy iniziale su Vercel | 🟡 In attesa | - | Deploy automatico da GitHub configurato dall'utente |
 
 ### SPRINT 1 - Database + Admin Base
 
@@ -178,12 +178,28 @@
 |------|------|--------|-------------|-------|
 | 2026-02-21 | 0.1 | `create-next-app` rifiuta nomi con maiuscole (MISHATRAVEL) | Creato in /tmp come `mishatravel-app` e copiato nella cartella progetto | ✅ Risolto |
 | 2026-02-21 | 0.1 | Porta 3000 gia occupata | Next.js ha usato automaticamente porta 3001 | ✅ Risolto |
+| 2026-02-21 | 0.0 | Chiave Supabase iniziale (sb_publishable_...) non era la anon key JWT | Utente ha fornito la chiave JWT corretta (eyJ...) | ✅ Risolto |
 
 ---
 
 ## Storico Modifiche al Piano
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
+
+### Modifica #2 - Consolidamento Frontend Esistente
+- **Data**: 2026-02-21
+- **File modificati**: Struttura progetto (root)
+- **Richiesto da**: Utente
+- **Motivo**: Esisteva gia un frontend completo con 27 pagine nella cartella `frontend/`. L'utente ha chiesto di partire da quello anziche rifare tutto da zero.
+- **Cosa e cambiato**:
+  - Spostati tutti i file da `frontend/` alla root del progetto
+  - Rimosso il boilerplate Next.js creato inizialmente alla root
+  - Rinominato package.json da "frontend" a "mishatravel"
+  - Sprint 3 e 4 risultano ora quasi completati (UI gia pronta, manca solo collegamento DB)
+  - Aggiunta configurazione Supabase (client, server, middleware)
+  - Creato file CREDENTIALS.md (gitignored) per gestione credenziali
+- **Impatto sul piano**: Sprint 3 e 4 ridotti drasticamente - solo collegamento dati mock → Supabase
+- **Versione piano**: v1.2
 
 ### Modifica #1 - Aggiunta Gestione Utenti e Ruoli
 - **Data**: 2026-02-21
@@ -206,8 +222,8 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | Data | Servizio | Stato | Note |
 |------|----------|-------|------|
 | 2026-02-21 | GitHub | ✅ Configurato | Repo: github.com/xlagrangex/mishatravel |
-| - | Supabase | ⏳ In attesa | Serve URL + anon key + service_role key |
-| - | Vercel | ⏳ In attesa | Serve account collegato a GitHub |
+| 2026-02-21 | Supabase | ✅ Parziale | URL + anon key configurati. Manca service_role key. |
+| - | Vercel | 🟡 Auto-deploy | Deploy automatico da GitHub, configurato dall'utente |
 | - | Brevo | ⏳ In attesa | Serve per Sprint 8 |
 | - | WordPress | ⏳ In attesa | Serve per Sprint 9 |
 
@@ -226,4 +242,4 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 ---
 
 *Ultimo aggiornamento: 2026-02-21*
-*Versione piano: v1.1*
+*Versione piano: v1.2*
