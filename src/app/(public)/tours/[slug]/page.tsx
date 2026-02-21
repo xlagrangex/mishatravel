@@ -3,12 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import PageHero from "@/components/layout/PageHero";
 import TourCard from "@/components/cards/TourCard";
+import TourConfigurator from "@/components/agenzia/TourConfigurator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Clock, MapPin, Check, X } from "lucide-react";
 import { getTourBySlug, getRelatedTours } from "@/lib/supabase/queries/tours";
+import StickyBottomBar from "@/components/shared/StickyBottomBar";
 
 export default async function TourDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -185,9 +187,17 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
                                   : "Su richiesta"}
                               </td>
                               <td className="py-3 px-4">
-                                <Button size="sm" className="bg-[#C41E2F] hover:bg-[#A31825] text-white text-xs">
-                                  Richiedi Preventivo
-                                </Button>
+                                <TourConfigurator
+                                  tourId={tour.id}
+                                  tourTitle={tour.title}
+                                  departures={tour.departures ?? []}
+                                  supplements={tour.supplements ?? []}
+                                  preselectedDepartureId={dep.id}
+                                >
+                                  <Button size="sm" className="bg-[#C41E2F] hover:bg-[#A31825] text-white text-xs">
+                                    Richiedi Preventivo
+                                  </Button>
+                                </TourConfigurator>
                               </td>
                             </tr>
                           ))}
@@ -224,9 +234,12 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
                   )}
                 </div>
 
-                <Button className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
-                  Richiedi Preventivo
-                </Button>
+                <TourConfigurator
+                  tourId={tour.id}
+                  tourTitle={tour.title}
+                  departures={tour.departures ?? []}
+                  supplements={tour.supplements ?? []}
+                />
 
                 <p className="text-xs text-gray-400 mt-3 text-center">
                   Contattaci per un preventivo personalizzato
@@ -261,6 +274,8 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
           </div>
         </section>
       )}
+
+      {priceNum && <StickyBottomBar price={priceNum} />}
     </>
   );
 }

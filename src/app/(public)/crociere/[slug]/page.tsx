@@ -2,12 +2,14 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import PageHero from "@/components/layout/PageHero";
 import CruiseCard from "@/components/cards/CruiseCard";
+import CruiseConfigurator from "@/components/agenzia/CruiseConfigurator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Clock, Ship, Waves, Check, X } from "lucide-react";
 import { getCruiseBySlug, getRelatedCruises } from "@/lib/supabase/queries/cruises";
+import StickyBottomBar from "@/components/shared/StickyBottomBar";
 
 export default async function CruiseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -28,6 +30,12 @@ export default async function CruiseDetailPage({ params }: { params: Promise<{ s
   // Separate included and excluded items
   const includedItems = (cruise.inclusions ?? []).filter((i) => i.is_included);
   const excludedItems = (cruise.inclusions ?? []).filter((i) => !i.is_included);
+
+  // Build deck configuration from cruise labels
+  const decks: { label: string; value: string }[] = [];
+  if (cruise.etichetta_primo_deck) decks.push({ label: cruise.etichetta_primo_deck, value: "main" });
+  if (cruise.etichetta_secondo_deck) decks.push({ label: cruise.etichetta_secondo_deck, value: "middle" });
+  if (cruise.etichetta_terzo_deck) decks.push({ label: cruise.etichetta_terzo_deck, value: "superior" });
 
   return (
     <>
@@ -144,7 +152,17 @@ export default async function CruiseDetailPage({ params }: { params: Promise<{ s
                                   : "Su richiesta"}
                               </td>
                               <td className="py-3 px-4">
-                                <Button size="sm" className="bg-[#C41E2F] hover:bg-[#A31825] text-white text-xs">Richiedi Preventivo</Button>
+                                <CruiseConfigurator
+                                  cruiseId={cruise.id}
+                                  cruiseTitle={cruise.title}
+                                  departures={cruise.departures ?? []}
+                                  supplements={cruise.supplements ?? []}
+                                  cabins={cruise.cabins ?? []}
+                                  decks={decks}
+                                  preselectedDepartureId={dep.id}
+                                >
+                                  <Button size="sm" className="bg-[#C41E2F] hover:bg-[#A31825] text-white text-xs">Richiedi Preventivo</Button>
+                                </CruiseConfigurator>
                               </td>
                             </tr>
                           ))}
@@ -176,7 +194,14 @@ export default async function CruiseDetailPage({ params }: { params: Promise<{ s
                     <div className="flex items-center gap-2"><Waves className="size-4 text-[#1B2D4F]" /><span>{destinationName}</span></div>
                   )}
                 </div>
-                <Button className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">Richiedi Preventivo</Button>
+                <CruiseConfigurator
+                  cruiseId={cruise.id}
+                  cruiseTitle={cruise.title}
+                  departures={cruise.departures ?? []}
+                  supplements={cruise.supplements ?? []}
+                  cabins={cruise.cabins ?? []}
+                  decks={decks}
+                />
               </div>
             </div>
           </div>
@@ -204,6 +229,8 @@ export default async function CruiseDetailPage({ params }: { params: Promise<{ s
           </div>
         </section>
       )}
+
+      {priceNum && <StickyBottomBar price={priceNum} />}
     </>
   );
 }

@@ -258,6 +258,69 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
 }
 
 // ---------------------------------------------------------------------------
+// Enriched queries (with departures for filtering)
+// ---------------------------------------------------------------------------
+
+export type CruiseListItemEnriched = CruiseListItem & {
+  ship_id: string | null
+  destination_id: string | null
+  destination_macro_area: string | null
+  departures: { id: string; data_partenza: string; prezzo_main_deck: number | null; from_city: string | null }[]
+}
+
+/**
+ * Published cruises with departure data for client-side filtering.
+ */
+export async function getPublishedCruisesWithDepartures(): Promise<CruiseListItemEnriched[]> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('cruises')
+    .select(
+      `
+      id,
+      title,
+      slug,
+      cover_image_url,
+      durata_notti,
+      a_partire_da,
+      tipo_crociera,
+      status,
+      created_at,
+      ship_id,
+      destination_id,
+      ship:ships(name),
+      destination:destinations(name, macro_area),
+      departures:cruise_departures(id, data_partenza, prezzo_main_deck, from_city)
+    `
+    )
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw new Error(`Failed to fetch enriched cruises: ${error.message}`)
+  }
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    cover_image_url: row.cover_image_url,
+    durata_notti: row.durata_notti,
+    a_partire_da: row.a_partire_da,
+    tipo_crociera: row.tipo_crociera,
+    status: row.status,
+    created_at: row.created_at,
+    ship_id: row.ship_id,
+    destination_id: row.destination_id,
+    ship_name: row.ship?.name ?? null,
+    destination_name: row.destination?.name ?? null,
+    destination_macro_area: row.destination?.macro_area ?? null,
+    departures: row.departures ?? [],
+  }))
+}
+
+// ---------------------------------------------------------------------------
 // Admin queries
 // ---------------------------------------------------------------------------
 

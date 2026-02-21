@@ -115,6 +115,64 @@ export async function getTourById(id: string) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Enriched queries (with departures for filtering)
+// ---------------------------------------------------------------------------
+
+export type TourListItemEnriched = TourListItem & {
+  destination_id: string | null
+  destination_macro_area: string | null
+  destination_slug: string | null
+  departures: { id: string; data_partenza: string; prezzo_3_stelle: number | null; from_city: string | null }[]
+}
+
+/**
+ * Published tours with departure data for client-side filtering.
+ */
+export async function getPublishedToursWithDepartures(): Promise<TourListItemEnriched[]> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('tours')
+    .select(
+      `
+      id,
+      title,
+      slug,
+      cover_image_url,
+      durata_notti,
+      a_partire_da,
+      status,
+      created_at,
+      destination_id,
+      destination:destinations(name, slug, macro_area),
+      departures:tour_departures(id, data_partenza, prezzo_3_stelle, from_city)
+    `
+    )
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw new Error(`Failed to fetch enriched tours: ${error.message}`)
+  }
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    cover_image_url: row.cover_image_url,
+    durata_notti: row.durata_notti,
+    a_partire_da: row.a_partire_da,
+    status: row.status,
+    created_at: row.created_at,
+    destination_id: row.destination_id,
+    destination_name: row.destination?.name ?? null,
+    destination_slug: row.destination?.slug ?? null,
+    destination_macro_area: row.destination?.macro_area ?? null,
+    departures: row.departures ?? [],
+  }))
+}
+
 /**
  * Delete a tour by ID.
  * Foreign-key cascades handle all sub-table rows automatically.
