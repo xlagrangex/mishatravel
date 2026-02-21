@@ -693,6 +693,45 @@
 
 ---
 
+## SPRINT 11 - Demo, Seed Data e Miglioramenti UX
+
+### Obiettivo: Sito visibile con dati demo, credenziali di test, flusso approvazione agenzie completo.
+
+---
+
+### TASK 11.1 - Seed Script Dati Demo
+- **Cosa**: Script `scripts/seed-demo.ts` eseguibile con `npx tsx scripts/seed-demo.ts` che popola il DB con dati demo realistici:
+  - 8-10 destinazioni (con macro_area corrette)
+  - 5-6 tour con itinerario, partenze, supplementi, incluso/escluso
+  - 3-4 crociere con cabine, deck, partenze
+  - 3-4 navi con specifiche, servizi, cabine
+  - 5-6 articoli blog con categorie
+  - 2-3 cataloghi
+  - 1 agenzia demo con dati completi
+- **Dipendenze**: 1.1
+
+### TASK 11.2 - Credenziali Demo Supabase Auth
+- **Cosa**: Creare utenti demo in Supabase Auth con ruoli assegnati:
+  - Super Admin: `admin@mishatravel.com` / `MishaAdmin2026!`
+  - Agenzia demo: `agenzia@mishatravel.com` / `MishaAgenzia2026!`
+  - Assegnare ruoli nella tabella `user_roles`
+  - L'agenzia demo deve avere status `active` per poter accedere
+  - Salvare credenziali in CREDENTIALS.md
+- **Dipendenze**: 5.1, 11.1
+
+### TASK 11.3 - Flusso Approvazione Agenzie
+- **Cosa**: Implementare il flusso completo di approvazione registrazione agenzia:
+  - La registrazione crea l'agenzia con status `pending` (gia implementato)
+  - Il middleware blocca l'accesso all'area riservata per agenzie con status != `active`
+  - Widget "Agenzie in attesa di approvazione" nella dashboard admin con:
+    - Lista agenzie pending con nome, email, data registrazione
+    - Pulsanti: Approva (status→active), Declina (status→blocked), Visualizza dettaglio
+  - Messaggio all'agenzia dopo login che spiega che il suo account e in attesa di approvazione
+  - Notifica creata per l'admin quando una nuova agenzia si registra
+- **Dipendenze**: 5.2, 7.6
+
+---
+
 ## Note Operative
 
 1. **Ogni sprint produce qualcosa di testabile**: L'utente puo verificare il progresso ad ogni sprint.
@@ -704,5 +743,5 @@
 ---
 
 *Piano creato il: 21 Febbraio 2026*
-*Totale task: ~69 task atomiche*
-*Versione piano: v1.5*
+*Totale task: ~72 task atomiche*
+*Versione piano: v1.7*

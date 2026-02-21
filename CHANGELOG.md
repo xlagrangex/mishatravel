@@ -192,6 +192,19 @@
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
 
+### Modifica #7 - Seed Dati Demo + Credenziali Demo + Approvazione Agenzie
+- **Data**: 2026-02-22
+- **File modificati**: SPRINT_PLAN.md, PROJECT_OVERVIEW.md, CHANGELOG.md, CLAUDE.md
+- **Richiesto da**: Utente
+- **Motivo**: L'utente vuole (1) vedere il sito popolato con dati demo realistici, (2) credenziali demo per super_admin e agenzia, (3) flusso di approvazione agenzie: la registrazione deve essere approvata dal super_admin prima che l'agenzia possa accedere all'area riservata.
+- **Cosa e cambiato**:
+  - **SPRINT_PLAN.md**: Aggiunte task 11.1 (seed script dati demo), 11.2 (credenziali demo Supabase Auth), 11.3 (approvazione agenzie in dashboard admin)
+  - **PROJECT_OVERVIEW.md**: Aggiunta sezione approvazione agenzie, aggiornato flusso registrazione
+  - **Middleware**: Agenzie con status != 'active' bloccate dall'accesso all'area riservata
+  - **Dashboard admin**: Widget "Agenzie in attesa di approvazione" con Approva/Declina/Modifica
+  - **Seed script**: `scripts/seed-demo.ts` con dati demo + utenti demo
+- **Versione piano**: v1.7
+
 ### Modifica #6 - Fix Header Routing + Redesign Destinazioni + Calendario Griglia
 - **Data**: 2026-02-21
 - **File modificati**: src/lib/data.ts, src/app/(public)/destinazioni/page.tsx, src/app/(public)/calendario-partenze/page.tsx
@@ -416,4 +429,4 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 ---
 
 *Ultimo aggiornamento: 2026-02-22*
-*Versione piano: v1.6*
+*Versione piano: v1.7*
