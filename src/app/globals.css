@@ -213,5 +213,5 @@ html {
 
 /* Narrower container on desktop — outside @layer for higher specificity */
 .container {
-  max-width: 1200px !important;
+  max-width: 1400px !important;
 }
