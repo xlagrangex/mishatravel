@@ -66,29 +66,57 @@ All'inizio di ogni sessione, DEVI leggere questi 5 file per avere il contesto co
 ### Durante lo Sviluppo
 1. **Prima di iniziare una task**: Verifica le dipendenze nel SPRINT_PLAN.md
 2. **Durante una task**: Se incontri un errore, registralo nel CHANGELOG.md
-3. **Dopo OGNI micro-modifica**: Aggiorna TUTTI i file MD pertinenti (CHANGELOG.md, CLAUDE.md sezione "Stato Attuale", SPRINT_PLAN.md). NON aspettare la fine dello sprint o di un blocco di task. Ogni singola modifica al codice → aggiornamento immediato dei file MD.
-4. **Dopo ogni commit**: Fai sempre `git push` (istruzione globale dell'utente)
+3. **Dopo ogni commit**: Fai sempre `git push` (istruzione globale dell'utente)
 
-### ⚠️ REGOLA CRITICA: Aggiornamento File MD
-**Alla fine di OGNI micro-modifica devi aggiornare i file MD.**
-Questo significa:
-- Ogni nuovo file creato → aggiorna CHANGELOG.md e struttura in CLAUDE.md se necessario
-- Ogni componente completato → aggiorna stato task in CHANGELOG.md
-- Ogni errore incontrato → registra in CHANGELOG.md sezione errori
-- Ogni dipendenza installata → aggiorna lista in CLAUDE.md
-- Ogni modifica strutturale (route, layout) → aggiorna struttura progetto in CLAUDE.md
-- **MAI accumulare modifiche senza aggiornare i file MD**
+### ⚠️ REGOLA CRITICA: Sistema di Versionamento e Aggiornamento File MD
 
-### Quando l'Utente Chiede Modifiche al Piano
-1. Aggiorna `PROJECT_OVERVIEW.md` e/o `SPRINT_PLAN.md`
-2. Registra la modifica nel CHANGELOG.md nella sezione "Storico Modifiche al Piano" con:
-   - Data
-   - File modificati
-   - Richiesto da (utente / necessita tecnica)
-   - Motivo
-   - Cosa e cambiato nel dettaglio
-   - Incrementa la versione del piano (v1.1 → v1.2 → v1.3...)
-3. Aggiorna le percentuali di avanzamento nel CHANGELOG.md
+**Questa regola e AUTOMATICA. Non devo aspettare che l'utente me lo chieda.**
+
+#### Versione del Piano
+La versione segue il formato `vX.Y` dove:
+- **X** = major (cambia solo con ristrutturazioni complete del piano)
+- **Y** = minor (incrementa ad ogni modifica, vedi trigger sotto)
+
+La versione corrente e indicata in fondo a TUTTI i 4 file MD. Deve essere SEMPRE sincronizzata.
+
+#### Trigger di aggiornamento: QUANDO aggiornare i file MD
+
+| Evento (trigger) | Incremento versione? | Cosa aggiornare |
+|-------------------|---------------------|-----------------|
+| **Task completata** (codice scritto e funzionante) | NO | CHANGELOG.md (stato task → ✅), CLAUDE.md (Stato Attuale) |
+| **Errore incontrato** | NO | CHANGELOG.md (sezione errori) |
+| **Nuovo file creato** | NO | CHANGELOG.md (lista file), CLAUDE.md (struttura progetto se strutturale) |
+| **Dipendenza installata** | NO | CLAUDE.md (lista dipendenze) |
+| **L'utente chiede una nuova feature/modifica al piano** | SI → v1.Y+1 | TUTTI e 4: SPRINT_PLAN.md (nuove task), PROJECT_OVERVIEW.md (nuova descrizione funzionale), CHANGELOG.md (Modifica #N), CLAUDE.md (stato attuale) |
+| **Emerge una necessita tecnica che cambia il piano** | SI → v1.Y+1 | Come sopra |
+| **Credenziale fornita** | NO | CREDENTIALS.md, .env.local, CHANGELOG.md (storico credenziali) |
+| **Fine sessione** | NO | CLAUDE.md (Stato Attuale aggiornato per la prossima sessione) |
+
+#### Procedura per incremento versione (trigger con "SI")
+
+Quando il trigger richiede incremento versione, eseguire TUTTI questi passi PRIMA di iniziare a scrivere codice:
+
+1. **SPRINT_PLAN.md**: Aggiungere le nuove task con ID sequenziale (es. 1.13, 1.14...), descrizione, dipendenze, stato ⚪
+2. **PROJECT_OVERVIEW.md**: Aggiornare la descrizione funzionale della sezione interessata
+3. **CHANGELOG.md**:
+   - Aggiungere voce "Modifica #N" con: data, file modificati, richiesto da, motivo, cosa e cambiato
+   - Aggiungere le nuove task nella tabella dello sprint corrispondente
+   - Aggiornare contatori (task totali, percentuali)
+4. **CLAUDE.md**: Aggiornare "Stato Attuale"
+5. **Tutti e 4 i file**: Aggiornare la riga `*Versione piano: vX.Y*` in fondo
+6. **Commit**: `docs: register Modifica #N - [breve descrizione]` + push
+7. **Solo dopo** questo commit, iniziare a implementare
+
+#### Procedura per task completata (trigger senza incremento versione)
+
+Dopo aver completato una task e committato il codice:
+1. CHANGELOG.md: Stato task → ✅, data completamento, note
+2. CLAUDE.md: Aggiornare "Stato Attuale" (sprint corrente, prossimo step, percentuale)
+3. Commit: includere gli aggiornamenti MD nello stesso commit del codice, oppure in un commit separato subito dopo
+4. Push
+
+#### Regola d'oro
+**MAI accumulare piu di 1 task completata senza aggiornare i file MD. MAI ricevere una richiesta di modifica dall'utente e iniziare a scrivere codice senza prima aver aggiornato il piano.**
 
 ### Gestione Credenziali
 - Le credenziali vanno SOLO in `CREDENTIALS.md` (gitignored) e `.env.local` (gitignored)
