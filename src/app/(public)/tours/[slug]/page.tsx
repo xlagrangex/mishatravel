@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +12,15 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Clock, MapPin, Check, X } from "lucide-react";
 import { getTourBySlug, getRelatedTours } from "@/lib/supabase/queries/tours";
 import StickyBottomBar from "@/components/shared/StickyBottomBar";
+import { generateTourMetadata } from "@/lib/seo/metadata";
+import { tourTripSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const tour = await getTourBySlug(slug);
+  if (!tour) return { title: "Tour non trovato" };
+  return generateTourMetadata(tour);
+}
 
 export default async function TourDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -276,6 +286,24 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
       )}
 
       {priceNum && <StickyBottomBar price={priceNum} />}
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(tourTripSchema(tour)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbSchema([
+              { name: "Tours", url: "/tours" },
+              { name: tour.title, url: `/tours/${tour.slug}` },
+            ])
+          ),
+        }}
+      />
     </>
   );
 }

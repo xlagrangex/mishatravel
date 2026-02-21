@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -6,6 +7,15 @@ import BlogCard from "@/components/cards/BlogCard";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, ArrowLeft } from "lucide-react";
 import { getBlogPostBySlug, getPublishedBlogPosts } from "@/lib/supabase/queries/blog";
+import { generateBlogPostMetadata } from "@/lib/seo/metadata";
+import { articleSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getBlogPostBySlug(slug);
+  if (!post) return { title: "Articolo non trovato" };
+  return generateBlogPostMetadata(post);
+}
 
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -93,6 +103,24 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
           </div>
         </section>
       )}
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleSchema(post)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbSchema([
+              { name: "Blog", url: "/blog" },
+              { name: post.title, url: `/blog/${post.slug}` },
+            ])
+          ),
+        }}
+      />
     </>
   );
 }

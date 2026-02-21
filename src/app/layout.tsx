@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
+import { generateBaseMetadata } from "@/lib/seo/metadata";
+import { organizationSchema } from "@/lib/seo/structured-data";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -17,17 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Misha Travel - Tour Operator",
-  description:
-    "Misha Travel: tour operator italiano specializzato in viaggi culturali, grandi itinerari e crociere fluviali. Scopri le nostre destinazioni in Europa, Asia, America Latina e Africa.",
-  keywords: [
-    "tour operator",
-    "viaggi culturali",
-    "crociere fluviali",
-    "Misha Travel",
-    "itinerari",
-    "viaggi organizzati",
-  ],
+  ...generateBaseMetadata(),
   icons: {
     icon: "/favicon.ico",
   },
@@ -46,6 +38,12 @@ export default function RootLayout({
         {process.env.NODE_ENV === "development" && (
           <script src="https://unpkg.com/react-scan/dist/auto.global.js" crossOrigin="anonymous" />
         )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema()),
+          }}
+        />
         {children}
       </body>
     </html>

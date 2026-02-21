@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import PageHero from "@/components/layout/PageHero";
@@ -6,6 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Layers } from "lucide-react";
 import { getShipBySlug } from "@/lib/supabase/queries/ships";
 import { getCruisesForShip } from "@/lib/supabase/queries/cruises";
+import { generateShipMetadata } from "@/lib/seo/metadata";
+import { breadcrumbSchema } from "@/lib/seo/structured-data";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const ship = await getShipBySlug(slug);
+  if (!ship) return { title: "Nave non trovata" };
+  return generateShipMetadata(ship);
+}
 
 export default async function ShipDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -156,6 +166,18 @@ export default async function ShipDetailPage({ params }: { params: Promise<{ slu
           )}
         </div>
       </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbSchema([
+              { name: "Flotta", url: "/flotta" },
+              { name: ship.name, url: `/flotta/${ship.slug}` },
+            ])
+          ),
+        }}
+      />
     </>
   );
 }

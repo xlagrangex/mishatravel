@@ -1,8 +1,19 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PageHero from "@/components/layout/PageHero";
 import TourCard from "@/components/cards/TourCard";
 import CruiseCard from "@/components/cards/CruiseCard";
 import { getDestinationWithTours } from "@/lib/supabase/queries/destinations";
+import { getDestinationBySlug } from "@/lib/supabase/queries/destinations";
+import { generateDestinationMetadata } from "@/lib/seo/metadata";
+import { breadcrumbSchema } from "@/lib/seo/structured-data";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const destination = await getDestinationBySlug(slug);
+  if (!destination) return { title: "Destinazione non trovata" };
+  return generateDestinationMetadata(destination);
+}
 
 export default async function DestinationDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -86,6 +97,18 @@ export default async function DestinationDetailPage({ params }: { params: Promis
           )}
         </div>
       </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbSchema([
+              { name: "Destinazioni", url: "/destinazioni" },
+              { name: dest.name, url: `/destinazioni/${dest.slug}` },
+            ])
+          ),
+        }}
+      />
     </>
   );
 }

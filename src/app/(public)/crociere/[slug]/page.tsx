@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import PageHero from "@/components/layout/PageHero";
@@ -10,6 +11,15 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Clock, Ship, Waves, Check, X } from "lucide-react";
 import { getCruiseBySlug, getRelatedCruises } from "@/lib/supabase/queries/cruises";
 import StickyBottomBar from "@/components/shared/StickyBottomBar";
+import { generateCruiseMetadata } from "@/lib/seo/metadata";
+import { boatTripSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const cruise = await getCruiseBySlug(slug);
+  if (!cruise) return { title: "Crociera non trovata" };
+  return generateCruiseMetadata(cruise);
+}
 
 export default async function CruiseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -231,6 +241,24 @@ export default async function CruiseDetailPage({ params }: { params: Promise<{ s
       )}
 
       {priceNum && <StickyBottomBar price={priceNum} />}
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(boatTripSchema(cruise)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbSchema([
+              { name: "Crociere", url: "/crociere" },
+              { name: cruise.title, url: `/crociere/${cruise.slug}` },
+            ])
+          ),
+        }}
+      />
     </>
   );
 }

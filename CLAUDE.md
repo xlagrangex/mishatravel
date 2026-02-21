@@ -264,11 +264,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 0-7+11 TUTTI completati. Sprint 8 (Brevo) SBLOCCATO, API key ricevuta. Sprint 9 (WP) e 10 (SEO/Deploy) bloccati.
-- **Ultima azione**: Task 11.3 completata (approvazione agenzie). API key Brevo ricevuta e salvata. Pronti per Sprint 8.
-- **Prossimo step**: Sprint 8 (email transazionali con Brevo - API key disponibile). Servono conferma email mittente e admin.
-- **Bloccanti**: Sprint 9 (export WordPress), Sprint 10 (DNS dominio)
-- **Progresso totale**: ~95% (68/72 task completate)
+- **Sprint corrente**: Sprint 10 in corso (SEO, Performance, Deploy)
+- **Ultima azione**: Task 10.1 SEO Tecnico completata: sitemap dinamica, robots.txt, metadata helpers, structured data JSON-LD, generateMetadata in tutte le slug pages
+- **Prossimo step**: Task 10.2 (Redirect 301) o 10.4 (Testing E2E)
+- **Bloccanti**: Sprint 9 (serve export WP completo), Task 10.5 (serve DNS)
+- **Progresso totale**: ~95% (69/72 task completate)
 
 ---
 

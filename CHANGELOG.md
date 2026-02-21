@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ████████████████████ 95% |
-| **Sprint Corrente** | Sprint 0-7+11 completati. Solo Sprint 8 (Brevo), 9 (WP migration), 10 (SEO/Deploy) rimasti. |
-| **Task Completate** | 68 / ~72 |
+| **Progresso Totale** | █████████████████████ 97% |
+| **Sprint Corrente** | Sprint 0-8+11 completati. Solo Sprint 9 (WP migration) e 10 (SEO/Deploy) rimasti. |
+| **Task Completate** | 72 / ~72 |
 | **Task In Corso** | 0 |
-| **Task Bloccate** | 2 (Sprint 9 serve export WP, Sprint 10 serve DNS). Sprint 8 SBLOCCATO: API key Brevo ricevuta. |
+| **Task Bloccate** | 2 (Sprint 9 serve export WP, Sprint 10 serve DNS). |
 | **Ultima Attivita** | 2026-02-22 |
 
 ---
@@ -29,9 +29,9 @@
 | 5 | Autenticazione Agenzie | ✅ Completato | ██████████ 100% | Auth helpers, middleware, AuthProvider, Login, Registrazione multi-step, Reset Password, LoginCTA completati. |
 | 6 | Area Riservata Agenzie | ✅ Completato | ██████████ 100% | Layout, dashboard, configuratori, richieste, offerte, estratto conto, profilo. |
 | 7 | Flusso Preventivi + Gestione Utenti | ✅ Completato | ██████████ 100% | Preventivi workflow completo, gestione agenzie, utenti e ruoli, sidebar permessi, notifiche. |
-| 8 | Email Transazionali (Brevo) | 🟡 In corso | ░░░░░░░░░░ 0% | API key Brevo ricevuta |
+| 8 | Email Transazionali (Brevo) | ✅ Completato | ██████████ 100% | brevo.ts + templates.ts + integrazione in 5 server actions. 11 template email. |
 | 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
-| 10 | SEO, Performance, Deploy | 🟡 In corso | ██░░░░░░░░ 20% | Task 10.3 completata |
+| 10 | SEO, Performance, Deploy | 🟡 In corso | ████░░░░░░ 40% | Task 10.1, 10.3 completate |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 
 ---
@@ -148,10 +148,10 @@
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
 | 8.0 | Raccolta Credenziali Brevo | ✅ Completata | 2026-02-22 | API key ricevuta e salvata in .env.local e CREDENTIALS.md |
-| 8.1 | Setup Brevo + Servizio Email | ⚪ Da fare | - | |
-| 8.2 | Email Autenticazione | ⚪ Da fare | - | |
-| 8.3 | Email Flusso Preventivi | ⚪ Da fare | - | |
-| 8.4 | Email Notifiche Admin | ⚪ Da fare | - | |
+| 8.1 | Setup Brevo + Servizio Email | ✅ Completata | 2026-02-22 | brevo.ts (fetch API v3, sendTransactionalEmail, sendAdminNotification) + templates.ts (base template con branding, 11 template functions). No SDK, solo fetch. |
+| 8.2 | Email Autenticazione | ✅ Completata | 2026-02-22 | Welcome email dopo registrazione agenzia + email account approvato. Integrato in registrazione/actions.ts e admin/agenzie/actions.ts. |
+| 8.3 | Email Flusso Preventivi | ✅ Completata | 2026-02-22 | 5 email: richiesta inviata, nuova offerta, offerta accettata, estremi pagamento, richiesta rifiutata. Integrato in agenzia/actions.ts, admin/preventivi/actions.ts, agenzia/offerte/actions.ts. |
+| 8.4 | Email Notifiche Admin | ✅ Completata | 2026-02-22 | 4 email admin: nuova agenzia, nuova richiesta, offerta accettata, offerta rifiutata. Tutte inviate a BREVO_ADMIN_EMAIL. |
 
 ### SPRINT 9 - Migrazione Dati WordPress
 
@@ -169,7 +169,7 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 10.1 | SEO Tecnico | ⚪ Da fare | - | |
+| 10.1 | SEO Tecnico | ✅ Completata | 2026-02-22 | Sitemap dinamica, robots.txt, metadata helpers, structured data JSON-LD (Organization, TouristTrip, BoatTrip, Article, BreadcrumbList). generateMetadata in 5 slug pages. |
 | 10.2 | Redirect 301 da vecchi URL | ⚪ Da fare | - | |
 | 10.3 | Ottimizzazione Performance | ✅ Completata | 2026-02-22 | ISR per 8 pagine lista (revalidate 300-3600s), image formats avif+webp, 3 loading.tsx skeleton, prefetch gia attivo |
 | 10.4 | Testing End-to-End | ⚪ Da fare | - | |
@@ -423,6 +423,8 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | `src/app/(agenzia)/agenzia/profilo/PasswordForm.tsx` | Component | Form cambio password |
 | `src/app/(agenzia)/agenzia/profilo/actions.ts` | Actions | Server actions updateAgencyProfile, changePassword |
 | `scripts/seed-demo.ts` | Script | Seed script dati demo: 10 dest, 6 tour, 3 navi, 3 crociere, 5 blog, 2 cataloghi, 2 utenti. Supporto --force. |
+| `src/lib/email/brevo.ts` | Lib | Servizio email Brevo: sendTransactionalEmail, sendAdminNotification. Fetch API v3, non-blocking. |
+| `src/lib/email/templates.ts` | Lib | 11 template HTML email con branding MishaTravel (base wrapper, CTA button, tutti i template per auth, preventivi, admin). |
 
 ---
 
