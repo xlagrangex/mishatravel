@@ -168,25 +168,34 @@ MISHATRAVEL/
 │   │   │   ├── trova-agenzia/
 │   │   │   └── [pagine legali]/ ← Privacy, Cookie, T&C, etc.
 │   │   │
-│   │   └── admin/               ← Admin panel (layout separato, noindex)
-│   │       ├── layout.tsx       ← Layout admin (AdminShell)
-│   │       ├── page.tsx         ← Dashboard con statistiche
-│   │       ├── destinazioni/    ← CRUD destinazioni (collegato Supabase)
-│   │       │   ├── page.tsx, DestinazioniTable.tsx, actions.ts
-│   │       │   ├── nuovo/page.tsx, [id]/modifica/page.tsx
-│   │       ├── tours/           ← CRUD tours (collegato Supabase)
-│   │       │   ├── page.tsx, AdminToursTable.tsx, actions.ts
-│   │       │   ├── nuovo/page.tsx, [id]/modifica/page.tsx
-│   │       ├── crociere/        ← Placeholder
-│   │       ├── flotta/          ← Placeholder
-│   │       ├── partenze/        ← Placeholder (sola lettura, legge da tour/crociere)
-│   │       ├── blog/            ← Placeholder
-│   │       ├── cataloghi/       ← Placeholder
-│   │       ├── media/           ← Placeholder
-│   │       ├── agenzie/         ← Placeholder
-│   │       ├── preventivi/      ← Placeholder
-│   │       ├── estratti-conto/  ← Placeholder
-│   │       └── utenti/          ← Placeholder
+│   │   ├── admin/               ← Admin panel (layout separato, noindex)
+│   │   │   ├── layout.tsx       ← Layout admin (AdminShell)
+│   │   │   ├── page.tsx         ← Dashboard con statistiche
+│   │   │   ├── destinazioni/    ← CRUD destinazioni (collegato Supabase)
+│   │   │   │   ├── page.tsx, DestinazioniTable.tsx, actions.ts
+│   │   │   │   ├── nuovo/page.tsx, [id]/modifica/page.tsx
+│   │   │   ├── tours/           ← CRUD tours (collegato Supabase)
+│   │   │   │   ├── page.tsx, AdminToursTable.tsx, actions.ts
+│   │   │   │   ├── nuovo/page.tsx, [id]/modifica/page.tsx
+│   │   │   ├── crociere/        ← CRUD crociere (collegato Supabase)
+│   │   │   ├── flotta/          ← CRUD flotta (collegato Supabase)
+│   │   │   ├── partenze/        ← Placeholder (sola lettura)
+│   │   │   ├── blog/            ← CRUD blog (collegato Supabase)
+│   │   │   ├── cataloghi/       ← CRUD cataloghi (collegato Supabase)
+│   │   │   ├── media/           ← Media library (collegato Supabase)
+│   │   │   ├── agenzie/         ← Placeholder
+│   │   │   ├── preventivi/      ← Placeholder
+│   │   │   ├── estratti-conto/  ← Placeholder
+│   │   │   └── utenti/          ← Placeholder
+│   │   │
+│   │   └── (agenzia)/           ← Route group area riservata agenzie (noindex)
+│   │       ├── layout.tsx       ← Layout agenzia (AgenziaShell, fetch nome + notifiche)
+│   │       └── agenzia/
+│   │           ├── dashboard/page.tsx  ← Dashboard con contatori e richieste recenti
+│   │           ├── richieste/         ← Le Mie Richieste (da fare)
+│   │           ├── offerte/           ← Offerte Ricevute (da fare)
+│   │           ├── estratto-conto/    ← Estratto Conto (da fare)
+│   │           └── profilo/           ← Profilo Agenzia (da fare)
 │   │
 │   ├── components/
 │   │   ├── layout/              ← TopBar, Header, Footer, PageHero
@@ -205,9 +214,13 @@ MISHATRAVEL/
 │   │   │       ├── ShipForm.tsx       ← Form nave 6 tab (info, adatta per, attivita, servizi, cabine, gallery)
 │   │   │       ├── BlogPostForm.tsx   ← Form blog post con categorie
 │   │   │       └── CatalogForm.tsx    ← Form catalogo
+│   │   ├── agenzia/              ← Componenti area agenzia
+│   │   │   ├── AgenziaShell.tsx  ← Shell con sidebar collassabile + mobile sheet
+│   │   │   ├── AgenziaSidebar.tsx ← Sidebar 5 voci (Dashboard, Richieste, Offerte, Estratto, Profilo)
+│   │   │   └── AgenziaHeader.tsx ← Header con nome agenzia, notifiche, logout
 │   │   ├── auth/                 ← Componenti autenticazione
 │   │   │   └── AuthProvider.tsx  ← Client context provider + useAuth hook
-│   │   └── ui/                  ← 20 componenti shadcn/ui + autocomplete
+│   │   └── ui/                  ← 22 componenti shadcn/ui + autocomplete
 │   │
 │   ├── lib/
 │   │   ├── data.ts              ← Dati mock (1935 righe) - ancora usati dal sito pubblico
@@ -222,7 +235,16 @@ MISHATRAVEL/
 │   │       ├── auth.ts          ← Auth helpers (getCurrentUser, getUserRole, getAuthContext)
 │   │       └── queries/
 │   │           ├── destinations.ts ← getDestinations, getDestinationById, getDestinationOptions
-│   │           └── tours.ts       ← getTours, getTourById
+│   │           ├── tours.ts       ← getTours, getTourById
+│   │           ├── cruises.ts     ← getCruises, getPublishedCruises, getCruiseBySlug
+│   │           ├── ships.ts       ← getShips, getPublishedShips, getShipBySlug
+│   │           ├── blog.ts        ← getBlogPosts, getPublishedBlogPosts, getBlogPostBySlug
+│   │           ├── catalogs.ts    ← getCatalogs, getPublishedCatalogs
+│   │           ├── media.ts       ← getMediaItems, deleteMediaItem
+│   │           ├── localities.ts  ← getDistinctLocalities (autocomplete)
+│   │           ├── departures.ts  ← getAllDepartures (UnifiedDeparture)
+│   │           ├── agencies.ts    ← getActiveAgencies
+│   │           └── agency-dashboard.ts ← getAgencyByUserId, getQuoteRequestCountsByStatus, getRecentQuoteRequests, getRecentNotifications
 │   │
 │   └── middleware.ts             ← Middleware: session refresh + protezione route (ruoli + permessi)
 │
@@ -240,11 +262,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 1-5 completati, Sprint 2 al 95% (manca 2.3 Calendario admin). Sprint 6+7 prossimi.
-- **Ultima azione**: Sprint 5 Auth completato (login, registrazione multi-step, reset password, LoginCTA). Crociere admin CRUD completato. Tutto il sito pubblico collegato a Supabase.
-- **Prossimo step**: Task 2.3 (Calendario admin), Sprint 6 (Area Agenzie), Sprint 7 (Preventivi + Gestione Utenti)
+- **Sprint corrente**: Sprint 6 in corso (Area Riservata Agenzie). Sprint 1-5 completati, Sprint 2 al 95%.
+- **Ultima azione**: Task 6.1 (Layout Area Agenzia) e 6.2 (Dashboard Agenzia) completate. AgenziaShell, AgenziaSidebar, AgenziaHeader, dashboard con dati reali Supabase.
+- **Prossimo step**: Task 6.3 (Configuratore Pacchetto Tour), 6.4 (Crociera), 6.5 (Le Mie Richieste)
 - **Bloccanti**: Sprint 8 (Brevo API key), Sprint 9 (export WordPress), Sprint 10 (DNS dominio)
-- **Progresso totale**: ~72% (47/69 task completate)
+- **Progresso totale**: ~74% (49/69 task completate)
 
 ---
 

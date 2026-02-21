@@ -1,0 +1,126 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  FileText,
+  Gift,
+  FileSpreadsheet,
+  UserCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+const navItems = [
+  { label: "Dashboard", href: "/agenzia/dashboard", icon: LayoutDashboard },
+  { label: "Le Mie Richieste", href: "/agenzia/richieste", icon: FileText },
+  { label: "Offerte Ricevute", href: "/agenzia/offerte", icon: Gift },
+  { label: "Estratto Conto", href: "/agenzia/estratto-conto", icon: FileSpreadsheet },
+  { label: "Profilo", href: "/agenzia/profilo", icon: UserCircle },
+];
+
+interface AgenziaSidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export default function AgenziaSidebar({ collapsed, onToggle }: AgenziaSidebarProps) {
+  const pathname = usePathname();
+
+  return (
+    <aside
+      className={cn(
+        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-white transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      {/* Logo / Brand */}
+      <div className="flex h-16 items-center justify-between border-b border-border px-4">
+        {!collapsed && (
+          <Link href="/agenzia/dashboard" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
+              M
+            </div>
+            <span className="font-heading text-lg font-semibold text-secondary">
+              Area Agenzia
+            </span>
+          </Link>
+        )}
+        {collapsed && (
+          <Link href="/agenzia/dashboard" className="mx-auto">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
+              M
+            </div>
+          </Link>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-2 py-4">
+        <ul className="space-y-1">
+          {navItems.map((item) => {
+            const isActive =
+              item.href === "/agenzia/dashboard"
+                ? pathname === "/agenzia/dashboard"
+                : pathname.startsWith(item.href);
+            const Icon = item.icon;
+
+            const linkContent = (
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  collapsed && "justify-center px-2"
+                )}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                {!collapsed && <span>{item.label}</span>}
+              </Link>
+            );
+
+            if (collapsed) {
+              return (
+                <li key={item.href}>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                    <TooltipContent side="right" className="font-medium">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                </li>
+              );
+            }
+
+            return <li key={item.href}>{linkContent}</li>;
+          })}
+        </ul>
+      </nav>
+
+      {/* Collapse toggle */}
+      <div className="border-t border-border p-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggle}
+          className="w-full justify-center"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <>
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              <span className="text-xs">Comprimi</span>
+            </>
+          )}
+        </Button>
+      </div>
+    </aside>
+  );
+}

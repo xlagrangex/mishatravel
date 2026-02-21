@@ -8,9 +8,9 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ██████████████████░░ 72% |
-| **Sprint Corrente** | Sprint 1-5 completati, Sprint 2 al 95% (manca 2.3 Calendario admin). Sprint 6+7 prossimi. |
-| **Task Completate** | 47 / ~69 |
+| **Progresso Totale** | ██████████████████░░ 74% |
+| **Sprint Corrente** | Sprint 1-5 completati, Sprint 2 al 95% (manca 2.3 Calendario admin). Sprint 6 in corso. |
+| **Task Completate** | 49 / ~69 |
 | **Task In Corso** | 0 |
 | **Task Bloccate** | 0 |
 | **Ultima Attivita** | 2026-02-22 |
@@ -27,7 +27,7 @@
 | 3 | Sito Pubblico - Pagine Core | ✅ Completato | ██████████ 100% | Tutte le pagine pubbliche collegate a Supabase |
 | 4 | Calendario + Destinazioni + Blog | ✅ Completato | ██████████ 100% | Tutte le pagine collegate a Supabase |
 | 5 | Autenticazione Agenzie | ✅ Completato | ██████████ 100% | Auth helpers, middleware, AuthProvider, Login, Registrazione multi-step, Reset Password, LoginCTA completati. |
-| 6 | Area Riservata Agenzie | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 6 | Area Riservata Agenzie | 🟡 In corso | ██░░░░░░░░ 25% | Layout + Dashboard completati (6.1, 6.2) |
 | 7 | Flusso Preventivi + Gestione Utenti | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 8 | Email Transazionali (Brevo) | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
@@ -119,8 +119,8 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 6.1 | Layout Area Agenzia | ⚪ Da fare | - | |
-| 6.2 | Dashboard Agenzia | ⚪ Da fare | - | |
+| 6.1 | Layout Area Agenzia | ✅ Completata | 2026-02-22 | AgenziaShell, AgenziaSidebar (5 voci, collapsible, tooltip), AgenziaHeader (logout, notifiche, nome agenzia). Route group (agenzia)/. |
+| 6.2 | Dashboard Agenzia | ✅ Completata | 2026-02-22 | Server component con dati reali Supabase. Card contatori (richieste, offerte, confermate). Lista richieste recenti con status badge. Notifiche recenti. Query functions in agency-dashboard.ts. |
 | 6.3 | Configuratore Pacchetto Tour | ⚪ Da fare | - | |
 | 6.4 | Configuratore Pacchetto Crociera | ⚪ Da fare | - | |
 | 6.5 | Le Mie Richieste | ⚪ Da fare | - | |
@@ -381,6 +381,12 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | `src/components/admin/forms/CruiseForm.tsx` | Form | Form CRUD crociera multi-tab |
 | `src/app/(public)/registrazione/actions.ts` | Actions | createAgencyRecord server action |
 | `src/components/auth/LoginCTA.tsx` | Component | CTA condizionale login/configuratore |
+| `src/app/(agenzia)/layout.tsx` | Layout | Layout area agenzia (AgenziaShell, fetch nome agenzia + notifiche) |
+| `src/app/(agenzia)/agenzia/dashboard/page.tsx` | Page | Dashboard agenzia con dati Supabase reali |
+| `src/components/agenzia/AgenziaShell.tsx` | Component | Shell agenzia (sidebar desktop + mobile Sheet) |
+| `src/components/agenzia/AgenziaSidebar.tsx` | Component | Sidebar 5 voci, collapsible, tooltip |
+| `src/components/agenzia/AgenziaHeader.tsx` | Component | Header agenzia con nome, notifiche, logout |
+| `src/lib/supabase/queries/agency-dashboard.ts` | Query | getAgencyByUserId, getQuoteRequestCountsByStatus, getRecentQuoteRequests, getRecentNotifications, getUnreadNotificationCount |
 
 ---
 
