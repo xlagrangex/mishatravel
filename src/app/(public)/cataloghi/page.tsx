@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Download, BookOpen } from "lucide-react";
 import { getPublishedCatalogs } from "@/lib/supabase/queries/catalogs";
 
+export const revalidate = 3600; // ISR: revalidate every 1 hour
+
 export const metadata = {
   title: "Cataloghi | Misha Travel",
   description: "Sfoglia e scarica i cataloghi Misha Travel con tutti gli itinerari, date e prezzi.",

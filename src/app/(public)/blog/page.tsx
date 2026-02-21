@@ -2,6 +2,8 @@ import PageHero from "@/components/layout/PageHero";
 import BlogCard from "@/components/cards/BlogCard";
 import { getPublishedBlogPosts } from "@/lib/supabase/queries/blog";
 
+export const revalidate = 600; // ISR: revalidate every 10 minutes
+
 export default async function BlogPage() {
   const posts = await getPublishedBlogPosts();
 

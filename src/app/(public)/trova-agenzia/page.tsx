@@ -2,6 +2,8 @@ import PageHero from "@/components/layout/PageHero";
 import TrovaAgenziaClient from "@/components/TrovaAgenziaClient";
 import { getActiveAgencies } from "@/lib/supabase/queries/agencies";
 
+export const revalidate = 3600; // ISR: revalidate every 1 hour
+
 export const metadata = {
   title: "Trova un'Agenzia | Misha Travel",
   description: "Cerca l'agenzia Misha Travel più vicina a te. Trova il partner di viaggio ideale nella tua città.",

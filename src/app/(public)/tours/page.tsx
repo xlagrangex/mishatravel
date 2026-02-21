@@ -6,6 +6,8 @@ import {
 } from "@/lib/data";
 import ToursPageClient from "./ToursPageClient";
 
+export const revalidate = 300; // ISR: revalidate every 5 minutes
+
 export default async function ToursPage() {
   let toursData: Awaited<ReturnType<typeof getPublishedToursWithDepartures>> = [];
   let destinationsData: Awaited<ReturnType<typeof getPublishedDestinations>> = [];

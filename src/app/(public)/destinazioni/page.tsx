@@ -1,6 +1,8 @@
 import { getPublishedDestinations, getTourCountsPerDestination } from "@/lib/supabase/queries/destinations";
 import DestinazioniClient from "./DestinazioniClient";
 
+export const revalidate = 3600; // ISR: revalidate every 1 hour
+
 export default async function DestinazioniPage() {
   const [destinations, tourCounts] = await Promise.all([
     getPublishedDestinations(),

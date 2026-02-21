@@ -10,7 +10,7 @@
 |---------|--------|
 | **Progresso Totale** | ████████████████████ 95% |
 | **Sprint Corrente** | Sprint 0-7+11 completati. Solo Sprint 8 (Brevo), 9 (WP migration), 10 (SEO/Deploy) rimasti. |
-| **Task Completate** | 67 / ~72 |
+| **Task Completate** | 68 / ~72 |
 | **Task In Corso** | 0 |
 | **Task Bloccate** | 2 (Sprint 9 serve export WP, Sprint 10 serve DNS). Sprint 8 SBLOCCATO: API key Brevo ricevuta. |
 | **Ultima Attivita** | 2026-02-22 |
@@ -31,7 +31,7 @@
 | 7 | Flusso Preventivi + Gestione Utenti | ✅ Completato | ██████████ 100% | Preventivi workflow completo, gestione agenzie, utenti e ruoli, sidebar permessi, notifiche. |
 | 8 | Email Transazionali (Brevo) | 🟡 In corso | ░░░░░░░░░░ 0% | API key Brevo ricevuta |
 | 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
-| 10 | SEO, Performance, Deploy | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 10 | SEO, Performance, Deploy | 🟡 In corso | ██░░░░░░░░ 20% | Task 10.3 completata |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 
 ---
@@ -171,7 +171,7 @@
 |----|------|-------|--------------------|-------------|
 | 10.1 | SEO Tecnico | ⚪ Da fare | - | |
 | 10.2 | Redirect 301 da vecchi URL | ⚪ Da fare | - | |
-| 10.3 | Ottimizzazione Performance | ⚪ Da fare | - | |
+| 10.3 | Ottimizzazione Performance | ✅ Completata | 2026-02-22 | ISR per 8 pagine lista (revalidate 300-3600s), image formats avif+webp, 3 loading.tsx skeleton, prefetch gia attivo |
 | 10.4 | Testing End-to-End | ⚪ Da fare | - | |
 | 10.5 | Deploy Produzione | ⚪ Da fare | - | |
 
