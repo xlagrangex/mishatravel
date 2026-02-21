@@ -4,13 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
+export const metadata = {
+  title: "Contatti | Misha Travel",
+  description: "Contatta Misha Travel: telefono, email, indirizzo della sede di Genova.",
+};
+
 export default function ContattiPage() {
   return (
     <>
       <PageHero
         title="Contattaci"
-        subtitle="Siamo a tua disposizione per qualsiasi informazione"
-        backgroundImage="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=1600&h=600&fit=crop"
+        subtitle="Se hai qualche problema, siamo qui"
         breadcrumbs={[{ label: "Contatti", href: "/contatti" }]}
       />
 
@@ -23,7 +27,7 @@ export default function ContattiPage() {
                 I Nostri Recapiti
               </h2>
               <p className="text-gray-600 leading-relaxed mb-8">
-                Il nostro team e a disposizione per rispondere alle vostre domande, fornire
+                Il nostro team &egrave; a disposizione per rispondere alle vostre domande, fornire
                 informazioni sui nostri tour e crociere, e aiutarvi a pianificare il viaggio perfetto.
               </p>
 
@@ -34,9 +38,9 @@ export default function ContattiPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#1B2D4F] mb-1">Sede</h3>
-                    <p className="text-gray-600">Misha Travel Srl</p>
-                    <p className="text-gray-600">Via Example 123, 00100 Roma (RM)</p>
-                    <p className="text-gray-600">Italia</p>
+                    <p className="text-gray-600">Crucemundo Italia Misha Travel S.r.l.</p>
+                    <p className="text-gray-600">Piazza Grimaldi, 7 R</p>
+                    <p className="text-gray-600">16124 Genova (GE) &ndash; Italia</p>
                   </div>
                 </div>
 
@@ -46,8 +50,13 @@ export default function ContattiPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#1B2D4F] mb-1">Telefono</h3>
-                    <p className="text-gray-600">+39 06 1234567</p>
-                    <p className="text-gray-600">+39 333 1234567 (WhatsApp)</p>
+                    <p className="text-gray-600">
+                      <a href="tel:+390102461630" className="hover:text-[#C41E2F] transition-colors">+39 010 246 1630</a>
+                    </p>
+                    <p className="text-gray-600">
+                      <a href="tel:+390108994000" className="hover:text-[#C41E2F] transition-colors">+39 010 899 4000</a>
+                      <span className="text-gray-400 text-sm ml-1">(Booking)</span>
+                    </p>
                   </div>
                 </div>
 
@@ -57,8 +66,13 @@ export default function ContattiPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#1B2D4F] mb-1">Email</h3>
-                    <p className="text-gray-600">info@mishatravel.com</p>
-                    <p className="text-gray-600">prenotazioni@mishatravel.com</p>
+                    <p className="text-gray-600">
+                      <a href="mailto:info@mishatravel.com" className="hover:text-[#C41E2F] transition-colors">info@mishatravel.com</a>
+                    </p>
+                    <p className="text-gray-600">
+                      <a href="mailto:agenzia@mishatravel.com" className="hover:text-[#C41E2F] transition-colors">agenzia@mishatravel.com</a>
+                      <span className="text-gray-400 text-sm ml-1">(Preventivi)</span>
+                    </p>
                   </div>
                 </div>
 
@@ -68,9 +82,30 @@ export default function ContattiPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#1B2D4F] mb-1">Orari di Apertura</h3>
-                    <p className="text-gray-600">Lunedi - Venerdi: 9:00 - 18:00</p>
-                    <p className="text-gray-600">Sabato: 9:00 - 13:00</p>
-                    <p className="text-gray-600">Domenica: Chiuso</p>
+                    <p className="text-gray-600">Luned&igrave; &ndash; Venerd&igrave;: 9:00 &ndash; 18:00</p>
+                    <p className="text-gray-600">Sabato e Domenica: Chiuso</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reparti */}
+              <div className="mt-8 pt-8 border-t border-gray-100">
+                <h3 className="text-lg font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">
+                  Reparti
+                </h3>
+                <div className="space-y-3">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="font-semibold text-[#1B2D4F] text-sm">Reparto Booking</p>
+                    <p className="text-sm text-gray-600">
+                      Tel: <a href="tel:+390108994000" className="hover:text-[#C41E2F]">+39 010 899 4000</a> &bull;
+                      Email: <a href="mailto:agenzia@mishatravel.com" className="hover:text-[#C41E2F]">agenzia@mishatravel.com</a>
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="font-semibold text-[#1B2D4F] text-sm">Reparto Amministrazione</p>
+                    <p className="text-sm text-gray-600">
+                      Email: <a href="mailto:amministrazione@mishatravel.com" className="hover:text-[#C41E2F]">amministrazione@mishatravel.com</a>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -99,7 +134,7 @@ export default function ContattiPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Telefono</label>
-                    <Input type="tel" placeholder="+39 333 1234567" />
+                    <Input type="tel" placeholder="+39 010 ..." />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Oggetto *</label>
@@ -133,15 +168,18 @@ export default function ContattiPage() {
         </div>
       </section>
 
-      {/* Map placeholder */}
+      {/* Map */}
       <section className="h-[400px] bg-gray-200 relative">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 shadow-lg text-center">
-            <MapPin className="size-8 text-[#C41E2F] mx-auto mb-2" />
-            <p className="text-[#1B2D4F] font-semibold">Misha Travel Srl</p>
-            <p className="text-gray-500 text-sm">Mappa interattiva - Coming soon</p>
-          </div>
-        </div>
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2855.3!2d8.9323!3d44.4056!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12d343f0e8b0e3f1%3A0x3b0a5a7e8f8c8f1a!2sPiazza+Grimaldi%2C+16124+Genova+GE!5e0!3m2!1sit!2sit!4v1"
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Misha Travel - Sede di Genova"
+        />
       </section>
     </>
   );
