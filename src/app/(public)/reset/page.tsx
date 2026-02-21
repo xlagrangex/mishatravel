@@ -1,48 +1,380 @@
+"use client";
+
+import { Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, ArrowLeft } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 
-export default function ResetPasswordPage() {
+// --------------------------------------------------------------------------
+// Schemas
+// --------------------------------------------------------------------------
+
+const requestSchema = z.object({
+  email: z.string().email("Inserisci un indirizzo email valido"),
+});
+
+const updateSchema = z
+  .object({
+    password: z.string().min(8, "La password deve avere almeno 8 caratteri"),
+    conferma_password: z.string().min(1, "Conferma la password"),
+  })
+  .refine((data) => data.password === data.conferma_password, {
+    message: "Le password non coincidono",
+    path: ["conferma_password"],
+  });
+
+type RequestFormData = z.infer<typeof requestSchema>;
+type UpdateFormData = z.infer<typeof updateSchema>;
+
+// --------------------------------------------------------------------------
+// Request Reset View
+// --------------------------------------------------------------------------
+
+function RequestResetView() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RequestFormData>({
+    resolver: zodResolver(requestSchema),
+    defaultValues: { email: "" },
+  });
+
+  async function onSubmit(formData: RequestFormData) {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        formData.email,
+        {
+          redirectTo: window.location.origin + "/reset?mode=update",
+        }
+      );
+
+      if (resetError) {
+        setError(resetError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      setSuccess(true);
+    } catch {
+      setError("Si è verificato un errore imprevisto. Riprova più tardi.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="text-center">
+        <CheckCircle2 className="size-12 text-green-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
+          Email inviata!
+        </h2>
+        <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+          Se l&apos;indirizzo email è associato a un account, riceverai un link per
+          reimpostare la password. Controlla anche la cartella spam.
+        </p>
+        <Link href="/login">
+          <Button
+            variant="outline"
+            size="lg"
+          >
+            Torna al Login
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Link
+        href="/login"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#1B2D4F] mb-6"
+      >
+        <ArrowLeft className="size-4" />
+        Torna al Login
+      </Link>
+
+      <h1 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
+        Recupera Password
+      </h1>
+      <p className="text-gray-500 mb-8 text-sm">
+        Inserisci l&apos;indirizzo email associato al tuo account. Riceverai un
+        link per reimpostare la password.
+      </p>
+
+      {error && (
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <AlertCircle className="size-5 shrink-0 mt-0.5" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-1 block">
+            Email
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              type="email"
+              placeholder="email@esempio.com"
+              className="pl-10"
+              {...register("email")}
+              aria-invalid={!!errors.email}
+            />
+          </div>
+          {errors.email && (
+            <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white"
+          size="lg"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Invio in corso...
+            </>
+          ) : (
+            "Invia Link di Recupero"
+          )}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-gray-500">
+        Ricordi la password?{" "}
+        <Link
+          href="/login"
+          className="text-[#C41E2F] font-medium hover:underline"
+        >
+          Accedi
+        </Link>
+      </p>
+    </>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Update Password View
+// --------------------------------------------------------------------------
+
+function UpdatePasswordView() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UpdateFormData>({
+    resolver: zodResolver(updateSchema),
+    defaultValues: { password: "", conferma_password: "" },
+  });
+
+  async function onSubmit(formData: UpdateFormData) {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: formData.password,
+      });
+
+      if (updateError) {
+        if (updateError.message.includes("same password")) {
+          setError("La nuova password deve essere diversa da quella attuale.");
+        } else {
+          setError(updateError.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      setSuccess(true);
+    } catch {
+      setError("Si è verificato un errore imprevisto. Riprova più tardi.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="text-center">
+        <CheckCircle2 className="size-12 text-green-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
+          Password aggiornata!
+        </h2>
+        <p className="text-gray-600 text-sm mb-6">
+          La tua password è stata reimpostata con successo. Ora puoi accedere con
+          le nuove credenziali.
+        </p>
+        <Link href="/login">
+          <Button
+            className="bg-[#C41E2F] hover:bg-[#A31825] text-white"
+            size="lg"
+          >
+            Vai al Login
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <h1 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
+        Nuova Password
+      </h1>
+      <p className="text-gray-500 mb-8 text-sm">
+        Inserisci la tua nuova password. Deve avere almeno 8 caratteri.
+      </p>
+
+      {error && (
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <AlertCircle className="size-5 shrink-0 mt-0.5" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-1 block">
+            Nuova Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              type="password"
+              placeholder="Minimo 8 caratteri"
+              className="pl-10"
+              {...register("password")}
+              aria-invalid={!!errors.password}
+            />
+          </div>
+          {errors.password && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-1 block">
+            Conferma Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              type="password"
+              placeholder="Ripeti la password"
+              className="pl-10"
+              {...register("conferma_password")}
+              aria-invalid={!!errors.conferma_password}
+            />
+          </div>
+          {errors.conferma_password && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.conferma_password.message}
+            </p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white"
+          size="lg"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Aggiornamento in corso...
+            </>
+          ) : (
+            "Aggiorna Password"
+          )}
+        </Button>
+      </form>
+    </>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Inner component that uses useSearchParams
+// --------------------------------------------------------------------------
+
+function ResetPasswordInner() {
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode");
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+
+  useEffect(() => {
+    // When the user arrives from the password reset email, Supabase sets the
+    // session automatically via the URL hash. We detect update mode from the
+    // query parameter we set in redirectTo.
+    setIsUpdateMode(mode === "update");
+  }, [mode]);
+
   return (
     <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
-          <Link href="/login" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#1B2D4F] mb-6">
-            <ArrowLeft className="size-4" />
-            Torna al Login
-          </Link>
-
-          <h1 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
-            Recupera Password
-          </h1>
-          <p className="text-gray-500 mb-8 text-sm">
-            Inserisci l&apos;indirizzo email associato al tuo account. Riceverai un link per reimpostare
-            la password.
-          </p>
-
-          <form className="space-y-5">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-                <Input type="email" placeholder="email@esempio.com" className="pl-10" required />
-              </div>
-            </div>
-
-            <Button type="submit" className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
-              Invia Link di Recupero
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-gray-500">
-            Ricordi la password?{" "}
-            <Link href="/login" className="text-[#C41E2F] font-medium hover:underline">
-              Accedi
-            </Link>
-          </p>
+          {isUpdateMode ? <UpdatePasswordView /> : <RequestResetView />}
         </div>
       </div>
     </section>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Main Page Component (with Suspense boundary for useSearchParams)
+// --------------------------------------------------------------------------
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8 text-center">
+              <Loader2 className="size-8 animate-spin text-gray-400 mx-auto" />
+            </div>
+          </div>
+        </section>
+      }
+    >
+      <ResetPasswordInner />
+    </Suspense>
   );
 }

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import type { Destination } from "@/lib/types";
 import { saveDestination } from "@/app/admin/destinazioni/actions";
+import MapPicker from "@/components/admin/MapPicker";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -214,17 +215,17 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
                 />
               </div>
 
-              {/* Coordinate */}
+              {/* Coordinate (Map Picker) */}
               <div className="space-y-2">
-                <Label htmlFor="coordinate">Coordinate</Label>
-                <Input
-                  id="coordinate"
-                  placeholder="es. 41.9028, 12.4964"
-                  {...register("coordinate")}
+                <Label>Coordinate</Label>
+                <MapPicker
+                  value={watch("coordinate")}
+                  onChange={(coordinates) =>
+                    setValue("coordinate", coordinates, {
+                      shouldDirty: true,
+                    })
+                  }
                 />
-                <p className="text-xs text-muted-foreground">
-                  Latitudine e longitudine separate da virgola.
-                </p>
               </div>
             </CardContent>
           </Card>

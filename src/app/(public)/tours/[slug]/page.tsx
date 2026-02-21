@@ -8,24 +8,30 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Clock, MapPin, Check, X } from "lucide-react";
-import { tours, getTourBySlug, getRelatedTours } from "@/lib/data";
-
-export function generateStaticParams() {
-  return tours.map((t) => ({ slug: t.slug }));
-}
+import { getTourBySlug, getRelatedTours } from "@/lib/supabase/queries/tours";
 
 export default async function TourDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const tour = getTourBySlug(slug);
+  const tour = await getTourBySlug(slug);
   if (!tour) notFound();
 
-  const related = getRelatedTours(slug, 3);
+  const related = await getRelatedTours(slug, 3);
 
-  const formattedPrice = new Intl.NumberFormat("it-IT", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-  }).format(tour.priceFrom);
+  const priceNum = tour.a_partire_da ? Number(tour.a_partire_da) : null;
+  const formattedPrice = priceNum
+    ? new Intl.NumberFormat("it-IT", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 0,
+      }).format(priceNum)
+    : null;
+
+  const destinationName = tour.destination?.name ?? "";
+  const coverImage = tour.cover_image_url || "/images/placeholder.jpg";
+
+  // Separate included and excluded items
+  const includedItems = (tour.inclusions ?? []).filter((i: any) => i.is_included);
+  const excludedItems = (tour.inclusions ?? []).filter((i: any) => !i.is_included);
 
   return (
     <>
@@ -35,7 +41,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
           { label: "Tours", href: "/tours" },
           { label: tour.title, href: `/tours/${tour.slug}` },
         ]}
-        backgroundImage={tour.image}
+        backgroundImage={coverImage}
       />
 
       <section className="py-12 bg-white">
@@ -46,7 +52,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
               {/* Main Image */}
               <div className="relative aspect-video rounded-lg overflow-hidden mb-8">
                 <Image
-                  src={tour.image}
+                  src={coverImage}
                   alt={tour.title}
                   fill
                   className="object-cover"
@@ -75,21 +81,13 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
                   <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">
                     {tour.title}
                   </h2>
-                  <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-                    {tour.description}
-                  </p>
-                  {tour.highlights && tour.highlights.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold text-[#1B2D4F] mb-3">Highlights</h3>
-                      <ul className="space-y-2">
-                        {tour.highlights.map((h, i) => (
-                          <li key={i} className="flex items-start gap-2 text-gray-600">
-                            <Check className="size-4 text-[#C41E2F] mt-1 shrink-0" />
-                            {h}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  {tour.content ? (
+                    <div
+                      className="text-gray-600 leading-relaxed prose prose-gray max-w-none"
+                      dangerouslySetInnerHTML={{ __html: tour.content }}
+                    />
+                  ) : (
+                    <p className="text-gray-500">Descrizione non ancora disponibile.</p>
                   )}
                 </TabsContent>
 
@@ -97,23 +95,27 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
                   <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">
                     Itinerario giorno per giorno
                   </h2>
-                  <Accordion type="single" collapsible className="w-full">
-                    {tour.itinerary.map((day, i) => (
-                      <AccordionItem key={i} value={`day-${i}`}>
-                        <AccordionTrigger className="text-left">
-                          <span className="flex items-center gap-3">
-                            <Badge className="bg-[#C41E2F] text-white shrink-0">
-                              Giorno {day.day}
-                            </Badge>
-                            <span className="font-semibold">{day.title}</span>
-                          </span>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <p className="text-gray-600 pl-20">{day.description}</p>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
+                  {(tour.itinerary_days ?? []).length > 0 ? (
+                    <Accordion type="single" collapsible className="w-full">
+                      {tour.itinerary_days.map((day: any, i: number) => (
+                        <AccordionItem key={day.id || i} value={`day-${i}`}>
+                          <AccordionTrigger className="text-left">
+                            <span className="flex items-center gap-3">
+                              <Badge className="bg-[#C41E2F] text-white shrink-0">
+                                Giorno {day.numero_giorno}
+                              </Badge>
+                              <span className="font-semibold">{day.localita}</span>
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <p className="text-gray-600 pl-20">{day.descrizione}</p>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  ) : (
+                    <p className="text-gray-500">Itinerario non ancora disponibile.</p>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="incluso" className="pt-6">
@@ -122,27 +124,35 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
                       <h3 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
                         <Check className="size-5" /> La quota comprende
                       </h3>
-                      <ul className="space-y-2">
-                        {tour.included.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2 text-gray-600">
-                            <Check className="size-4 text-green-600 mt-1 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      {includedItems.length > 0 ? (
+                        <ul className="space-y-2">
+                          {includedItems.map((item: any, i: number) => (
+                            <li key={item.id || i} className="flex items-start gap-2 text-gray-600">
+                              <Check className="size-4 text-green-600 mt-1 shrink-0" />
+                              {item.titolo}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Nessun elemento specificato.</p>
+                      )}
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-red-700 mb-4 flex items-center gap-2">
                         <X className="size-5" /> La quota non comprende
                       </h3>
-                      <ul className="space-y-2">
-                        {tour.excluded.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2 text-gray-600">
-                            <X className="size-4 text-red-500 mt-1 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      {excludedItems.length > 0 ? (
+                        <ul className="space-y-2">
+                          {excludedItems.map((item: any, i: number) => (
+                            <li key={item.id || i} className="flex items-start gap-2 text-gray-600">
+                              <X className="size-4 text-red-500 mt-1 shrink-0" />
+                              {item.titolo}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Nessun elemento specificato.</p>
+                      )}
                     </div>
                   </div>
                 </TabsContent>
@@ -151,38 +161,42 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
                   <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">
                     Date di partenza e prezzi
                   </h2>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b-2 border-[#1B2D4F]">
-                          <th className="py-3 px-4 text-sm font-semibold text-[#1B2D4F]">Data</th>
-                          <th className="py-3 px-4 text-sm font-semibold text-[#1B2D4F]">Prezzo</th>
-                          <th className="py-3 px-4 text-sm font-semibold text-[#1B2D4F]">Disponibilita</th>
-                          <th className="py-3 px-4"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {tour.departures.map((dep, i) => (
-                          <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-4 text-sm">{dep.date}</td>
-                            <td className="py-3 px-4 text-sm font-bold text-[#C41E2F]">
-                              {new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(dep.price)}
-                            </td>
-                            <td className="py-3 px-4">
-                              <Badge variant={dep.availability === "sold out" ? "destructive" : "outline"} className="text-xs">
-                                {dep.availability}
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4">
-                              <Button size="sm" className="bg-[#C41E2F] hover:bg-[#A31825] text-white text-xs">
-                                Richiedi Preventivo
-                              </Button>
-                            </td>
+                  {(tour.departures ?? []).length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b-2 border-[#1B2D4F]">
+                            <th className="py-3 px-4 text-sm font-semibold text-[#1B2D4F]">Partenza da</th>
+                            <th className="py-3 px-4 text-sm font-semibold text-[#1B2D4F]">Data</th>
+                            <th className="py-3 px-4 text-sm font-semibold text-[#1B2D4F]">Prezzo</th>
+                            <th className="py-3 px-4"></th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {tour.departures.map((dep: any, i: number) => (
+                            <tr key={dep.id || i} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 px-4 text-sm">{dep.from_city}</td>
+                              <td className="py-3 px-4 text-sm">
+                                {new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long", year: "numeric" }).format(new Date(dep.data_partenza))}
+                              </td>
+                              <td className="py-3 px-4 text-sm font-bold text-[#C41E2F]">
+                                {dep.prezzo_3_stelle
+                                  ? new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(dep.prezzo_3_stelle)
+                                  : "Su richiesta"}
+                              </td>
+                              <td className="py-3 px-4">
+                                <Button size="sm" className="bg-[#C41E2F] hover:bg-[#A31825] text-white text-xs">
+                                  Richiedi Preventivo
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">Nessuna partenza programmata al momento.</p>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
@@ -191,17 +205,23 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
             <div className="lg:col-span-1">
               <div className="bg-gray-50 rounded-lg p-6 sticky top-24 border border-gray-200">
                 <p className="text-sm text-gray-500 mb-1">Prezzo a partire da</p>
-                <p className="text-3xl font-bold text-[#C41E2F] mb-4">{formattedPrice}</p>
+                <p className="text-3xl font-bold text-[#C41E2F] mb-4">
+                  {formattedPrice ?? (tour.prezzo_su_richiesta ? "Su richiesta" : "N/D")}
+                </p>
 
                 <div className="space-y-3 text-sm text-gray-600 mb-6">
-                  <div className="flex items-center gap-2">
-                    <Clock className="size-4 text-[#1B2D4F]" />
-                    <span>{tour.duration}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="size-4 text-[#1B2D4F]" />
-                    <span>{tour.destination}</span>
-                  </div>
+                  {tour.durata_notti && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="size-4 text-[#1B2D4F]" />
+                      <span>{tour.durata_notti}</span>
+                    </div>
+                  )}
+                  {destinationName && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="size-4 text-[#1B2D4F]" />
+                      <span>{destinationName}</span>
+                    </div>
+                  )}
                 </div>
 
                 <Button className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
@@ -226,7 +246,16 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {related.map((t) => (
-                <TourCard key={t.slug} slug={t.slug} title={t.title} destination={t.destination} duration={t.duration} priceFrom={t.priceFrom} image={t.image} type="tour" />
+                <TourCard
+                  key={t.slug}
+                  slug={t.slug}
+                  title={t.title}
+                  destination={t.destination_name ?? ""}
+                  duration={t.durata_notti ?? ""}
+                  priceFrom={t.a_partire_da ? Number(t.a_partire_da) : 0}
+                  image={t.cover_image_url || "/images/placeholder.jpg"}
+                  type="tour"
+                />
               ))}
             </div>
           </div>

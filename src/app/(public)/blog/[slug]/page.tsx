@@ -5,24 +5,27 @@ import PageHero from "@/components/layout/PageHero";
 import BlogCard from "@/components/cards/BlogCard";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, ArrowLeft } from "lucide-react";
-import { blogPosts, getBlogPostBySlug } from "@/lib/data";
-
-export function generateStaticParams() {
-  return blogPosts.map((p) => ({ slug: p.slug }));
-}
+import { getBlogPostBySlug, getPublishedBlogPosts } from "@/lib/supabase/queries/blog";
 
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getBlogPostBySlug(slug);
   if (!post) notFound();
 
+  const dateStr = post.published_at ?? post.created_at;
   const formattedDate = new Intl.DateTimeFormat("it-IT", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(new Date(post.date));
+  }).format(new Date(dateStr));
 
-  const relatedPosts = blogPosts.filter((p) => p.slug !== slug).slice(0, 3);
+  const categoryName = post.category?.name ?? "Generale";
+  const coverImage = post.cover_image_url ?? "/images/blog/placeholder.jpg";
+  const content = post.content ?? "";
+
+  // Fetch related posts (other published posts, excluding current)
+  const allPosts = await getPublishedBlogPosts();
+  const relatedPosts = allPosts.filter((p) => p.slug !== slug).slice(0, 3);
 
   return (
     <>
@@ -32,7 +35,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
           { label: "Blog", href: "/blog" },
           { label: post.title, href: `/blog/${post.slug}` },
         ]}
-        backgroundImage={post.image}
+        backgroundImage={coverImage}
       />
 
       <section className="py-12 bg-white">
@@ -44,7 +47,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
             </Link>
 
             <div className="flex items-center gap-3 mb-6">
-              <Badge className="bg-[#C41E2F] text-white">{post.category}</Badge>
+              <Badge className="bg-[#C41E2F] text-white">{categoryName}</Badge>
               <span className="flex items-center gap-1.5 text-sm text-gray-500">
                 <CalendarDays className="size-3.5" />
                 {formattedDate}
@@ -52,7 +55,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
             </div>
 
             <div className="relative aspect-video rounded-lg overflow-hidden mb-8">
-              <Image src={post.image} alt={post.title} fill className="object-cover" priority />
+              <Image src={coverImage} alt={post.title} fill className="object-cover" priority />
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-6">
@@ -60,7 +63,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
             </h1>
 
             <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed">
-              {post.content.split("\n\n").map((paragraph, i) => (
+              {content.split("\n\n").map((paragraph, i) => (
                 <p key={i} className="mb-4">{paragraph}</p>
               ))}
             </div>
@@ -80,10 +83,10 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
                   key={p.slug}
                   slug={p.slug}
                   title={p.title}
-                  category={p.category}
-                  image={p.image}
-                  date={p.date}
-                  excerpt={p.excerpt}
+                  category={p.category?.name ?? "Generale"}
+                  image={p.cover_image_url ?? "/images/blog/placeholder.jpg"}
+                  date={p.published_at ?? p.created_at}
+                  excerpt={p.excerpt ?? ""}
                 />
               ))}
             </div>

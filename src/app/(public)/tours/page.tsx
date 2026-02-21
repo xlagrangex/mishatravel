@@ -1,12 +1,23 @@
 import PageHero from "@/components/layout/PageHero";
 import TourCard from "@/components/cards/TourCard";
 import DestinationCard from "@/components/cards/DestinationCard";
-import { tours, getDestinationsByMacroArea, type MacroArea } from "@/lib/data";
+import { getPublishedTours } from "@/lib/supabase/queries/tours";
+import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
 
-const macroAreas: MacroArea[] = ["America Latina", "Asia/Russia", "Europa", "Africa"];
+export default async function ToursPage() {
+  const [tours, destinations] = await Promise.all([
+    getPublishedTours(),
+    getPublishedDestinations(),
+  ]);
 
-export default function ToursPage() {
-  const grouped = getDestinationsByMacroArea();
+  // Group destinations by macro_area
+  const macroAreas = ["America Latina", "Asia/Russia", "Europa", "Africa"] as const;
+  const grouped: Record<string, typeof destinations> = {};
+  for (const dest of destinations) {
+    const area = dest.macro_area ?? "Altro";
+    if (!grouped[area]) grouped[area] = [];
+    grouped[area].push(dest);
+  }
 
   return (
     <>
@@ -37,20 +48,28 @@ export default function ToursPage() {
           <p className="text-gray-600 mb-8">
             Esplora la nostra selezione di tour culturali e avventure nel mondo.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tours.map((tour) => (
-              <TourCard
-                key={tour.slug}
-                slug={tour.slug}
-                title={tour.title}
-                destination={tour.destination}
-                duration={tour.duration}
-                priceFrom={tour.priceFrom}
-                image={tour.image}
-                type="tour"
-              />
-            ))}
-          </div>
+          {tours.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tours.map((tour) => (
+                <TourCard
+                  key={tour.slug}
+                  slug={tour.slug}
+                  title={tour.title}
+                  destination={tour.destination_name ?? ""}
+                  duration={tour.durata_notti ?? ""}
+                  priceFrom={tour.a_partire_da ? Number(tour.a_partire_da) : 0}
+                  image={tour.cover_image_url || "/images/placeholder.jpg"}
+                  type="tour"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg p-8 text-center">
+              <p className="text-gray-500 text-lg">
+                Nessun tour disponibile al momento. Torna a trovarci presto!
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -60,25 +79,29 @@ export default function ToursPage() {
           <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-8">
             Le nostre destinazioni
           </h2>
-          {macroAreas.map((area) => (
-            <div key={area} className="mb-12">
-              <div className="bg-navy-gradient text-white px-6 py-4 rounded-t-lg mb-4">
-                <h3 className="text-xl font-semibold font-[family-name:var(--font-poppins)]">
-                  {area}
-                </h3>
+          {macroAreas.map((area) => {
+            const areaDests = grouped[area] ?? [];
+            if (areaDests.length === 0) return null;
+            return (
+              <div key={area} className="mb-12">
+                <div className="bg-navy-gradient text-white px-6 py-4 rounded-t-lg mb-4">
+                  <h3 className="text-xl font-semibold font-[family-name:var(--font-poppins)]">
+                    {area}
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {areaDests.map((dest) => (
+                    <DestinationCard
+                      key={dest.slug}
+                      slug={dest.slug}
+                      name={dest.name}
+                      image={dest.cover_image_url || "/images/placeholder.jpg"}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {(grouped[area] ?? []).map((dest) => (
-                  <DestinationCard
-                    key={dest.slug}
-                    slug={dest.slug}
-                    name={dest.name}
-                    image={dest.image}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </>

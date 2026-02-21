@@ -1,10 +1,111 @@
+"use client";
+
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock, Mail } from "lucide-react";
-import Image from "next/image";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Lock, Mail, Loader2, AlertCircle } from "lucide-react";
 
-export default function LoginPage() {
+const loginSchema = z.object({
+  email: z.string().email("Inserisci un indirizzo email valido"),
+  password: z.string().min(1, "La password è obbligatoria"),
+  remember: z.boolean().optional(),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      remember: false,
+    },
+  });
+
+  const rememberValue = watch("remember");
+
+  async function onSubmit(formData: LoginFormData) {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (authError) {
+        if (authError.message.includes("Email not confirmed")) {
+          setError("Account non verificato. Controlla la tua email per il link di conferma.");
+        } else if (authError.message.includes("Invalid login credentials")) {
+          setError("Credenziali non valide. Controlla email e password.");
+        } else {
+          setError(authError.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      if (!data.user) {
+        setError("Errore durante l'accesso. Riprova.");
+        setIsLoading(false);
+        return;
+      }
+
+      // If there is a redirect parameter, use it
+      if (redirectTo) {
+        router.push(redirectTo);
+        return;
+      }
+
+      // Otherwise, redirect based on role
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .single();
+
+      if (roleData) {
+        const role = roleData.role;
+        if (role === "agency") {
+          router.push("/agenzia/dashboard");
+        } else if (role === "admin" || role === "super_admin" || role === "operator") {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
+      } else {
+        // No role assigned yet
+        router.push("/");
+      }
+    } catch {
+      setError("Si è verificato un errore imprevisto. Riprova più tardi.");
+      setIsLoading(false);
+    }
+  }
+
   return (
     <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -41,41 +142,94 @@ export default function LoginPage() {
                 Inserisci le tue credenziali per accedere all&apos;area riservata.
               </p>
 
-              <form className="space-y-5">
+              {/* Error message */}
+              {error && (
+                <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  <AlertCircle className="size-5 shrink-0 mt-0.5" />
+                  <p>{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Email</label>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">
+                    Email
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-                    <Input type="email" placeholder="email@esempio.com" className="pl-10" required />
+                    <Input
+                      type="email"
+                      placeholder="email@esempio.com"
+                      className="pl-10"
+                      {...register("email")}
+                      aria-invalid={!!errors.email}
+                    />
                   </div>
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Password</label>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">
+                    Password
+                  </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-                    <Input type="password" placeholder="La tua password" className="pl-10" required />
+                    <Input
+                      type="password"
+                      placeholder="La tua password"
+                      className="pl-10"
+                      {...register("password")}
+                      aria-invalid={!!errors.password}
+                    />
                   </div>
+                  {errors.password && (
+                    <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm text-gray-600">
-                    <input type="checkbox" />
+                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <Checkbox
+                      checked={rememberValue}
+                      onCheckedChange={(checked) =>
+                        setValue("remember", checked === true)
+                      }
+                    />
                     Ricordami
                   </label>
-                  <Link href="/reset" className="text-sm text-[#C41E2F] hover:underline">
+                  <Link
+                    href="/reset"
+                    className="text-sm text-[#C41E2F] hover:underline"
+                  >
                     Password dimenticata?
                   </Link>
                 </div>
 
-                <Button type="submit" className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
-                  Accedi
+                <Button
+                  type="submit"
+                  className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white"
+                  size="lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Accesso in corso...
+                    </>
+                  ) : (
+                    "Accedi"
+                  )}
                 </Button>
               </form>
 
               <div className="mt-6 text-center text-sm text-gray-500">
                 Non hai ancora un account?{" "}
-                <Link href="/registrazione" className="text-[#C41E2F] font-medium hover:underline">
+                <Link
+                  href="/registrazione"
+                  className="text-[#C41E2F] font-medium hover:underline"
+                >
                   Registrati
                 </Link>
               </div>
@@ -84,5 +238,24 @@ export default function LoginPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+// Wrapper with Suspense boundary for useSearchParams
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-5xl mx-auto text-center">
+              <Loader2 className="size-8 animate-spin text-gray-400 mx-auto" />
+            </div>
+          </div>
+        </section>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

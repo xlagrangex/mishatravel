@@ -1,8 +1,10 @@
 import PageHero from "@/components/layout/PageHero";
 import ShipCard from "@/components/cards/ShipCard";
-import { ships } from "@/lib/data";
+import { getPublishedShips } from "@/lib/supabase/queries/ships";
 
-export default function FlottaPage() {
+export default async function FlottaPage() {
+  const ships = await getPublishedShips();
+
   return (
     <>
       <PageHero
@@ -24,17 +26,25 @@ export default function FlottaPage() {
 
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ships.map((ship) => (
-              <ShipCard
-                key={ship.slug}
-                slug={ship.slug}
-                name={ship.name}
-                image={ship.image}
-                capacity={`${ship.capacity} passeggeri`}
-              />
-            ))}
-          </div>
+          {ships.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {ships.map((ship) => (
+                <ShipCard
+                  key={ship.slug}
+                  slug={ship.slug}
+                  name={ship.name}
+                  image={ship.cover_image_url || "/images/placeholder.jpg"}
+                  capacity={ship.name}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg p-8 text-center">
+              <p className="text-gray-500 text-lg">
+                Nessuna nave disponibile al momento. Torna a trovarci presto!
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </>

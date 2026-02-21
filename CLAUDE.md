@@ -198,24 +198,33 @@ MISHATRAVEL/
 │   │   │   ├── ImageUpload.tsx  ← Upload immagini drag&drop con preview
 │   │   │   ├── FileUpload.tsx   ← Upload file (PDF) con progress
 │   │   │   ├── RichTextEditor.tsx ← Editor Tiptap con toolbar
+│   │   │   ├── MapPicker.tsx     ← Leaflet map picker per coordinate
 │   │   │   └── forms/
-│   │   │       ├── DestinationForm.tsx ← Form destinazione con Zod
-│   │   │       └── TourForm.tsx       ← Form tour 8 tab con useFieldArray
-│   │   └── ui/                  ← 19 componenti shadcn/ui
+│   │   │       ├── DestinationForm.tsx ← Form destinazione con MapPicker
+│   │   │       ├── TourForm.tsx       ← Form tour 8 tab con autocomplete localita
+│   │   │       ├── ShipForm.tsx       ← Form nave 6 tab (info, adatta per, attivita, servizi, cabine, gallery)
+│   │   │       ├── BlogPostForm.tsx   ← Form blog post con categorie
+│   │   │       └── CatalogForm.tsx    ← Form catalogo
+│   │   ├── auth/                 ← Componenti autenticazione
+│   │   │   └── AuthProvider.tsx  ← Client context provider + useAuth hook
+│   │   └── ui/                  ← 20 componenti shadcn/ui + autocomplete
 │   │
 │   ├── lib/
 │   │   ├── data.ts              ← Dati mock (1935 righe) - ancora usati dal sito pubblico
 │   │   ├── types.ts             ← 40 interfacce TypeScript + 3 tipi compositi
 │   │   ├── utils.ts             ← Utility (cn helper)
+│   │   ├── auth/
+│   │   │   └── role-config.ts   ← SECTION_MAP, ADMIN_ROLES, PROTECTED_PREFIXES
 │   │   └── supabase/
 │   │       ├── client.ts        ← Supabase client per browser
 │   │       ├── server.ts        ← Supabase client per server (SSR)
 │   │       ├── admin.ts         ← Supabase client admin (service_role, bypassa RLS)
+│   │       ├── auth.ts          ← Auth helpers (getCurrentUser, getUserRole, getAuthContext)
 │   │       └── queries/
 │   │           ├── destinations.ts ← getDestinations, getDestinationById, getDestinationOptions
 │   │           └── tours.ts       ← getTours, getTourById
 │   │
-│   └── middleware.ts             ← Middleware per refresh sessione Supabase
+│   └── middleware.ts             ← Middleware: session refresh + protezione route (ruoli + permessi)
 │
 ├── public/
 │   └── images/                  ← Immagini locali (logo, hero, tour, crociere, navi)
@@ -231,11 +240,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 1 (90%) + Sprint 4 redesign completato
-- **Ultima azione**: Fix header routing, redesign Destinazioni (mosaico + sticky nav), Calendario Partenze (griglia mensile + lista)
-- **Prossimo step**: Task 1.13 (Map Picker Leaflet) oppure Sprint 2 (CRUD Crociere + Flotta)
-- **Bloccanti**: Nessuno
-- **Progresso totale**: ~40% (19/69 task completate)
+- **Sprint corrente**: Sprint 1-5 completati, Sprint 2 al 95% (manca 2.3 Calendario admin). Sprint 6+7 prossimi.
+- **Ultima azione**: Sprint 5 Auth completato (login, registrazione multi-step, reset password, LoginCTA). Crociere admin CRUD completato. Tutto il sito pubblico collegato a Supabase.
+- **Prossimo step**: Task 2.3 (Calendario admin), Sprint 6 (Area Agenzie), Sprint 7 (Preventivi + Gestione Utenti)
+- **Bloccanti**: Sprint 8 (Brevo API key), Sprint 9 (export WordPress), Sprint 10 (DNS dominio)
+- **Progresso totale**: ~72% (47/69 task completate)
 
 ---
 
@@ -296,5 +305,5 @@ MISHATRAVEL/
 
 ---
 
-*Ultimo aggiornamento: 2026-02-21*
+*Ultimo aggiornamento: 2026-02-22*
 *Versione piano: v1.5*

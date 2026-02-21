@@ -8,12 +8,12 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ████████░░░░░░░░░░░░ 38% |
-| **Sprint Corrente** | Sprint 1 (completamento task 1.13, 1.14) → Sprint 2 |
-| **Task Completate** | 17 / ~69 |
+| **Progresso Totale** | ██████████████████░░ 72% |
+| **Sprint Corrente** | Sprint 1-5 completati, Sprint 2 al 95% (manca 2.3 Calendario admin). Sprint 6+7 prossimi. |
+| **Task Completate** | 47 / ~69 |
 | **Task In Corso** | 0 |
 | **Task Bloccate** | 0 |
-| **Ultima Attivita** | 2026-02-21 |
+| **Ultima Attivita** | 2026-02-22 |
 
 ---
 
@@ -22,11 +22,11 @@
 | Sprint | Titolo | Stato | Progresso | Note |
 |--------|--------|-------|-----------|------|
 | 0 | Setup e Configurazione | ✅ Completato | ██████████ 100% | Tutte le credenziali fornite, progetto configurato, repo su GitHub |
-| 1 | Database + Admin Base | 🟡 Quasi completato | █████████░ 90% | Schema DB eseguito, admin collegato a Supabase. Mancano: Map Picker (1.13), autocomplete localita (1.14). |
-| 2 | Admin Crociere + Flotta | 🟡 Parziale | ██░░░░░░░░ 20% | Pagine placeholder create per tutte le sezioni |
-| 3 | Sito Pubblico - Pagine Core | 🟡 Parziale | ██████████ 95% | 27 pagine gia costruite con dati mock, manca solo collegamento DB |
-| 4 | Calendario + Destinazioni + Blog | 🟡 Parziale | ████████░░ 80% | Pagine esistenti, manca collegamento DB |
-| 5 | Autenticazione Agenzie | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 1 | Database + Admin Base | ✅ Completato | ██████████ 100% | Schema DB, admin collegato a Supabase, Map Picker, autocomplete localita. |
+| 2 | Admin Crociere + Flotta | 🟡 Quasi completato | █████████░ 95% | Flotta, Blog, Cataloghi, Media, Crociere completati. Manca solo 2.3 Calendario admin. |
+| 3 | Sito Pubblico - Pagine Core | ✅ Completato | ██████████ 100% | Tutte le pagine pubbliche collegate a Supabase |
+| 4 | Calendario + Destinazioni + Blog | ✅ Completato | ██████████ 100% | Tutte le pagine collegate a Supabase |
+| 5 | Autenticazione Agenzie | ✅ Completato | ██████████ 100% | Auth helpers, middleware, AuthProvider, Login, Registrazione multi-step, Reset Password, LoginCTA completati. |
 | 6 | Area Riservata Agenzie | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 7 | Flusso Preventivi + Gestione Utenti | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 8 | Email Transazionali (Brevo) | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
@@ -65,19 +65,19 @@
 | 1.10 | Admin: Gestione Tour | ✅ Completata | 2026-02-21 | Form complesso a 8 tab: Info Base, Programma, Alberghi, Partenze, Supplementi&Extra, Incluso/Escluso, Termini&Penali, Gallery&PDF. useFieldArray per liste dinamiche. ~700 righe. |
 | 1.11 | Collegamento Admin CRUD a Supabase | ✅ Completata | 2026-02-21 | Admin client (service_role), query functions, server actions, DestinationForm e TourForm collegati a Supabase. Pattern delete-and-reinsert per sub-tabelle tour. |
 | 1.12 | Preview links nelle tabelle admin | ✅ Completata | 2026-02-21 | Colonna "Anteprima" con slug cliccabile + icona ExternalLink in DestinazioniTable e AdminToursTable. |
-| 1.13 | Map Picker per input coordinate (Leaflet) | ⚪ Da fare | - | Componente MapPicker con Leaflet+OpenStreetMap nel form destinazione. Click su mappa, ricerca localita, pin draggabile. |
-| 1.14 | Auto-suggerimento localita itinerario tour | ⚪ Da fare | - | Autocomplete nel campo localita del TourForm (tab Programma) con localita gia usate in altri tour. |
+| 1.13 | Map Picker per input coordinate (Leaflet) | ✅ Completata | 2026-02-21 | MapPicker.tsx con Leaflet+OpenStreetMap, geocoding Nominatim, pin draggabile. Integrato in DestinationForm. |
+| 1.14 | Auto-suggerimento localita itinerario tour | ✅ Completata | 2026-02-21 | Autocomplete component, queries/localities.ts, integrato in TourForm tab Programma. |
 
 ### SPRINT 2 - Admin Crociere + Flotta
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 2.1 | Admin: Gestione Flotta/Navi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata, CRUD da implementare |
-| 2.2 | Admin: Gestione Crociere Fluviali | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
-| 2.3 | Admin: Vista Calendario Partenze (sola lettura) | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata. Semplificata: sola lettura, legge da tour_departures/cruise_departures. |
-| 2.4 | Admin: Gestione Blog | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
-| 2.5 | Admin: Gestione Cataloghi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
-| 2.6 | Admin: Libreria Media | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
+| 2.1 | Admin: Gestione Flotta/Navi | ✅ Completata | 2026-02-21 | CRUD completo: queries/ships.ts, ShipForm (6 tab), FlottaTable, actions. Collegato Supabase. |
+| 2.2 | Admin: Gestione Crociere Fluviali | ✅ Completata | 2026-02-22 | CRUD completo: queries/cruises.ts, CruiseForm (multi-tab), CrociereTable, actions. Select nave con deck/cabine condizionali. |
+| 2.3 | Admin: Vista Calendario Partenze (sola lettura) | ⚪ Da fare | - | Dipende da 2.2. Sola lettura, legge da tour_departures/cruise_departures. |
+| 2.4 | Admin: Gestione Blog | ✅ Completata | 2026-02-21 | CRUD completo: queries/blog.ts, BlogPostForm, BlogTable, actions. Categorie incluse. |
+| 2.5 | Admin: Gestione Cataloghi | ✅ Completata | 2026-02-21 | CRUD completo: queries/catalogs.ts, CatalogForm, CataloghiTable, actions. |
+| 2.6 | Admin: Libreria Media | ✅ Completata | 2026-02-21 | MediaGrid con griglia responsive, ricerca, delete. Upload non ancora wired (manca Storage). |
 
 ### SPRINT 3 - Sito Pubblico - Pagine Core
 
@@ -85,35 +85,35 @@
 |----|------|-------|--------------------|-------------|
 | 3.1 | Header e Navigazione pubblica | ✅ Gia presente | 2026-02-21 | Mega menu, responsive, TopBar. Consolidato da frontend. |
 | 3.2 | Footer | ✅ Gia presente | 2026-02-21 | Footer completo con contatti, link, social. |
-| 3.3 | Homepage | ✅ UI pronta | 2026-02-21 | Hero slider, destinazioni, tour, crociere. Dati mock. |
-| 3.4 | Pagina Lista Tour | ✅ UI pronta | 2026-02-21 | Griglia card, filtri. Dati mock. |
-| 3.5 | Pagina Dettaglio Tour | ✅ UI pronta | 2026-02-21 | Gallery, itinerario, partenze, incluso/escluso. Dati mock. |
-| 3.6 | Pagina Lista Crociere | ✅ UI pronta | 2026-02-21 | Griglia card. Dati mock. |
-| 3.7 | Pagina Dettaglio Crociera | ✅ UI pronta | 2026-02-21 | Completa. Dati mock. |
-| 3.8 | Pagina Lista Flotta | ✅ UI pronta | 2026-02-21 | Griglia navi. Dati mock. |
-| 3.9 | Pagina Dettaglio Nave | ✅ UI pronta | 2026-02-21 | Completa. Dati mock. |
+| 3.3 | Homepage | ✅ Completata | 2026-02-22 | Hero slider, destinazioni, tour, crociere. Collegata Supabase via Promise.all. |
+| 3.4 | Pagina Lista Tour | ✅ Completata | 2026-02-22 | Griglia card. Collegata Supabase (getPublishedTours). |
+| 3.5 | Pagina Dettaglio Tour | ✅ Completata | 2026-02-22 | Gallery, itinerario, partenze. Collegata Supabase (getTourBySlug). |
+| 3.6 | Pagina Lista Crociere | ✅ Completata | 2026-02-22 | Griglia card. Collegata Supabase (getPublishedCruises). |
+| 3.7 | Pagina Dettaglio Crociera | ✅ Completata | 2026-02-22 | Completa. Collegata Supabase (getCruiseBySlug). |
+| 3.8 | Pagina Lista Flotta | ✅ Completata | 2026-02-22 | Griglia navi. Collegata Supabase (getPublishedShips). |
+| 3.9 | Pagina Dettaglio Nave | ✅ Completata | 2026-02-22 | Completa. Collegata Supabase (getShipBySlug). |
 
 ### SPRINT 4 - Calendario + Destinazioni + Blog + Cataloghi
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 4.1 | Calendario Partenze Pubblico | ✅ Redesign completato | 2026-02-21 | Vista griglia calendario (default) + vista lista. Click su giorno, legenda tour/crociere, date-fns locale IT. |
-| 4.2 | Pagina Destinazioni | ✅ Redesign completato | 2026-02-21 | Hero scuro #1B2D4F, nav sticky macro area, layout mosaico, conteggio tour, smooth scroll, CTA bottom. |
-| 4.3 | Pagina Singola Destinazione | ✅ UI pronta | 2026-02-21 | Dati mock. |
-| 4.4 | Blog Pubblico | ✅ UI pronta | 2026-02-21 | Lista + singolo articolo. Dati mock. |
-| 4.5 | Cataloghi | ✅ UI pronta | 2026-02-21 | Dati mock. |
-| 4.6 | Pagine Statiche | ✅ UI pronta | 2026-02-21 | Contatti, diventa-partner, trova-agenzia, legali. |
+| 4.1 | Calendario Partenze Pubblico | ✅ Completata | 2026-02-22 | Collegata Supabase. queries/departures.ts (UnifiedDeparture), CalendarioPartenzeClient.tsx. Tour + crociere unificate. |
+| 4.2 | Pagina Destinazioni | ✅ Completata | 2026-02-22 | Collegata Supabase. DestinazioniClient.tsx, getTourCountsPerDestination. Layout mosaico preservato. |
+| 4.3 | Pagina Singola Destinazione | ✅ Completata | 2026-02-22 | Collegata Supabase. getDestinationWithTours (tours + cruises). Sezione crociere aggiunta. |
+| 4.4 | Blog Pubblico | ✅ Completata | 2026-02-22 | Collegata Supabase. getPublishedBlogPosts, getBlogPostBySlug. Lista + dettaglio + correlati. |
+| 4.5 | Cataloghi | ✅ Completata | 2026-02-22 | Collegata Supabase. getPublishedCatalogs. Download PDF preservato. |
+| 4.6 | Trova Agenzia + Pagine Statiche | ✅ Completata | 2026-02-22 | Collegata Supabase. getActiveAgencies, AgencyMap.tsx (Leaflet), TrovaAgenziaClient.tsx. Contatti e diventa-partner statiche. |
 
 ### SPRINT 5 - Autenticazione Agenzie
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 5.1 | Setup Supabase Auth + Ruoli | ⚪ Da fare | - | |
-| 5.2 | Pagina Registrazione Agenzia | ⚪ Da fare | - | |
-| 5.3 | Pagina Login | ⚪ Da fare | - | |
-| 5.4 | Recupero Password | ⚪ Da fare | - | |
-| 5.5 | Middleware protezione route | ⚪ Da fare | - | |
-| 5.6 | Logica "Accedi per prenotare" | ⚪ Da fare | - | |
+| 5.1 | Setup Supabase Auth + Ruoli | ✅ Completata | 2026-02-22 | Auth helpers (getCurrentUser, getUserRole, getUserPermissions, getAuthContext), role-config.ts, AuthProvider client context |
+| 5.2 | Pagina Registrazione Agenzia | ✅ Completata | 2026-02-22 | Form multi-step (3 step): dati aziendali, contatto, password. Zod validation per step. createAgencyRecord server action. |
+| 5.3 | Pagina Login | ✅ Completata | 2026-02-22 | Form email+password con Supabase Auth signInWithPassword. Redirect post-login, gestione errori. Suspense per useSearchParams. |
+| 5.4 | Recupero Password | ✅ Completata | 2026-02-22 | Due fasi: richiesta email (resetPasswordForEmail) + form nuova password (updateUser). |
+| 5.5 | Middleware protezione route | ✅ Completata | 2026-02-22 | Session refresh + protezione /admin + /agenzia. Operator permission check. Redirect a /login. |
+| 5.6 | Logica "Accedi per prenotare" | ✅ Completata | 2026-02-22 | LoginCTA component. Mostra CTA diversa in base a stato auth (non loggato → login, agenzia → configuratore). |
 
 ### SPRINT 6 - Area Riservata Agenzie
 
@@ -346,6 +346,41 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | `src/app/admin/tours/actions.ts` | Actions | Server actions saveTour, deleteTourAction |
 | `src/app/admin/destinazioni/DestinazioniTable.tsx` | Component | Tabella destinazioni client con ricerca, delete, preview links |
 | `src/app/admin/tours/AdminToursTable.tsx` | Component | Tabella tour client con ricerca, delete, preview links |
+| `src/lib/supabase/auth.ts` | Lib | Auth helpers: getCurrentUser, getUserRole, getUserPermissions, getAuthContext |
+| `src/lib/auth/role-config.ts` | Config | SECTION_MAP, ADMIN_ROLES, PROTECTED_PREFIXES, PUBLIC_ROUTES |
+| `src/components/auth/AuthProvider.tsx` | Component | Client-side AuthContext provider + useAuth hook |
+| `src/lib/supabase/queries/ships.ts` | Query | getShips, getShipById, getShipOptions, getPublishedShips, getShipBySlug |
+| `src/lib/supabase/queries/blog.ts` | Query | getBlogPosts, getBlogPostById, getBlogCategories, getPublishedBlogPosts, getBlogPostBySlug |
+| `src/lib/supabase/queries/catalogs.ts` | Query | getCatalogs, getCatalogById, getPublishedCatalogs |
+| `src/lib/supabase/queries/media.ts` | Query | getMediaItems, deleteMediaItem |
+| `src/lib/supabase/queries/localities.ts` | Query | getDistinctLocalities (autocomplete itinerario) |
+| `src/lib/supabase/queries/cruises.ts` | Query | getCruises, getPublishedCruises, getCruiseBySlug, etc. |
+| `src/lib/supabase/queries/departures.ts` | Query | getAllDepartures (UnifiedDeparture, tour + crociere) |
+| `src/lib/supabase/queries/agencies.ts` | Query | getActiveAgencies |
+| `src/app/admin/flotta/actions.ts` | Actions | saveShip, deleteShipAction con syncSubTable |
+| `src/app/admin/blog/actions.ts` | Actions | saveBlogPost, deleteBlogPost, saveBlogCategory |
+| `src/app/admin/cataloghi/actions.ts` | Actions | saveCatalog, deleteCatalog |
+| `src/app/admin/media/actions.ts` | Actions | deleteMediaAction |
+| `src/components/admin/forms/ShipForm.tsx` | Form | Form CRUD nave a 6 tab |
+| `src/components/admin/forms/BlogPostForm.tsx` | Form | Form CRUD blog post |
+| `src/components/admin/forms/CatalogForm.tsx` | Form | Form CRUD catalogo |
+| `src/app/admin/flotta/FlottaTable.tsx` | Component | Tabella flotta admin |
+| `src/app/admin/blog/BlogTable.tsx` | Component | Tabella blog admin |
+| `src/app/admin/cataloghi/CataloghiTable.tsx` | Component | Tabella cataloghi admin |
+| `src/app/admin/media/MediaGrid.tsx` | Component | Griglia media admin |
+| `src/components/admin/MapPicker.tsx` | Component | Map Picker Leaflet + geocoding Nominatim |
+| `src/components/ui/autocomplete.tsx` | Component | Autocomplete dropdown riutilizzabile |
+| `src/components/AgencyMap.tsx` | Component | Mappa Leaflet agenzie con marker |
+| `src/components/TrovaAgenziaClient.tsx` | Component | Client component trova-agenzia con ricerca |
+| `src/app/(public)/calendario-partenze/CalendarioPartenzeClient.tsx` | Component | Calendario partenze interattivo client |
+| `src/app/(public)/destinazioni/DestinazioniClient.tsx` | Component | Destinazioni lista interattiva client |
+| `src/app/admin/crociere/actions.ts` | Actions | saveCruise, deleteCruiseAction con syncSubTable |
+| `src/app/admin/crociere/CrociereTable.tsx` | Component | Tabella crociere admin |
+| `src/app/admin/crociere/nuovo/page.tsx` | Page | Nuova crociera |
+| `src/app/admin/crociere/[id]/modifica/page.tsx` | Page | Modifica crociera |
+| `src/components/admin/forms/CruiseForm.tsx` | Form | Form CRUD crociera multi-tab |
+| `src/app/(public)/registrazione/actions.ts` | Actions | createAgencyRecord server action |
+| `src/components/auth/LoginCTA.tsx` | Component | CTA condizionale login/configuratore |
 
 ---
 
@@ -361,5 +396,5 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 
 ---
 
-*Ultimo aggiornamento: 2026-02-21*
-*Versione piano: v1.5*
+*Ultimo aggiornamento: 2026-02-22*
+*Versione piano: v1.6*

@@ -20,6 +20,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Autocomplete } from "@/components/ui/autocomplete";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -147,13 +148,14 @@ function slugify(text: string): string {
 interface TourFormProps {
   initialData?: TourWithRelations;
   destinations?: { id: string; name: string; slug: string; coordinate: string | null }[];
+  localities?: string[];
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export default function TourForm({ initialData, destinations = [] }: TourFormProps) {
+export default function TourForm({ initialData, destinations = [], localities = [] }: TourFormProps) {
   // ---------------------------------------------------------------------------
   // Form setup
   // ---------------------------------------------------------------------------
@@ -620,10 +622,16 @@ export default function TourForm({ initialData, destinations = [] }: TourFormPro
                     </div>
                     <div className="space-y-2">
                       <Label>Localit\u00E0</Label>
-                      <Input
-                        placeholder="es. Atene"
-                        {...register(
-                          `itinerary_days.${index}.localita`,
+                      <Controller
+                        control={control}
+                        name={`itinerary_days.${index}.localita`}
+                        render={({ field }) => (
+                          <Autocomplete
+                            value={field.value}
+                            onChange={field.onChange}
+                            suggestions={localities}
+                            placeholder="es. Atene"
+                          />
                         )}
                       />
                     </div>

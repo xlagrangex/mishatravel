@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import TourForm from "@/components/admin/forms/TourForm";
 import { getTourById } from "@/lib/supabase/queries/tours";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
+import { getDistinctLocalities } from "@/lib/supabase/queries/localities";
 
 interface ModificaTourPageProps {
   params: Promise<{ id: string }>;
@@ -10,9 +11,10 @@ interface ModificaTourPageProps {
 export default async function ModificaTourPage({ params }: ModificaTourPageProps) {
   const { id } = await params;
 
-  const [tour, destinations] = await Promise.all([
+  const [tour, destinations, localities] = await Promise.all([
     getTourById(id),
     getDestinationOptions(),
+    getDistinctLocalities(),
   ]);
 
   if (!tour) notFound();
@@ -28,7 +30,7 @@ export default async function ModificaTourPage({ params }: ModificaTourPageProps
         </p>
       </div>
 
-      <TourForm initialData={tour} destinations={destinations} />
+      <TourForm initialData={tour} destinations={destinations} localities={localities} />
     </div>
   );
 }

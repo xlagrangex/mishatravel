@@ -6,13 +6,25 @@ import TourCard from "@/components/cards/TourCard";
 import CruiseCard from "@/components/cards/CruiseCard";
 import BlogCard from "@/components/cards/BlogCard";
 import HeroSlider from "@/components/home/HeroSlider";
-import { destinations, tours, cruises, blogPosts } from "@/lib/data";
+import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
+import { getPublishedTours } from "@/lib/supabase/queries/tours";
+import { getPublishedCruises } from "@/lib/supabase/queries/cruises";
+import { getBlogPosts } from "@/lib/supabase/queries/blog";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [destinations, tours, cruises, blogPosts] = await Promise.all([
+    getPublishedDestinations(),
+    getPublishedTours(),
+    getPublishedCruises(),
+    getBlogPosts(),
+  ]);
+
   const featuredDestinations = destinations.slice(0, 8);
   const featuredTours = tours.slice(0, 6);
   const featuredCruises = cruises.slice(0, 6);
-  const latestPosts = blogPosts.slice(0, 3);
+  const latestPosts = blogPosts
+    .filter((p) => p.status === "published")
+    .slice(0, 3);
 
   return (
     <>
@@ -26,13 +38,21 @@ export default function HomePage() {
             Scegli la tua destinazione
           </h2>
           <div className="section-divider mb-10" />
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-            {featuredDestinations.map((dest) => (
-              <div key={dest.slug} className="snap-start shrink-0 w-[200px] md:w-[220px]">
-                <DestinationCard slug={dest.slug} name={dest.name} image={dest.image} />
-              </div>
-            ))}
-          </div>
+          {featuredDestinations.length > 0 ? (
+            <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+              {featuredDestinations.map((dest) => (
+                <div key={dest.slug} className="snap-start shrink-0 w-[200px] md:w-[220px]">
+                  <DestinationCard
+                    slug={dest.slug}
+                    name={dest.name}
+                    image={dest.cover_image_url || "/images/placeholder.jpg"}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500">Nessuna destinazione disponibile al momento.</p>
+          )}
           <div className="text-center mt-8">
             <Button asChild size="lg" className="bg-[#C41E2F] hover:bg-[#A31825] text-white px-8">
               <Link href="/destinazioni">Scopri tutte le destinazioni</Link>
@@ -108,20 +128,24 @@ export default function HomePage() {
             I nostri Tour
           </h2>
           <div className="section-divider mb-10" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredTours.map((tour) => (
-              <TourCard
-                key={tour.slug}
-                slug={tour.slug}
-                title={tour.title}
-                destination={tour.destination}
-                duration={tour.duration}
-                priceFrom={tour.priceFrom}
-                image={tour.image}
-                type="tour"
-              />
-            ))}
-          </div>
+          {featuredTours.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredTours.map((tour) => (
+                <TourCard
+                  key={tour.slug}
+                  slug={tour.slug}
+                  title={tour.title}
+                  destination={tour.destination_name ?? ""}
+                  duration={tour.durata_notti ?? ""}
+                  priceFrom={tour.a_partire_da ? Number(tour.a_partire_da) : 0}
+                  image={tour.cover_image_url || "/images/placeholder.jpg"}
+                  type="tour"
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500">Nessun tour disponibile al momento.</p>
+          )}
           <div className="text-center mt-8">
             <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
               <Link href="/tours">Tutti i tour</Link>
@@ -137,20 +161,24 @@ export default function HomePage() {
             Le nostre crociere
           </h2>
           <div className="section-divider mb-10" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCruises.map((cruise) => (
-              <CruiseCard
-                key={cruise.slug}
-                slug={cruise.slug}
-                title={cruise.title}
-                ship={cruise.ship}
-                river={cruise.river}
-                duration={cruise.duration}
-                priceFrom={cruise.priceFrom}
-                image={cruise.image}
-              />
-            ))}
-          </div>
+          {featuredCruises.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCruises.map((cruise) => (
+                <CruiseCard
+                  key={cruise.slug}
+                  slug={cruise.slug}
+                  title={cruise.title}
+                  ship={cruise.ship_name ?? ""}
+                  river={cruise.destination_name ?? ""}
+                  duration={cruise.durata_notti ?? ""}
+                  priceFrom={cruise.a_partire_da ? Number(cruise.a_partire_da) : 0}
+                  image={cruise.cover_image_url || "/images/placeholder.jpg"}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500">Nessuna crociera disponibile al momento.</p>
+          )}
           <div className="text-center mt-8">
             <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
               <Link href="/crociere">Tutte le crociere</Link>
@@ -166,19 +194,23 @@ export default function HomePage() {
             I nostri ultimi Articoli dal Blog
           </h2>
           <div className="section-divider mb-10" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latestPosts.map((post) => (
-              <BlogCard
-                key={post.slug}
-                slug={post.slug}
-                title={post.title}
-                category={post.category}
-                image={post.image}
-                date={post.date}
-                excerpt={post.excerpt}
-              />
-            ))}
-          </div>
+          {latestPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latestPosts.map((post) => (
+                <BlogCard
+                  key={post.slug}
+                  slug={post.slug}
+                  title={post.title}
+                  category={post.category?.name ?? ""}
+                  image={post.cover_image_url || "/images/placeholder.jpg"}
+                  date={post.published_at || post.created_at}
+                  excerpt={post.excerpt ?? ""}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500">Nessun articolo disponibile al momento.</p>
+          )}
           <div className="text-center mt-8">
             <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
               <Link href="/blog">Vai al blog</Link>

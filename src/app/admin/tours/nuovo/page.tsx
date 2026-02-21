@@ -1,8 +1,12 @@
 import TourForm from "@/components/admin/forms/TourForm";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
+import { getDistinctLocalities } from "@/lib/supabase/queries/localities";
 
 export default async function NuovoTourPage() {
-  const destinations = await getDestinationOptions();
+  const [destinations, localities] = await Promise.all([
+    getDestinationOptions(),
+    getDistinctLocalities(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -15,7 +19,7 @@ export default async function NuovoTourPage() {
         </p>
       </div>
 
-      <TourForm destinations={destinations} />
+      <TourForm destinations={destinations} localities={localities} />
     </div>
   );
 }
