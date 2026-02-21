@@ -1695,11 +1695,11 @@ export const navigationItems: NavItem[] = [
   },
   {
     label: "Crociere Fluviali",
-    href: "/crociere-fluviali",
+    href: "/crociere",
   },
   {
     label: "I Nostri Tour",
-    href: "/tour",
+    href: "/tours",
   },
   {
     label: "Flotta",
@@ -1878,6 +1878,18 @@ export function getBlogPostBySlug(slug: string): BlogPost | undefined {
 
 export function getToursForDestination(destSlug: string): Tour[] {
   return tours.filter((t) => t.destinationSlug === destSlug);
+}
+
+export function getTourCountPerDestination(): Record<string, number> {
+  const counts: Record<string, number> = {};
+  tours.forEach((t) => {
+    counts[t.destinationSlug] = (counts[t.destinationSlug] || 0) + 1;
+  });
+  cruises.forEach((c) => {
+    const riverSlug = c.river.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    counts[riverSlug] = (counts[riverSlug] || 0) + 1;
+  });
+  return counts;
 }
 
 export function getCruisesForShip(shipSlug: string): Cruise[] {
