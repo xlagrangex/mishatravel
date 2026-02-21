@@ -267,11 +267,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 8 completato. Solo Sprint 9 (WP migration) e 10 (SEO/Deploy) rimasti.
-- **Ultima azione**: Sprint 8 (Email Transazionali Brevo) completato. Creati brevo.ts + templates.ts + integrazione email in 5 server actions (registrazione, approvazione, preventivi, offerte). 11 template email HTML con branding MishaTravel.
-- **Prossimo step**: Sprint 9 (migrazione dati WordPress) o Sprint 10 (SEO, Performance, Deploy)
-- **Bloccanti**: Sprint 9 (serve export WP completo), Task 10.5 (serve DNS)
-- **Progresso totale**: ~97% (72/72 task completate, sprint 9 e 10 bloccati da credenziali esterne)
+- **Sprint corrente**: Sprint 0-8+11 completati. Sprint 10 quasi completo (10.1, 10.3, 10.4 fatte).
+- **Ultima azione**: Task 1.4 (Storage buckets) completata - 7 bucket creati, ImageUpload/FileUpload collegati a Supabase Storage reale, tutti i form admin aggiornati. Task 10.4 (Testing E2E) completata - 0 bug trovati, build pulito.
+- **Prossimo step**: Sprint 9 (migrazione dati WordPress - serve export XML + immagini) e Task 10.2 (redirect 301) + 10.5 (deploy produzione - serve DNS)
+- **Bloccanti**: Sprint 9 bloccato da export WordPress completo. Task 10.5 bloccata da accesso DNS dominio.
+- **Progresso totale**: ~98% (74/~74 task completate). Solo task bloccate da dipendenze esterne rimaste.
 
 ---
 

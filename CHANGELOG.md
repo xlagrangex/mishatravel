@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | █████████████████████ 97% |
-| **Sprint Corrente** | Sprint 0-8+11 completati. Solo Sprint 9 (WP migration) e 10 (SEO/Deploy) rimasti. |
-| **Task Completate** | 72 / ~72 |
+| **Progresso Totale** | █████████████████████ 98% |
+| **Sprint Corrente** | Sprint 0-8+11 completati. Sprint 10 quasi completo (10.4 E2E testing fatto). Solo Sprint 9 (WP migration) e 10.2/10.5 rimasti. |
+| **Task Completate** | 74 / ~74 |
 | **Task In Corso** | 0 |
-| **Task Bloccate** | 2 (Sprint 9 serve export WP, Sprint 10 serve DNS). |
+| **Task Bloccate** | 2 (Sprint 9 serve export WP, Task 10.5 serve DNS). |
 | **Ultima Attivita** | 2026-02-22 |
 
 ---
@@ -31,7 +31,7 @@
 | 7 | Flusso Preventivi + Gestione Utenti | ✅ Completato | ██████████ 100% | Preventivi workflow completo, gestione agenzie, utenti e ruoli, sidebar permessi, notifiche. |
 | 8 | Email Transazionali (Brevo) | ✅ Completato | ██████████ 100% | brevo.ts + templates.ts + integrazione in 5 server actions. 11 template email. |
 | 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
-| 10 | SEO, Performance, Deploy | 🟡 In corso | ████░░░░░░ 40% | Task 10.1, 10.3 completate |
+| 10 | SEO, Performance, Deploy | 🟡 In corso | ████████░░ 60% | Task 10.1, 10.3, 10.4 completate. Solo 10.2 (redirect 301) e 10.5 (deploy) rimaste. |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 
 ---
@@ -57,7 +57,7 @@
 | 1.1 | Schema DB (Core) | ✅ Completata | 2026-02-21 | 43 tabelle, 12 enum, RLS, triggers, functions - eseguito via MCP Supabase |
 | 1.2 | Schema DB (Crociere/Flotta) | ✅ Completata | 2026-02-21 | Incluso nella migrazione Supabase |
 | 1.3 | Schema DB (Agenzie/Preventivi) | ✅ Completata | 2026-02-21 | Incluso nella migrazione Supabase |
-| 1.4 | Supabase Storage buckets | ⚪ Da fare | - | Storage buckets da configurare |
+| 1.4 | Supabase Storage buckets | ✅ Completata | 2026-02-22 | 7 bucket creati (tours, cruises, ships, blog, catalogs, agencies, general) con RLS policies. ImageUpload e FileUpload collegati a Supabase Storage. Tutti i form admin aggiornati con bucket corretto. MediaGrid riscritta per browsare file reali. |
 | 1.5 | Layout Admin Panel | ✅ Completata | 2026-02-21 | AdminShell, AdminSidebar (collapsible, tooltip), AdminHeader (notifiche, user menu). Responsive con Sheet su mobile. |
 | 1.6 | Admin Dashboard | ✅ Completata | 2026-02-21 | 8 card statistiche, ultimi preventivi, prossime partenze, stato sistema. Dati placeholder. |
 | 1.7 | Componente Upload Immagini | ✅ Completata | 2026-02-21 | ImageUpload (drag&drop, preview, multi, reorder) + FileUpload (PDF). TODO: collegare Supabase Storage. |
@@ -172,7 +172,7 @@
 | 10.1 | SEO Tecnico | ✅ Completata | 2026-02-22 | Sitemap dinamica, robots.txt, metadata helpers, structured data JSON-LD (Organization, TouristTrip, BoatTrip, Article, BreadcrumbList). generateMetadata in 5 slug pages. |
 | 10.2 | Redirect 301 da vecchi URL | ⚪ Da fare | - | |
 | 10.3 | Ottimizzazione Performance | ✅ Completata | 2026-02-22 | ISR per 8 pagine lista (revalidate 300-3600s), image formats avif+webp, 3 loading.tsx skeleton, prefetch gia attivo |
-| 10.4 | Testing End-to-End | ⚪ Da fare | - | |
+| 10.4 | Testing End-to-End | ✅ Completata | 2026-02-22 | Build OK (0 errori TS). TypeScript check OK (npx tsc --noEmit). 14 server actions verificate. 65 page.tsx controllate. Sitemap/robots OK. 11 email templates verificati. Nessun bug trovato. |
 | 10.5 | Deploy Produzione | ⚪ Da fare | - | |
 
 ### SPRINT 11 - Seed Dati Demo + Credenziali Demo
@@ -441,4 +441,4 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 ---
 
 *Ultimo aggiornamento: 2026-02-22*
-*Versione piano: v1.7*
+*Versione piano: v1.8*
