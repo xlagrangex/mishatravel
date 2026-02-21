@@ -58,6 +58,30 @@ export async function createAgencyRecord(
       return { error: roleError.message };
     }
 
+    // Notify all super_admin users about the new agency registration
+    try {
+      const { data: superAdmins } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "super_admin");
+
+      if (superAdmins && superAdmins.length > 0) {
+        const notifications = superAdmins.map(
+          (admin: { user_id: string }) => ({
+            user_id: admin.user_id,
+            title: "Nuova agenzia registrata",
+            message: `L'agenzia "${data.business_name}" ha richiesto la registrazione.`,
+            link: "/admin/agenzie",
+          })
+        );
+
+        await supabase.from("notifications").insert(notifications);
+      }
+    } catch (notifErr) {
+      // Don't fail the registration if notification fails
+      console.error("Error sending admin notifications:", notifErr);
+    }
+
     return { error: null };
   } catch (err) {
     console.error("Unexpected error in createAgencyRecord:", err);

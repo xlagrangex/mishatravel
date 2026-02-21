@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ████████████████████ 93% |
-| **Sprint Corrente** | Sprint 0-7 completati. Solo Sprint 8 (Brevo), 9 (WP migration), 10 (SEO/Deploy) rimasti. |
-| **Task Completate** | 64 / ~69 |
+| **Progresso Totale** | ████████████████████ 95% |
+| **Sprint Corrente** | Sprint 0-7+11 completati. Solo Sprint 8 (Brevo), 9 (WP migration), 10 (SEO/Deploy) rimasti. |
+| **Task Completate** | 67 / ~72 |
 | **Task In Corso** | 0 |
-| **Task Bloccate** | 3 (Sprint 8 serve Brevo API key, Sprint 9 serve export WP, Sprint 10 serve DNS) |
+| **Task Bloccate** | 2 (Sprint 9 serve export WP, Sprint 10 serve DNS). Sprint 8 SBLOCCATO: API key Brevo ricevuta. |
 | **Ultima Attivita** | 2026-02-22 |
 
 ---
@@ -29,9 +29,10 @@
 | 5 | Autenticazione Agenzie | ✅ Completato | ██████████ 100% | Auth helpers, middleware, AuthProvider, Login, Registrazione multi-step, Reset Password, LoginCTA completati. |
 | 6 | Area Riservata Agenzie | ✅ Completato | ██████████ 100% | Layout, dashboard, configuratori, richieste, offerte, estratto conto, profilo. |
 | 7 | Flusso Preventivi + Gestione Utenti | ✅ Completato | ██████████ 100% | Preventivi workflow completo, gestione agenzie, utenti e ruoli, sidebar permessi, notifiche. |
-| 8 | Email Transazionali (Brevo) | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 8 | Email Transazionali (Brevo) | 🟡 In corso | ░░░░░░░░░░ 0% | API key Brevo ricevuta |
 | 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
 | 10 | SEO, Performance, Deploy | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 
 ---
 
@@ -146,7 +147,7 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 8.0 | Raccolta Credenziali Brevo | ⚪ Da fare | - | |
+| 8.0 | Raccolta Credenziali Brevo | ✅ Completata | 2026-02-22 | API key ricevuta e salvata in .env.local e CREDENTIALS.md |
 | 8.1 | Setup Brevo + Servizio Email | ⚪ Da fare | - | |
 | 8.2 | Email Autenticazione | ⚪ Da fare | - | |
 | 8.3 | Email Flusso Preventivi | ⚪ Da fare | - | |
@@ -173,6 +174,14 @@
 | 10.3 | Ottimizzazione Performance | ⚪ Da fare | - | |
 | 10.4 | Testing End-to-End | ⚪ Da fare | - | |
 | 10.5 | Deploy Produzione | ⚪ Da fare | - | |
+
+### SPRINT 11 - Seed Dati Demo + Credenziali Demo
+
+| ID | Task | Stato | Data Completamento | Note/Errori |
+|----|------|-------|--------------------|-------------|
+| 11.1 | Seed script con dati demo realistici | ✅ Completata | 2026-02-22 | `scripts/seed-demo.ts`: 10 destinazioni, 6 tour (con itinerari/partenze/supplementi/inclusioni), 3 navi (con servizi), 3 crociere (con itinerari/partenze/cabine/inclusioni), 5 blog post + 2 categorie, 2 cataloghi. Supporto --force per re-seed. |
+| 11.2 | Credenziali demo (utenti Supabase Auth) | ✅ Completata | 2026-02-22 | Super admin: admin@mishatravel.com / MishaAdmin2026! - Agenzia: agenzia@mishatravel.com / MishaAgenzia2026! - Agenzia demo con status active. Credenziali salvate in CREDENTIALS.md. |
+| 11.3 | Flusso approvazione agenzie | ✅ Completata | 2026-02-22 | Middleware blocca agenzie pending → /account-in-attesa. Dashboard admin widget "Agenzie in attesa" con Approva/Dettaglio. Login redirect per pending. Notifica super_admin su nuova registrazione. |
 
 ---
 
@@ -314,7 +323,7 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | 2026-02-21 | GitHub | ✅ Configurato | Repo: github.com/xlagrangex/mishatravel |
 | 2026-02-21 | Supabase | ✅ Completo | URL + anon key + service_role key + DB password configurati. Connection string pooler ancora mancante. |
 | 2026-02-21 | Vercel | ✅ Auto-deploy | Deploy automatico da GitHub, configurato dall'utente |
-| - | Brevo | ⏳ In attesa | Serve per Sprint 8 |
+| 2026-02-22 | Brevo | ✅ API key ricevuta | xkeysib-... salvata in .env.local e CREDENTIALS.md. Email mittente/admin da confermare. |
 | - | WordPress | 🟡 Parziale | ACF export JSON fornito. Mancano export XML completo e accesso immagini per Sprint 9. |
 
 ---
@@ -413,6 +422,7 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | `src/app/(agenzia)/agenzia/profilo/ProfileForm.tsx` | Component | Form dati aziendali con Zod + react-hook-form |
 | `src/app/(agenzia)/agenzia/profilo/PasswordForm.tsx` | Component | Form cambio password |
 | `src/app/(agenzia)/agenzia/profilo/actions.ts` | Actions | Server actions updateAgencyProfile, changePassword |
+| `scripts/seed-demo.ts` | Script | Seed script dati demo: 10 dest, 6 tour, 3 navi, 3 crociere, 5 blog, 2 cataloghi, 2 utenti. Supporto --force. |
 
 ---
 

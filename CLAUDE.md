@@ -264,11 +264,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 0-7 TUTTI completati. Solo Sprint 8 (Brevo email), 9 (migrazione WP), 10 (SEO/Deploy) rimasti.
-- **Ultima azione**: Sprint 6+7 completati. Area agenzia completa (layout, dashboard, configuratori, richieste, offerte, estratto conto, profilo). Admin preventivi workflow completo. Gestione agenzie e utenti. Sidebar permessi dinamica. Notifiche in-app.
-- **Prossimo step**: Sprint 8 (serve Brevo API key), Sprint 9 (serve export WordPress), Sprint 10 (serve DNS dominio)
-- **Bloccanti**: Sprint 8 (Brevo API key), Sprint 9 (export WordPress), Sprint 10 (DNS dominio)
-- **Progresso totale**: ~93% (64/69 task completate)
+- **Sprint corrente**: Sprint 0-7+11 TUTTI completati. Sprint 8 (Brevo) SBLOCCATO, API key ricevuta. Sprint 9 (WP) e 10 (SEO/Deploy) bloccati.
+- **Ultima azione**: Task 11.3 completata (approvazione agenzie). API key Brevo ricevuta e salvata. Pronti per Sprint 8.
+- **Prossimo step**: Sprint 8 (email transazionali con Brevo - API key disponibile). Servono conferma email mittente e admin.
+- **Bloccanti**: Sprint 9 (export WordPress), Sprint 10 (DNS dominio)
+- **Progresso totale**: ~95% (68/72 task completate)
 
 ---
 

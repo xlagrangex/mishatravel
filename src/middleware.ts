@@ -143,6 +143,20 @@ export async function middleware(request: NextRequest) {
       homeUrl.searchParams.set('error', 'unauthorized')
       return NextResponse.redirect(homeUrl)
     }
+
+    // Check if the agency account is active
+    const { data: agencyData } = await supabase
+      .from('agencies')
+      .select('status')
+      .eq('user_id', user.id)
+      .single()
+
+    if (agencyData && agencyData.status !== 'active') {
+      // Agency is pending or blocked - redirect to waiting page
+      const waitUrl = request.nextUrl.clone()
+      waitUrl.pathname = '/account-in-attesa'
+      return NextResponse.redirect(waitUrl)
+    }
   }
 
   return supabaseResponse

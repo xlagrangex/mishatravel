@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getPendingAgencies } from "@/lib/supabase/queries/admin-agencies";
+import PendingAgenciesWidget from "./PendingAgenciesWidget";
 
 const stats = [
   { label: "Tour Attivi", value: "0", icon: Plane, color: "text-blue-600" },
@@ -22,7 +24,14 @@ const stats = [
   { label: "Preventivi Confermati", value: "0", icon: TrendingUp, color: "text-emerald-600" },
 ];
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  let pendingAgencies: Awaited<ReturnType<typeof getPendingAgencies>> = [];
+  try {
+    pendingAgencies = await getPendingAgencies();
+  } catch {
+    // Silently fail - widget just won't show
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Title */}
@@ -34,6 +43,11 @@ export default function AdminDashboard() {
           Panoramica generale del sistema MishaTravel
         </p>
       </div>
+
+      {/* Pending Agencies Widget - only shows if count > 0 */}
+      {pendingAgencies.length > 0 && (
+        <PendingAgenciesWidget agencies={pendingAgencies} />
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

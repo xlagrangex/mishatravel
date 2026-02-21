@@ -80,6 +80,21 @@ export async function getAgencyQuoteRequests(
 }
 
 /**
+ * Get pending agencies for the admin dashboard approval widget.
+ */
+export async function getPendingAgencies(): Promise<Agency[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('agencies')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(`Errore caricamento agenzie in attesa: ${error.message}`)
+  return (data ?? []) as Agency[]
+}
+
+/**
  * Get agency stats (total, active, pending, quote count).
  */
 export async function getAgencyStats(): Promise<{

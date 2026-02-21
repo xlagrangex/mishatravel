@@ -90,7 +90,18 @@ function LoginForm() {
       if (roleData) {
         const role = roleData.role;
         if (role === "agency") {
-          router.push("/agenzia/dashboard");
+          // Check if agency is active before redirecting to dashboard
+          const { data: agencyData } = await supabase
+            .from("agencies")
+            .select("status")
+            .eq("user_id", data.user.id)
+            .single();
+
+          if (agencyData && agencyData.status !== "active") {
+            router.push("/account-in-attesa");
+          } else {
+            router.push("/agenzia/dashboard");
+          }
         } else if (role === "admin" || role === "super_admin" || role === "operator") {
           router.push("/admin");
         } else {
