@@ -107,3 +107,120 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
 
   return all
 }
+
+// ---------------------------------------------------------------------------
+// Admin Types
+// ---------------------------------------------------------------------------
+
+export type AdminDeparture = {
+  id: string
+  type: 'tour' | 'crociera'
+  parent_id: string          // tour.id or cruise.id for edit links
+  title: string
+  destination_name: string | null
+  date: string               // ISO date string (YYYY-MM-DD)
+  price: number | null
+  duration: string | null
+  status: string | null       // parent tour/cruise status
+}
+
+// ---------------------------------------------------------------------------
+// Admin Queries
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetches ALL departures for the admin panel, including unpublished.
+ * Returns parent_id instead of slug/basePath so admin can link to edit pages.
+ * Also fetches the unique destination names for filter dropdowns.
+ */
+export async function getAdminDepartures(): Promise<{
+  departures: AdminDeparture[]
+  destinations: string[]
+}> {
+  const supabase = createAdminClient()
+
+  // Fetch tour departures (no !inner so we include drafts too, but still need parent)
+  const { data: tourDeps, error: tourError } = await supabase
+    .from('tour_departures')
+    .select(
+      `
+      id,
+      data_partenza,
+      prezzo_3_stelle,
+      tour:tours!inner(
+        id,
+        title,
+        status,
+        durata_notti,
+        destination:destinations(name)
+      )
+    `
+    )
+    .order('data_partenza', { ascending: true })
+
+  if (tourError) {
+    throw new Error(`Failed to fetch tour departures: ${tourError.message}`)
+  }
+
+  // Fetch cruise departures
+  const { data: cruiseDeps, error: cruiseError } = await supabase
+    .from('cruise_departures')
+    .select(
+      `
+      id,
+      data_partenza,
+      prezzo_main_deck,
+      cruise:cruises!inner(
+        id,
+        title,
+        status,
+        durata_notti,
+        destination:destinations(name)
+      )
+    `
+    )
+    .order('data_partenza', { ascending: true })
+
+  if (cruiseError) {
+    throw new Error(`Failed to fetch cruise departures: ${cruiseError.message}`)
+  }
+
+  // Map tour departures
+  const tourItems: AdminDeparture[] = (tourDeps ?? []).map((row: any) => ({
+    id: row.id,
+    type: 'tour' as const,
+    parent_id: row.tour.id,
+    title: row.tour.title,
+    destination_name: row.tour.destination?.name ?? null,
+    date: row.data_partenza ?? '',
+    price: row.prezzo_3_stelle != null ? Number(row.prezzo_3_stelle) : null,
+    duration: row.tour.durata_notti ?? null,
+    status: row.tour.status ?? null,
+  }))
+
+  // Map cruise departures
+  const cruiseItems: AdminDeparture[] = (cruiseDeps ?? []).map((row: any) => ({
+    id: row.id,
+    type: 'crociera' as const,
+    parent_id: row.cruise.id,
+    title: row.cruise.title,
+    destination_name: row.cruise.destination?.name ?? null,
+    date: row.data_partenza ?? '',
+    price: row.prezzo_main_deck != null ? Number(row.prezzo_main_deck) : null,
+    duration: row.cruise.durata_notti ?? null,
+    status: row.cruise.status ?? null,
+  }))
+
+  // Merge and sort by date ascending
+  const all = [...tourItems, ...cruiseItems]
+  all.sort((a, b) => a.date.localeCompare(b.date))
+
+  // Collect unique destination names for filter
+  const destSet = new Set<string>()
+  all.forEach((d) => {
+    if (d.destination_name) destSet.add(d.destination_name)
+  })
+  const destinations = Array.from(destSet).sort()
+
+  return { departures: all, destinations }
+}

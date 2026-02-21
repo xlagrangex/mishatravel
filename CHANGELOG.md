@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ██████████████████░░ 74% |
-| **Sprint Corrente** | Sprint 1-5 completati, Sprint 2 al 95% (manca 2.3 Calendario admin). Sprint 6 in corso. |
-| **Task Completate** | 49 / ~69 |
+| **Progresso Totale** | ████████████████████ 93% |
+| **Sprint Corrente** | Sprint 0-7 completati. Solo Sprint 8 (Brevo), 9 (WP migration), 10 (SEO/Deploy) rimasti. |
+| **Task Completate** | 64 / ~69 |
 | **Task In Corso** | 0 |
-| **Task Bloccate** | 0 |
+| **Task Bloccate** | 3 (Sprint 8 serve Brevo API key, Sprint 9 serve export WP, Sprint 10 serve DNS) |
 | **Ultima Attivita** | 2026-02-22 |
 
 ---
@@ -23,12 +23,12 @@
 |--------|--------|-------|-----------|------|
 | 0 | Setup e Configurazione | ✅ Completato | ██████████ 100% | Tutte le credenziali fornite, progetto configurato, repo su GitHub |
 | 1 | Database + Admin Base | ✅ Completato | ██████████ 100% | Schema DB, admin collegato a Supabase, Map Picker, autocomplete localita. |
-| 2 | Admin Crociere + Flotta | 🟡 Quasi completato | █████████░ 95% | Flotta, Blog, Cataloghi, Media, Crociere completati. Manca solo 2.3 Calendario admin. |
+| 2 | Admin Crociere + Flotta | ✅ Completato | ██████████ 100% | Flotta, Blog, Cataloghi, Media, Crociere, Calendario admin tutti completati. |
 | 3 | Sito Pubblico - Pagine Core | ✅ Completato | ██████████ 100% | Tutte le pagine pubbliche collegate a Supabase |
 | 4 | Calendario + Destinazioni + Blog | ✅ Completato | ██████████ 100% | Tutte le pagine collegate a Supabase |
 | 5 | Autenticazione Agenzie | ✅ Completato | ██████████ 100% | Auth helpers, middleware, AuthProvider, Login, Registrazione multi-step, Reset Password, LoginCTA completati. |
-| 6 | Area Riservata Agenzie | 🟡 In corso | ██░░░░░░░░ 25% | Layout + Dashboard completati (6.1, 6.2) |
-| 7 | Flusso Preventivi + Gestione Utenti | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
+| 6 | Area Riservata Agenzie | ✅ Completato | ██████████ 100% | Layout, dashboard, configuratori, richieste, offerte, estratto conto, profilo. |
+| 7 | Flusso Preventivi + Gestione Utenti | ✅ Completato | ██████████ 100% | Preventivi workflow completo, gestione agenzie, utenti e ruoli, sidebar permessi, notifiche. |
 | 8 | Email Transazionali (Brevo) | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
 | 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
 | 10 | SEO, Performance, Deploy | ⚪ Non iniziato | ░░░░░░░░░░ 0% | |
@@ -74,7 +74,7 @@
 |----|------|-------|--------------------|-------------|
 | 2.1 | Admin: Gestione Flotta/Navi | ✅ Completata | 2026-02-21 | CRUD completo: queries/ships.ts, ShipForm (6 tab), FlottaTable, actions. Collegato Supabase. |
 | 2.2 | Admin: Gestione Crociere Fluviali | ✅ Completata | 2026-02-22 | CRUD completo: queries/cruises.ts, CruiseForm (multi-tab), CrociereTable, actions. Select nave con deck/cabine condizionali. |
-| 2.3 | Admin: Vista Calendario Partenze (sola lettura) | ⚪ Da fare | - | Dipende da 2.2. Sola lettura, legge da tour_departures/cruise_departures. |
+| 2.3 | Admin: Vista Calendario Partenze (sola lettura) | ✅ Completata | 2026-02-22 | Vista calendario + lista con filtri tipo/destinazione. Card stats, indicatori colorati, click→modifica tour/crociera. AdminPartenzeClient.tsx. |
 | 2.4 | Admin: Gestione Blog | ✅ Completata | 2026-02-21 | CRUD completo: queries/blog.ts, BlogPostForm, BlogTable, actions. Categorie incluse. |
 | 2.5 | Admin: Gestione Cataloghi | ✅ Completata | 2026-02-21 | CRUD completo: queries/catalogs.ts, CatalogForm, CataloghiTable, actions. |
 | 2.6 | Admin: Libreria Media | ✅ Completata | 2026-02-21 | MediaGrid con griglia responsive, ricerca, delete. Upload non ancora wired (manca Storage). |
@@ -121,26 +121,26 @@
 |----|------|-------|--------------------|-------------|
 | 6.1 | Layout Area Agenzia | ✅ Completata | 2026-02-22 | AgenziaShell, AgenziaSidebar (5 voci, collapsible, tooltip), AgenziaHeader (logout, notifiche, nome agenzia). Route group (agenzia)/. |
 | 6.2 | Dashboard Agenzia | ✅ Completata | 2026-02-22 | Server component con dati reali Supabase. Card contatori (richieste, offerte, confermate). Lista richieste recenti con status badge. Notifiche recenti. Query functions in agency-dashboard.ts. |
-| 6.3 | Configuratore Pacchetto Tour | ⚪ Da fare | - | |
-| 6.4 | Configuratore Pacchetto Crociera | ⚪ Da fare | - | |
-| 6.5 | Le Mie Richieste | ⚪ Da fare | - | |
-| 6.6 | Offerte Ricevute | ⚪ Da fare | - | |
-| 6.7 | Estratto Conto | ⚪ Da fare | - | |
-| 6.8 | Profilo Agenzia | ⚪ Da fare | - | |
+| 6.3 | Configuratore Pacchetto Tour | ✅ Completata | 2026-02-22 | TourConfigurator.tsx: dialog 3-step (form→riepilogo→conferma). Select partenza, adulti/bambini, camera, extra. Server action createQuoteRequest. |
+| 6.4 | Configuratore Pacchetto Crociera | ✅ Completata | 2026-02-22 | CruiseConfigurator.tsx: dialog 3-step. Select partenza, deck condizionale, cabina, n.cabine, partecipanti, extra. Prezzo indicativo. |
+| 6.5 | Le Mie Richieste | ✅ Completata | 2026-02-22 | Tabella richieste con status badge colorati. Pagina dettaglio con timeline, offerta, pagamento. Query getAgencyQuotes, getQuoteById. |
+| 6.6 | Offerte Ricevute | ✅ Completata | 2026-02-22 | Lista offerte con dettagli prezzo/condizioni/scadenza. Accetta/Rifiuta con dialog conferma. Motivazione opzionale su rifiuto. Server actions. |
+| 6.7 | Estratto Conto | ✅ Completata | 2026-02-22 | Tabella documenti contabili con filtro date range. Download PDF. Query getAgencyStatements. |
+| 6.8 | Profilo Agenzia | ✅ Completata | 2026-02-22 | Form dati aziendali (Zod + react-hook-form). Cambio password (Supabase Auth updateUser). Server actions updateAgencyProfile, changePassword. |
 
 ### SPRINT 7 - Flusso Preventivi + Gestione Utenti
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 7.1 | Admin: Lista Preventivi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder |
-| 7.2 | Admin: Dettaglio Richiesta + Timeline | ⚪ Da fare | - | |
-| 7.3 | Admin: Modifica Richiesta e Crea Offerta | ⚪ Da fare | - | |
-| 7.4 | Admin: Invio Estremi Pagamento | ⚪ Da fare | - | |
-| 7.5 | Admin: Conferma Pagamento e Rifiuto | ⚪ Da fare | - | |
-| 7.6 | Admin: Gestione Agenzie | 🟡 Placeholder | 2026-02-21 | Pagina placeholder |
-| 7.7 | Admin: Gestione Utenti e Ruoli | 🟡 Placeholder | 2026-02-21 | Pagina placeholder |
-| 7.8 | Hook Sidebar dinamica permessi | ⚪ Da fare | - | |
-| 7.9 | Sistema Notifiche In-App | ⚪ Da fare | - | |
+| 7.1 | Admin: Lista Preventivi | ✅ Completata | 2026-02-22 | AdminQuotesTable con filtri stato/tipo/agenzia/data. Card contatori per stato. Badge colorati. Query admin-quotes.ts. |
+| 7.2 | Admin: Dettaglio Richiesta + Timeline | ✅ Completata | 2026-02-22 | QuoteDetailClient con info agenzia, dettagli pacchetto, timeline visiva. Colori per attore (agency/admin). |
+| 7.3 | Admin: Modifica Richiesta e Crea Offerta | ✅ Completata | 2026-02-22 | Form offerta: prezzo, condizioni, termini pagamento, scadenza. Bozza o invio diretto. Status → offer_sent. |
+| 7.4 | Admin: Invio Estremi Pagamento | ✅ Completata | 2026-02-22 | Form IBAN, importo, causale. Record in quote_payments. Status → payment_sent. |
+| 7.5 | Admin: Conferma Pagamento e Rifiuto | ✅ Completata | 2026-02-22 | Conferma pagamento (→confirmed) e rifiuto con motivazione (→rejected). Timeline aggiornata. |
+| 7.6 | Admin: Gestione Agenzie | ✅ Completata | 2026-02-22 | AgenzieTable con filtri status/search. Dettaglio agenzia con storico richieste. Approva/Blocca/Elimina. Query admin-agencies.ts. |
+| 7.7 | Admin: Gestione Utenti e Ruoli | ✅ Completata | 2026-02-22 | UtentiTable con filtro ruolo/stato. Creazione admin/operatore. Permessi operatore (checkboxes sezioni). Modifica ruolo, reset password. |
+| 7.8 | Hook Sidebar dinamica permessi | ✅ Completata | 2026-02-22 | useUserPermissions.ts hook. AdminSidebar filtra voci in base a ruolo/permessi operatore. |
+| 7.9 | Sistema Notifiche In-App | ✅ Completata | 2026-02-22 | NotificationBell.tsx: campanella con contatore non lette, dropdown lista, click→marca letto. Query notifications.ts. |
 
 ### SPRINT 8 - Email Transazionali (Brevo)
 
@@ -387,6 +387,19 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | `src/components/agenzia/AgenziaSidebar.tsx` | Component | Sidebar 5 voci, collapsible, tooltip |
 | `src/components/agenzia/AgenziaHeader.tsx` | Component | Header agenzia con nome, notifiche, logout |
 | `src/lib/supabase/queries/agency-dashboard.ts` | Query | getAgencyByUserId, getQuoteRequestCountsByStatus, getRecentQuoteRequests, getRecentNotifications, getUnreadNotificationCount |
+| `src/lib/supabase/queries/quotes.ts` | Query | getAgencyQuotes, getQuoteById, getAgencyOffers, acceptOffer, declineOffer |
+| `src/lib/supabase/queries/account-statements.ts` | Query | getAgencyStatements (con filtro date range) |
+| `src/app/(agenzia)/agenzia/richieste/page.tsx` | Page | Le Mie Richieste - tabella richieste agenzia con status badge |
+| `src/app/(agenzia)/agenzia/richieste/[id]/page.tsx` | Page | Dettaglio richiesta con timeline, offerta, pagamento |
+| `src/app/(agenzia)/agenzia/offerte/page.tsx` | Page | Offerte Ricevute - server component lista offerte |
+| `src/app/(agenzia)/agenzia/offerte/OffersList.tsx` | Component | Client component offerte con Accetta/Rifiuta dialogs |
+| `src/app/(agenzia)/agenzia/offerte/actions.ts` | Actions | Server actions acceptOfferAction, declineOfferAction |
+| `src/app/(agenzia)/agenzia/estratto-conto/page.tsx` | Page | Estratto Conto - server component con filtro date |
+| `src/app/(agenzia)/agenzia/estratto-conto/StatementsTable.tsx` | Component | Client component tabella documenti con filtro date range |
+| `src/app/(agenzia)/agenzia/profilo/page.tsx` | Page | Profilo Agenzia - server component con dati agency |
+| `src/app/(agenzia)/agenzia/profilo/ProfileForm.tsx` | Component | Form dati aziendali con Zod + react-hook-form |
+| `src/app/(agenzia)/agenzia/profilo/PasswordForm.tsx` | Component | Form cambio password |
+| `src/app/(agenzia)/agenzia/profilo/actions.ts` | Actions | Server actions updateAgencyProfile, changePassword |
 
 ---
 

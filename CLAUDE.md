@@ -244,7 +244,9 @@ MISHATRAVEL/
 │   │           ├── localities.ts  ← getDistinctLocalities (autocomplete)
 │   │           ├── departures.ts  ← getAllDepartures (UnifiedDeparture)
 │   │           ├── agencies.ts    ← getActiveAgencies
-│   │           └── agency-dashboard.ts ← getAgencyByUserId, getQuoteRequestCountsByStatus, getRecentQuoteRequests, getRecentNotifications
+│   │           ├── agency-dashboard.ts ← getAgencyByUserId, getQuoteRequestCountsByStatus, getRecentQuoteRequests, getRecentNotifications
+│   │           ├── quotes.ts          ← getAgencyQuotes, getQuoteById, getAgencyOffers, acceptOffer, declineOffer
+│   │           └── account-statements.ts ← getAgencyStatements (con filtro date range)
 │   │
 │   └── middleware.ts             ← Middleware: session refresh + protezione route (ruoli + permessi)
 │
@@ -262,11 +264,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 6 in corso (Area Riservata Agenzie). Sprint 1-5 completati, Sprint 2 al 95%.
-- **Ultima azione**: Task 6.1 (Layout Area Agenzia) e 6.2 (Dashboard Agenzia) completate. AgenziaShell, AgenziaSidebar, AgenziaHeader, dashboard con dati reali Supabase.
-- **Prossimo step**: Task 6.3 (Configuratore Pacchetto Tour), 6.4 (Crociera), 6.5 (Le Mie Richieste)
+- **Sprint corrente**: Sprint 0-7 TUTTI completati. Solo Sprint 8 (Brevo email), 9 (migrazione WP), 10 (SEO/Deploy) rimasti.
+- **Ultima azione**: Sprint 6+7 completati. Area agenzia completa (layout, dashboard, configuratori, richieste, offerte, estratto conto, profilo). Admin preventivi workflow completo. Gestione agenzie e utenti. Sidebar permessi dinamica. Notifiche in-app.
+- **Prossimo step**: Sprint 8 (serve Brevo API key), Sprint 9 (serve export WordPress), Sprint 10 (serve DNS dominio)
 - **Bloccanti**: Sprint 8 (Brevo API key), Sprint 9 (export WordPress), Sprint 10 (DNS dominio)
-- **Progresso totale**: ~74% (49/69 task completate)
+- **Progresso totale**: ~93% (64/69 task completate)
 
 ---
 

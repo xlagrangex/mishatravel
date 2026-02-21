@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 import {
   LayoutDashboard,
   Map,
@@ -24,23 +25,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+/**
+ * Each nav item either has a href (link) or is a separator.
+ * The `pathSegment` is the key used by SECTION_MAP to check permissions.
+ */
 const navItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/admin", icon: LayoutDashboard, pathSegment: "admin" },
   { type: "separator" as const, label: "Contenuti" },
-  { label: "Tour", href: "/admin/tours", icon: Plane },
-  { label: "Crociere", href: "/admin/crociere", icon: Ship },
-  { label: "Flotta", href: "/admin/flotta", icon: Anchor },
-  { label: "Partenze", href: "/admin/partenze", icon: Calendar },
-  { label: "Destinazioni", href: "/admin/destinazioni", icon: MapPin },
+  { label: "Tour", href: "/admin/tours", icon: Plane, pathSegment: "tours" },
+  { label: "Crociere", href: "/admin/crociere", icon: Ship, pathSegment: "crociere" },
+  { label: "Flotta", href: "/admin/flotta", icon: Anchor, pathSegment: "flotta" },
+  { label: "Partenze", href: "/admin/partenze", icon: Calendar, pathSegment: "partenze" },
+  { label: "Destinazioni", href: "/admin/destinazioni", icon: MapPin, pathSegment: "destinazioni" },
   { type: "separator" as const, label: "Comunicazione" },
-  { label: "Blog", href: "/admin/blog", icon: BookOpen },
-  { label: "Cataloghi", href: "/admin/cataloghi", icon: FolderOpen },
-  { label: "Media", href: "/admin/media", icon: Image },
+  { label: "Blog", href: "/admin/blog", icon: BookOpen, pathSegment: "blog" },
+  { label: "Cataloghi", href: "/admin/cataloghi", icon: FolderOpen, pathSegment: "cataloghi" },
+  { label: "Media", href: "/admin/media", icon: Image, pathSegment: "media" },
   { type: "separator" as const, label: "Gestione" },
-  { label: "Agenzie", href: "/admin/agenzie", icon: Users },
-  { label: "Preventivi", href: "/admin/preventivi", icon: FileText },
-  { label: "Estratti Conto", href: "/admin/estratti-conto", icon: FileSpreadsheet },
-  { label: "Utenti", href: "/admin/utenti", icon: UserCog },
+  { label: "Agenzie", href: "/admin/agenzie", icon: Users, pathSegment: "agenzie" },
+  { label: "Preventivi", href: "/admin/preventivi", icon: FileText, pathSegment: "preventivi" },
+  { label: "Estratti Conto", href: "/admin/estratti-conto", icon: FileSpreadsheet, pathSegment: "estratti-conto" },
+  { label: "Utenti", href: "/admin/utenti", icon: UserCog, pathSegment: "utenti" },
 ];
 
 interface AdminSidebarProps {
@@ -50,6 +55,35 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { canAccess } = useUserPermissions();
+
+  // Filter nav items based on permissions
+  const visibleItems = navItems.filter((item) => {
+    // Separators are always included initially; we'll prune empty sections below
+    if ("type" in item && item.type === "separator") return true;
+    const navItem = item as { pathSegment: string };
+    return canAccess(navItem.pathSegment);
+  });
+
+  // Remove separators that have no visible items after them
+  const filteredItems: typeof navItems = [];
+  for (let i = 0; i < visibleItems.length; i++) {
+    const item = visibleItems[i];
+    if ("type" in item && item.type === "separator") {
+      // Check if there are any visible link items before the next separator (or end)
+      let hasVisibleChild = false;
+      for (let j = i + 1; j < visibleItems.length; j++) {
+        if ("type" in visibleItems[j] && (visibleItems[j] as { type: string }).type === "separator") break;
+        hasVisibleChild = true;
+        break;
+      }
+      if (hasVisibleChild) {
+        filteredItems.push(item);
+      }
+    } else {
+      filteredItems.push(item);
+    }
+  }
 
   return (
     <aside
@@ -82,7 +116,7 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         <ul className="space-y-1">
-          {navItems.map((item, index) => {
+          {filteredItems.map((item, index) => {
             if ("type" in item && item.type === "separator") {
               if (collapsed) return <li key={index} className="my-3 border-t border-border" />;
               return (
@@ -94,7 +128,7 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
               );
             }
 
-            const navItem = item as { label: string; href: string; icon: React.ElementType };
+            const navItem = item as { label: string; href: string; icon: React.ElementType; pathSegment: string };
             const isActive =
               navItem.href === "/admin"
                 ? pathname === "/admin"

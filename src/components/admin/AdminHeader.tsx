@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, LogOut, Menu, User } from "lucide-react";
+import { LogOut, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import NotificationBell from "@/components/NotificationBell";
 
 interface AdminHeaderProps {
   onMenuToggle: () => void;
@@ -38,15 +38,7 @@ export default function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
       {/* Right: notifications + user menu */}
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <Badge
-            variant="destructive"
-            className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-[10px] flex items-center justify-center"
-          >
-            0
-          </Badge>
-        </Button>
+        <NotificationBell />
 
         {/* User Menu */}
         <DropdownMenu>
