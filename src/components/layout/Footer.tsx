@@ -53,14 +53,17 @@ export default function Footer() {
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {footerContacts.map((contact) => (
-              <div key={contact.title}>
+              <div
+                key={contact.title}
+                className="border border-white/20 rounded-lg p-5 bg-white/5 hover:bg-white/10 transition-all duration-300"
+              >
                 <h4 className="font-semibold text-lg mb-4 font-[family-name:var(--font-poppins)]">
                   {contact.title}
                 </h4>
                 <div className="space-y-3 text-sm text-white/90">
                   <p className="flex items-start gap-2">
                     <MapPin className="size-4 mt-0.5 shrink-0" />
-                    <span>{contact.address}</span>
+                    <span>Piazza Grimaldi 1/12, 16126 Genova (GE)</span>
                   </p>
                   {contact.phones.map((phone) => (
                     <p key={phone} className="flex items-center gap-2">
@@ -101,11 +104,11 @@ export default function Footer() {
             <div className="sm:col-span-2 lg:col-span-1">
               <Link href="/" className="inline-block mb-4">
                 <Image
-                  src="/images/logo/logo.webp"
+                  src="/images/logo/logo-footer.webp"
                   alt="Misha Travel"
                   width={180}
                   height={60}
-                  className="h-12 w-auto brightness-0 invert"
+                  className="h-12 w-auto"
                 />
               </Link>
               <p className="text-sm text-white/70 leading-relaxed">

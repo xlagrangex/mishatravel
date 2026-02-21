@@ -222,7 +222,7 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | Data | Servizio | Stato | Note |
 |------|----------|-------|------|
 | 2026-02-21 | GitHub | ✅ Configurato | Repo: github.com/xlagrangex/mishatravel |
-| 2026-02-21 | Supabase | ✅ Parziale | URL + anon key configurati. Manca service_role key. |
+| 2026-02-21 | Supabase | ✅ Completo | URL + anon key + service_role key configurati. |
 | - | Vercel | 🟡 Auto-deploy | Deploy automatico da GitHub, configurato dall'utente |
 | - | Brevo | ⏳ In attesa | Serve per Sprint 8 |
 | - | WordPress | ⏳ In attesa | Serve per Sprint 9 |

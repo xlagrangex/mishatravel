@@ -5,6 +5,7 @@ import DestinationCard from "@/components/cards/DestinationCard";
 import TourCard from "@/components/cards/TourCard";
 import CruiseCard from "@/components/cards/CruiseCard";
 import BlogCard from "@/components/cards/BlogCard";
+import HeroSlider from "@/components/home/HeroSlider";
 import { destinations, tours, cruises, blogPosts } from "@/lib/data";
 
 export default function HomePage() {
@@ -16,30 +17,7 @@ export default function HomePage() {
   return (
     <>
       {/* ===== HERO SLIDER ===== */}
-      <section className="relative w-full h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden">
-        <Image
-          src="/images/misc/statue-liberty-new-york-city-skyline-usa-scaled.jpg"
-          alt="New York e Cascate del Niagara"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="hero-overlay" />
-        <div className="relative z-10 text-center text-white px-4 max-w-3xl mx-auto">
-          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-white/80">
-            Misha Travel Tour Operator
-          </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-[family-name:var(--font-poppins)] mb-4 leading-tight">
-            NEW YORK &amp; CASCATE DEL NIAGARA
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-6">
-            a partire da <span className="font-bold text-2xl">&#8364;2.950</span>
-          </p>
-          <Button asChild size="lg" className="bg-[#C41E2F] hover:bg-[#A31825] text-white px-8 py-3 text-base">
-            <Link href="/tours/india-triangolo-doro-udaipur-jodhpur-pushkar-mandawa">Scopri di pi&ugrave;</Link>
-          </Button>
-        </div>
-      </section>
+      <HeroSlider />
 
       {/* ===== DESTINAZIONI ===== */}
       <section className="py-16 bg-white">
@@ -64,8 +42,16 @@ export default function HomePage() {
       </section>
 
       {/* ===== AGENCY CTA ===== */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
+      <section className="relative py-16 bg-gray-50 overflow-hidden">
+        {/* Dotted world map pattern background */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage: "radial-gradient(circle, #1B2D4F 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+        <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">
             Offri ai tuoi clienti il viaggio della loro vita
           </h2>
@@ -73,11 +59,42 @@ export default function HomePage() {
             Al resto pensiamo noi
           </p>
           <p className="text-gray-600 leading-relaxed mb-8 max-w-2xl mx-auto">
-            Misha Travel e un tour operator B2B specializzato in viaggi culturali, grandi itinerari e
+            Misha Travel &egrave; un tour operator B2B specializzato in viaggi culturali, grandi itinerari e
             crociere fluviali. Lavoriamo esclusivamente con agenzie di viaggio, offrendo prodotti di alta
-            qualita, assistenza dedicata e margini competitivi. Diventa nostro partner e offri ai tuoi
+            qualit&agrave;, assistenza dedicata e margini competitivi. Diventa nostro partner e offri ai tuoi
             clienti esperienze di viaggio indimenticabili.
           </p>
+
+          {/* GIF Icons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-8">
+            <Link href="/tours" className="group flex flex-col items-center gap-3">
+              <div className="w-24 h-24 rounded-full bg-white shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/tours/icon-001.gif"
+                  alt="I nostri tour"
+                  className="w-16 h-16 object-contain"
+                />
+              </div>
+              <span className="text-sm font-semibold text-[#1B2D4F] group-hover:text-[#C41E2F] transition-colors">
+                I nostri tour
+              </span>
+            </Link>
+            <Link href="/crociere" className="group flex flex-col items-center gap-3">
+              <div className="w-24 h-24 rounded-full bg-white shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/cruises/output-onlinegiftools.gif"
+                  alt="Crociere Fluviali"
+                  className="w-16 h-16 object-contain"
+                />
+              </div>
+              <span className="text-sm font-semibold text-[#1B2D4F] group-hover:text-[#C41E2F] transition-colors">
+                Crociere Fluviali
+              </span>
+            </Link>
+          </div>
+
           <Button asChild size="lg" className="bg-[#C41E2F] hover:bg-[#A31825] text-white px-8">
             <Link href="/diventa-partner">Diventa Partner</Link>
           </Button>
