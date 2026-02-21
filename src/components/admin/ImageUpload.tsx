@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +23,8 @@ export interface ImageUploadProps {
   value?: string[];
   /** Called whenever the list of uploaded image URLs changes. */
   onUpload: (urls: string[]) => void;
+  /** Supabase Storage bucket name. Defaults to 'general'. */
+  bucket?: string;
   /** Allow selecting multiple files at once. */
   multiple?: boolean;
   /** Maximum number of images (only relevant when `multiple` is true). */
@@ -71,6 +74,7 @@ function uid(): string {
 export default function ImageUpload({
   value = [],
   onUpload,
+  bucket = "general",
   multiple = false,
   maxFiles = 20,
   maxSizeBytes = DEFAULT_MAX_SIZE,
@@ -97,27 +101,35 @@ export default function ImageUpload({
   }, []);
 
   // -----------------------------------------------------------------------
-  // Upload logic (mocked)
+  // Upload logic (Supabase Storage)
   // -----------------------------------------------------------------------
 
-  const simulateUpload = useCallback(
+  const uploadToStorage = useCallback(
     async (file: File): Promise<string> => {
-      // TODO: Replace this mock with actual Supabase Storage upload.
-      // Example:
-      //   const { data, error } = await supabase.storage
-      //     .from("images")
-      //     .upload(`tours/${Date.now()}_${file.name}`, file);
-      //   if (error) throw error;
-      //   return supabase.storage.from("images").getPublicUrl(data.path).data.publicUrl;
+      const supabase = createClient();
 
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const objectUrl = URL.createObjectURL(file);
-          resolve(objectUrl);
-        }, 800 + Math.random() * 1200);
-      });
+      // Sanitize filename: remove special chars, keep extension
+      const sanitized = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, "_")
+        .replace(/_+/g, "_");
+      const filePath = `${Date.now()}_${sanitized}`;
+
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) throw new Error(error.message);
+
+      const { data: urlData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(data.path);
+
+      return urlData.publicUrl;
     },
-    [],
+    [bucket],
   );
 
   const processFiles = useCallback(
@@ -174,7 +186,7 @@ export default function ImageUpload({
           }, 200);
 
           try {
-            const url = await simulateUpload(entry.file);
+            const url = await uploadToStorage(entry.file);
             clearInterval(progressInterval);
 
             setUploading((prev) =>
@@ -212,7 +224,7 @@ export default function ImageUpload({
         }, 1500);
       }
     },
-    [value, onUpload, multiple, maxFiles, maxSizeBytes, accept, simulateUpload],
+    [value, onUpload, multiple, maxFiles, maxSizeBytes, accept, uploadToStorage],
   );
 
   // -----------------------------------------------------------------------

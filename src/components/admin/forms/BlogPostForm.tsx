@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import type { BlogPost, BlogCategory } from "@/lib/types";
 import { saveBlogPost } from "@/app/admin/blog/actions";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -288,10 +289,17 @@ export default function BlogPostForm({ initialData, categories }: BlogPostFormPr
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* TODO: Replace with ImageUpload component */}
-              <div className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 text-sm text-muted-foreground">
-                Upload immagine
-              </div>
+              <Controller
+                name="cover_image_url"
+                control={control}
+                render={({ field }) => (
+                  <ImageUpload
+                    value={field.value ? [field.value] : []}
+                    onUpload={(urls) => field.onChange(urls[0] || "")}
+                    bucket="blog"
+                  />
+                )}
+              />
             </CardContent>
           </Card>
 

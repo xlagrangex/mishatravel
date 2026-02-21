@@ -1,16 +1,34 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useRef, useCallback } from "react";
 import Image from "next/image";
-import { Search, Trash2, Upload, FileIcon, ImageIcon, FileText, Film } from "lucide-react";
+import {
+  Search,
+  Trash2,
+  Upload,
+  FileIcon,
+  ImageIcon,
+  FileText,
+  Film,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { MediaItem } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import type { StorageFileItem } from "@/lib/supabase/queries/media";
 import { deleteMediaAction } from "./actions";
 
 interface MediaGridProps {
-  items: MediaItem[];
+  items: StorageFileItem[];
+  buckets: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -40,22 +58,37 @@ function getFileIcon(mimeType: string | null) {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function MediaGrid({ items }: MediaGridProps) {
+export default function MediaGrid({ items, buckets }: MediaGridProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBucket, setSelectedBucket] = useState<string>("all");
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return items;
-    const q = searchQuery.toLowerCase();
-    return items.filter((item) => item.filename.toLowerCase().includes(q));
-  }, [searchQuery, items]);
+    let result = items;
+    if (selectedBucket !== "all") {
+      result = result.filter((item) => item.bucket === selectedBucket);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((item) => item.name.toLowerCase().includes(q));
+    }
+    return result;
+  }, [searchQuery, selectedBucket, items]);
 
-  const handleDelete = (id: string, filename: string) => {
-    if (!confirm(`Sei sicuro di voler eliminare "${filename}"? Questa azione non può essere annullata.`)) return;
-    setDeletingId(id);
+  const handleDelete = (bucket: string, fileName: string, displayName: string) => {
+    if (
+      !confirm(
+        `Sei sicuro di voler eliminare "${displayName}"? Questa azione non può essere annullata.`
+      )
+    )
+      return;
+    const itemId = `${bucket}/${fileName}`;
+    setDeletingId(itemId);
     startTransition(async () => {
-      const result = await deleteMediaAction(id);
+      const result = await deleteMediaAction(bucket, fileName);
       if (!result.success) {
         alert(`Errore: ${result.error}`);
       }
@@ -63,8 +96,60 @@ export default function MediaGrid({ items }: MediaGridProps) {
     });
   };
 
+  const handleUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const targetBucket =
+        selectedBucket !== "all" ? selectedBucket : "general";
+      setIsUploading(true);
+
+      try {
+        const supabase = createClient();
+        for (const file of Array.from(files)) {
+          const sanitized = file.name
+            .replace(/[^a-zA-Z0-9._-]/g, "_")
+            .replace(/_+/g, "_");
+          const filePath = `${Date.now()}_${sanitized}`;
+
+          const { error } = await supabase.storage
+            .from(targetBucket)
+            .upload(filePath, file, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (error) {
+            alert(`Errore upload "${file.name}": ${error.message}`);
+          }
+        }
+        // Reload page to show new files
+        window.location.reload();
+      } catch (err) {
+        alert(
+          `Errore upload: ${err instanceof Error ? err.message : "Errore sconosciuto"}`
+        );
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [selectedBucket]
+  );
+
   return (
     <div className="space-y-6">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        accept="image/*,application/pdf"
+        onChange={handleUpload}
+      />
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -72,27 +157,52 @@ export default function MediaGrid({ items }: MediaGridProps) {
             Libreria Media
           </h1>
           <p className="text-sm text-muted-foreground">
-            Gestisci immagini e file caricati
+            Gestisci immagini e file caricati su Supabase Storage
             {items.length > 0 && (
               <span className="ml-1">({items.length} totali)</span>
             )}
           </p>
         </div>
-        <Button disabled title="Upload in arrivo">
-          <Upload className="h-4 w-4" />
-          Carica File
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
+          {isUploading ? "Caricamento..." : "Carica File"}
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Cerca per nome file..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Search */}
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Cerca per nome file..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Bucket filter */}
+        <Select value={selectedBucket} onValueChange={setSelectedBucket}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Tutti i bucket" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti i bucket</SelectItem>
+            {buckets.map((b) => (
+              <SelectItem key={b} value={b}>
+                {b}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Grid */}
@@ -100,18 +210,18 @@ export default function MediaGrid({ items }: MediaGridProps) {
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
           <ImageIcon className="mb-4 h-12 w-12 text-muted-foreground/30" />
           <p className="text-lg font-medium text-muted-foreground">
-            Nessun file caricato
+            Nessun file trovato
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {searchQuery
-              ? "Prova a modificare la ricerca."
-              : "L'upload dei file sarà disponibile con la configurazione di Supabase Storage."}
+            {searchQuery || selectedBucket !== "all"
+              ? "Prova a modificare i filtri di ricerca."
+              : "Clicca \"Carica File\" per iniziare ad aggiungere immagini e documenti."}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((item) => {
-            const IconComponent = getFileIcon(item.mime_type);
+            const IconComponent = getFileIcon(item.mimeType);
             return (
               <div
                 key={item.id}
@@ -122,10 +232,10 @@ export default function MediaGrid({ items }: MediaGridProps) {
               >
                 {/* Thumbnail / Icon */}
                 <div className="relative aspect-square bg-muted">
-                  {isImage(item.mime_type) ? (
+                  {isImage(item.mimeType) ? (
                     <Image
                       src={item.url}
-                      alt={item.filename}
+                      alt={item.name}
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -143,7 +253,9 @@ export default function MediaGrid({ items }: MediaGridProps) {
                       size="icon-xs"
                       className="h-7 w-7"
                       disabled={isPending && deletingId === item.id}
-                      onClick={() => handleDelete(item.id, item.filename)}
+                      onClick={() =>
+                        handleDelete(item.bucket, item.name, item.name)
+                      }
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span className="sr-only">Elimina</span>
@@ -153,23 +265,18 @@ export default function MediaGrid({ items }: MediaGridProps) {
 
                 {/* File info */}
                 <div className="p-3">
-                  <p className="truncate text-sm font-medium" title={item.filename}>
-                    {item.filename}
+                  <p
+                    className="truncate text-sm font-medium"
+                    title={item.name}
+                  >
+                    {item.name}
                   </p>
                   <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formatFileSize(item.file_size)}</span>
-                    {item.mime_type && (
-                      <>
-                        <span className="text-muted-foreground/40">&middot;</span>
-                        <span className="truncate">{item.mime_type}</span>
-                      </>
-                    )}
+                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase">
+                      {item.bucket}
+                    </span>
+                    <span>{formatFileSize(item.size)}</span>
                   </div>
-                  {item.width && item.height && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {item.width} &times; {item.height}
-                    </p>
-                  )}
                 </div>
               </div>
             );

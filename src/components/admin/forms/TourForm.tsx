@@ -14,9 +14,9 @@ import {
   ChevronDown,
   Save,
   ArrowLeft,
-  ImagePlus,
-  FileUp,
 } from "lucide-react";
+import ImageUpload from "@/components/admin/ImageUpload";
+import FileUpload from "@/components/admin/FileUpload";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1176,19 +1176,19 @@ export default function TourForm({ initialData, destinations = [], localities = 
                 <CardTitle>Gallery</CardTitle>
               </CardHeader>
               <CardContent>
-                {/* TODO: Replace with ImageUpload component */}
-                <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 text-center">
-                  <div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-                    <ImagePlus className="size-7 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Carica immagini</p>
-                    <p className="text-xs text-muted-foreground">
-                      Drag &amp; drop o clicca per selezionare le immagini della
-                      gallery del tour
-                    </p>
-                  </div>
-                </div>
+                <Controller
+                  control={control}
+                  name="gallery_urls"
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value}
+                      onUpload={field.onChange}
+                      bucket="tours"
+                      multiple
+                      maxFiles={20}
+                    />
+                  )}
+                />
               </CardContent>
             </Card>
 
@@ -1198,18 +1198,17 @@ export default function TourForm({ initialData, destinations = [], localities = 
                 <CardTitle>Programma PDF</CardTitle>
               </CardHeader>
               <CardContent>
-                {/* TODO: Replace with FileUpload component */}
-                <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-12 text-center">
-                  <div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-                    <FileUp className="size-7 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Carica PDF</p>
-                    <p className="text-xs text-muted-foreground">
-                      Carica il programma completo del tour in formato PDF
-                    </p>
-                  </div>
-                </div>
+                <Controller
+                  control={control}
+                  name="programma_pdf_url"
+                  render={({ field }) => (
+                    <FileUpload
+                      value={field.value}
+                      onUpload={field.onChange}
+                      bucket="tours"
+                    />
+                  )}
+                />
               </CardContent>
             </Card>
           </div>

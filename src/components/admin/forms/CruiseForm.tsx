@@ -16,6 +16,8 @@ import {
   ImagePlus,
   FileUp,
 } from "lucide-react";
+import ImageUpload from "@/components/admin/ImageUpload";
+import FileUpload from "@/components/admin/FileUpload";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -619,13 +621,19 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
 
               <Separator />
 
-              {/* Cover Image URL (placeholder) */}
+              {/* Cover Image */}
               <div className="space-y-2">
-                <Label htmlFor="cover_image_url">URL Immagine Copertina</Label>
-                <Input
-                  id="cover_image_url"
-                  placeholder="https://..."
-                  {...register("cover_image_url")}
+                <Label>Immagine Copertina</Label>
+                <Controller
+                  control={control}
+                  name="cover_image_url"
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value ? [field.value] : []}
+                      onUpload={(urls) => field.onChange(urls[0] || null)}
+                      bucket="cruises"
+                    />
+                  )}
                 />
               </div>
 
@@ -1355,27 +1363,17 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                 <CardTitle>Programma PDF</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="programma_pdf_url">URL Programma PDF</Label>
-                    <Input
-                      id="programma_pdf_url"
-                      placeholder="https://..."
-                      {...register("programma_pdf_url")}
+                <Controller
+                  control={control}
+                  name="programma_pdf_url"
+                  render={({ field }) => (
+                    <FileUpload
+                      value={field.value}
+                      onUpload={field.onChange}
+                      bucket="cruises"
                     />
-                  </div>
-                  <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center">
-                    <div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-                      <FileUp className="size-7 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Carica PDF</p>
-                      <p className="text-xs text-muted-foreground">
-                        Carica il programma completo della crociera in formato PDF
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  )}
+                />
               </CardContent>
             </Card>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +22,8 @@ export interface FileUploadProps {
   value?: string | null;
   /** Called when a file is uploaded or removed. Receives the URL or null. */
   onUpload: (url: string | null) => void;
+  /** Supabase Storage bucket name. Defaults to 'catalogs'. */
+  bucket?: string;
   /** Maximum file size in bytes. Defaults to 10 MB. */
   maxSizeBytes?: number;
   /** Accepted MIME types. Defaults to PDF. */
@@ -60,6 +63,7 @@ function formatBytes(bytes: number): string {
 export default function FileUpload({
   value = null,
   onUpload,
+  bucket = "catalogs",
   maxSizeBytes = DEFAULT_MAX_SIZE,
   accept = DEFAULT_ACCEPT,
   fileTypeLabel = "PDF",
@@ -73,25 +77,33 @@ export default function FileUpload({
   const [fileSize, setFileSize] = useState<number | null>(null);
 
   // -----------------------------------------------------------------------
-  // Upload logic (mocked)
+  // Upload logic (Supabase Storage)
   // -----------------------------------------------------------------------
 
-  const simulateUpload = useCallback(async (file: File): Promise<string> => {
-    // TODO: Replace this mock with actual Supabase Storage upload.
-    // Example:
-    //   const { data, error } = await supabase.storage
-    //     .from("documents")
-    //     .upload(`pdfs/${Date.now()}_${file.name}`, file);
-    //   if (error) throw error;
-    //   return supabase.storage.from("documents").getPublicUrl(data.path).data.publicUrl;
+  const uploadToStorage = useCallback(async (file: File): Promise<string> => {
+    const supabase = createClient();
 
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const objectUrl = URL.createObjectURL(file);
-        resolve(objectUrl);
-      }, 800 + Math.random() * 1200);
-    });
-  }, []);
+    // Sanitize filename: remove special chars, keep extension
+    const sanitized = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/_+/g, "_");
+    const filePath = `${Date.now()}_${sanitized}`;
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) throw new Error(error.message);
+
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    return urlData.publicUrl;
+  }, [bucket]);
 
   const processFile = useCallback(
     async (file: File) => {
@@ -129,7 +141,7 @@ export default function FileUpload({
       }, 200);
 
       try {
-        const url = await simulateUpload(file);
+        const url = await uploadToStorage(file);
         clearInterval(progressInterval);
 
         setUploadState({ file, progress: 100, status: "done" });
@@ -151,7 +163,7 @@ export default function FileUpload({
         });
       }
     },
-    [maxSizeBytes, accept, fileTypeLabel, simulateUpload, onUpload],
+    [maxSizeBytes, accept, fileTypeLabel, uploadToStorage, onUpload],
   );
 
   // -----------------------------------------------------------------------

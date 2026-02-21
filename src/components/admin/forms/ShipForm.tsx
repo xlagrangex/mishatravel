@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   ImagePlus,
 } from "lucide-react";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -368,13 +369,19 @@ export default function ShipForm({ initialData }: ShipFormProps) {
                 </p>
               </div>
 
-              {/* Cover Image URL (placeholder) */}
+              {/* Cover Image */}
               <div className="space-y-2">
-                <Label htmlFor="cover_image_url">URL Immagine Copertina</Label>
-                <Input
-                  id="cover_image_url"
-                  placeholder="https://example.com/nave.jpg"
-                  {...register("cover_image_url")}
+                <Label>Immagine Copertina</Label>
+                <Controller
+                  control={control}
+                  name="cover_image_url"
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value ? [field.value] : []}
+                      onUpload={(urls) => field.onChange(urls[0] || null)}
+                      bucket="ships"
+                    />
+                  )}
                 />
               </div>
 

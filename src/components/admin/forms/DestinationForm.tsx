@@ -22,6 +22,7 @@ import {
 import type { Destination } from "@/lib/types";
 import { saveDestination } from "@/app/admin/destinazioni/actions";
 import MapPicker from "@/components/admin/MapPicker";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -275,10 +276,17 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* TODO: Replace with ImageUpload component */}
-              <div className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 text-sm text-muted-foreground">
-                Upload immagine
-              </div>
+              <Controller
+                name="cover_image_url"
+                control={control}
+                render={({ field }) => (
+                  <ImageUpload
+                    value={field.value ? [field.value] : []}
+                    onUpload={(urls) => field.onChange(urls[0] || "")}
+                    bucket="general"
+                  />
+                )}
+              />
             </CardContent>
           </Card>
         </div>

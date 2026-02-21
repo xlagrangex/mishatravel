@@ -1,20 +1,29 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/admin'
+import { deleteStorageFile } from '@/lib/supabase/queries/media'
 import { revalidatePath } from 'next/cache'
 
-type ActionResult = { success: true; id: string } | { success: false; error: string }
+type ActionResult =
+  | { success: true }
+  | { success: false; error: string }
 
-export async function deleteMediaAction(id: string): Promise<ActionResult> {
-  const supabase = createAdminClient()
-
-  const { error } = await supabase
-    .from('media')
-    .delete()
-    .eq('id', id)
-
-  if (error) return { success: false, error: error.message }
-
-  revalidatePath('/admin/media')
-  return { success: true, id }
+/**
+ * Deletes a file from Supabase Storage.
+ * @param bucket The storage bucket name
+ * @param fileName The file name within the bucket
+ */
+export async function deleteMediaAction(
+  bucket: string,
+  fileName: string
+): Promise<ActionResult> {
+  try {
+    await deleteStorageFile(bucket, fileName)
+    revalidatePath('/admin/media')
+    return { success: true }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
 }

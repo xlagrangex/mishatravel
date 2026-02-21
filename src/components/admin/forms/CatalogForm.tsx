@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Catalog } from "@/lib/types";
 import { saveCatalog } from "@/app/admin/cataloghi/actions";
+import ImageUpload from "@/components/admin/ImageUpload";
+import FileUpload from "@/components/admin/FileUpload";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -132,23 +134,33 @@ export default function CatalogForm({ initialData }: CatalogFormProps) {
               {/* Immagine Copertina */}
               <div className="space-y-2">
                 <Label>Immagine Copertina</Label>
-                <div className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 text-sm text-muted-foreground">
-                  Upload immagine (in arrivo)
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  L&apos;upload delle immagini sarà disponibile con la configurazione di Supabase Storage.
-                </p>
+                <Controller
+                  name="cover_image_url"
+                  control={control}
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value ? [field.value] : []}
+                      onUpload={(urls) => field.onChange(urls[0] || "")}
+                      bucket="catalogs"
+                    />
+                  )}
+                />
               </div>
 
-              {/* PDF URL */}
+              {/* PDF */}
               <div className="space-y-2">
                 <Label>PDF</Label>
-                <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 text-sm text-muted-foreground">
-                  Upload PDF (in arrivo)
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  L&apos;upload dei PDF sarà disponibile con la configurazione di Supabase Storage.
-                </p>
+                <Controller
+                  name="pdf_url"
+                  control={control}
+                  render={({ field }) => (
+                    <FileUpload
+                      value={field.value || null}
+                      onUpload={(url) => field.onChange(url || "")}
+                      bucket="catalogs"
+                    />
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
