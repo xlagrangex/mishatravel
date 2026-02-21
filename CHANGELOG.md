@@ -8,10 +8,10 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ███████░░░░░░░░░░░░░ 35% |
-| **Sprint Corrente** | Sprint 2 - Admin Crociere + Flotta |
-| **Task Completate** | 15 / ~65 |
-| **Task In Corso** | 2 (Collegamento admin Supabase) |
+| **Progresso Totale** | ████████░░░░░░░░░░░░ 38% |
+| **Sprint Corrente** | Sprint 1 (completamento task 1.13, 1.14) → Sprint 2 |
+| **Task Completate** | 17 / ~69 |
+| **Task In Corso** | 0 |
 | **Task Bloccate** | 0 |
 | **Ultima Attivita** | 2026-02-21 |
 
@@ -22,7 +22,7 @@
 | Sprint | Titolo | Stato | Progresso | Note |
 |--------|--------|-------|-----------|------|
 | 0 | Setup e Configurazione | ✅ Completato | ██████████ 100% | Tutte le credenziali fornite, progetto configurato, repo su GitHub |
-| 1 | Database + Admin Base | ✅ Completato | ██████████ 100% | Schema DB eseguito su Supabase (43 tabelle, 12 enum, RLS, triggers, functions). Admin panel collegato a Supabase. |
+| 1 | Database + Admin Base | 🟡 Quasi completato | █████████░ 90% | Schema DB eseguito, admin collegato a Supabase. Mancano: Map Picker (1.13), autocomplete localita (1.14). |
 | 2 | Admin Crociere + Flotta | 🟡 Parziale | ██░░░░░░░░ 20% | Pagine placeholder create per tutte le sezioni |
 | 3 | Sito Pubblico - Pagine Core | 🟡 Parziale | ██████████ 95% | 27 pagine gia costruite con dati mock, manca solo collegamento DB |
 | 4 | Calendario + Destinazioni + Blog | 🟡 Parziale | ████████░░ 80% | Pagine esistenti, manca collegamento DB |
@@ -63,6 +63,10 @@
 | 1.8 | Componente Rich Text Editor | ✅ Completata | 2026-02-21 | Tiptap con toolbar: bold, italic, headings, liste, link, immagini, undo/redo. |
 | 1.9 | Admin: Gestione Destinazioni | ✅ Completata | 2026-02-21 | Lista con ricerca + form nuovo/modifica con zod validation. Slug auto-generato. Mock data. |
 | 1.10 | Admin: Gestione Tour | ✅ Completata | 2026-02-21 | Form complesso a 8 tab: Info Base, Programma, Alberghi, Partenze, Supplementi&Extra, Incluso/Escluso, Termini&Penali, Gallery&PDF. useFieldArray per liste dinamiche. ~700 righe. |
+| 1.11 | Collegamento Admin CRUD a Supabase | ✅ Completata | 2026-02-21 | Admin client (service_role), query functions, server actions, DestinationForm e TourForm collegati a Supabase. Pattern delete-and-reinsert per sub-tabelle tour. |
+| 1.12 | Preview links nelle tabelle admin | ✅ Completata | 2026-02-21 | Colonna "Anteprima" con slug cliccabile + icona ExternalLink in DestinazioniTable e AdminToursTable. |
+| 1.13 | Map Picker per input coordinate (Leaflet) | ⚪ Da fare | - | Componente MapPicker con Leaflet+OpenStreetMap nel form destinazione. Click su mappa, ricerca localita, pin draggabile. |
+| 1.14 | Auto-suggerimento localita itinerario tour | ⚪ Da fare | - | Autocomplete nel campo localita del TourForm (tab Programma) con localita gia usate in altri tour. |
 
 ### SPRINT 2 - Admin Crociere + Flotta
 
@@ -70,7 +74,7 @@
 |----|------|-------|--------------------|-------------|
 | 2.1 | Admin: Gestione Flotta/Navi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata, CRUD da implementare |
 | 2.2 | Admin: Gestione Crociere Fluviali | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
-| 2.3 | Admin: Calendario Partenze | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
+| 2.3 | Admin: Vista Calendario Partenze (sola lettura) | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata. Semplificata: sola lettura, legge da tour_departures/cruise_departures. |
 | 2.4 | Admin: Gestione Blog | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
 | 2.5 | Admin: Gestione Cataloghi | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
 | 2.6 | Admin: Libreria Media | 🟡 Placeholder | 2026-02-21 | Pagina placeholder creata |
@@ -188,6 +192,32 @@
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
 
+### Modifica #5 - Miglioramenti UX Admin + Collegamento Supabase + Calendario Semplificato
+- **Data**: 2026-02-21
+- **File modificati**: SPRINT_PLAN.md, PROJECT_OVERVIEW.md, CHANGELOG.md, CLAUDE.md
+- **Richiesto da**: Utente
+- **Motivo**: L'utente ha richiesto diversi miglioramenti UX nell'admin panel e una semplificazione del calendario partenze, durante la fase di collegamento dell'admin a Supabase.
+- **Cosa e cambiato**:
+  - **SPRINT_PLAN.md**:
+    - Aggiunte 4 nuove task allo Sprint 1: 1.11 (collegamento CRUD Supabase, ✅), 1.12 (preview links, ✅), 1.13 (Map Picker Leaflet, ⚪), 1.14 (autocomplete localita, ⚪)
+    - Modificata task 2.3: da "Gestione Calendario Partenze" (CRUD) a "Vista Calendario Partenze" (sola lettura). Le partenze vengono gestite solo dalla tab Partenze del form tour/crociera.
+    - Totale task aggiornato: ~69 (da ~65)
+  - **PROJECT_OVERVIEW.md**:
+    - Sezione 4.4.2 (Tour): aggiunta colonna "Anteprima" alla lista tour
+    - Sezione 4.4.2 (Tour Itinerario): aggiunto campo "Localita" con auto-suggerimento
+    - Sezione 4.4.5 (Calendario): riscritta come sola lettura aggregata
+    - Sezione 4.4.10 (Destinazioni): aggiunta descrizione Map Picker per coordinate, colonna anteprima nella lista
+  - **CHANGELOG.md**: Aggiunti task 1.11-1.14, aggiornato stato Sprint 1
+  - **Nuovi file creati durante implementazione**:
+    - `src/lib/supabase/admin.ts` - Client Supabase admin (service_role)
+    - `src/lib/supabase/queries/destinations.ts` - Query functions destinazioni
+    - `src/lib/supabase/queries/tours.ts` - Query functions tour
+    - `src/app/admin/destinazioni/actions.ts` - Server actions destinazioni
+    - `src/app/admin/tours/actions.ts` - Server actions tour
+    - `src/app/admin/destinazioni/DestinazioniTable.tsx` - Tabella client component
+    - `src/app/admin/tours/AdminToursTable.tsx` - Tabella client component
+- **Versione piano**: v1.5
+
 ### Modifica #4 - Feature Trova Agenzia con Mappa + Connessione DB Supabase
 - **Data**: 2026-02-21
 - **File modificati**: PROJECT_OVERVIEW.md, CHANGELOG.md, schema DB
@@ -298,6 +328,13 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 | `src/app/admin/preventivi/page.tsx` | Page | Placeholder preventivi |
 | `src/app/admin/estratti-conto/page.tsx` | Page | Placeholder estratti conto |
 | `src/app/admin/utenti/page.tsx` | Page | Placeholder utenti |
+| `src/lib/supabase/admin.ts` | Lib | Client Supabase con service_role key (bypassa RLS) |
+| `src/lib/supabase/queries/destinations.ts` | Query | getDestinations, getDestinationById, getDestinationOptions |
+| `src/lib/supabase/queries/tours.ts` | Query | getTours, getTourById |
+| `src/app/admin/destinazioni/actions.ts` | Actions | Server actions saveDestination, deleteDestination |
+| `src/app/admin/tours/actions.ts` | Actions | Server actions saveTour, deleteTourAction |
+| `src/app/admin/destinazioni/DestinazioniTable.tsx` | Component | Tabella destinazioni client con ricerca, delete, preview links |
+| `src/app/admin/tours/AdminToursTable.tsx` | Component | Tabella tour client con ricerca, delete, preview links |
 
 ---
 
@@ -314,4 +351,4 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 ---
 
 *Ultimo aggiornamento: 2026-02-21*
-*Versione piano: v1.4*
+*Versione piano: v1.5*

@@ -143,11 +143,15 @@ MISHATRAVEL/
 │   │   └── admin/               ← Admin panel (layout separato, noindex)
 │   │       ├── layout.tsx       ← Layout admin (AdminShell)
 │   │       ├── page.tsx         ← Dashboard con statistiche
-│   │       ├── destinazioni/    ← CRUD destinazioni (lista + nuovo + modifica)
-│   │       ├── tours/           ← CRUD tours (lista + nuovo + modifica, form 8 tab)
+│   │       ├── destinazioni/    ← CRUD destinazioni (collegato Supabase)
+│   │       │   ├── page.tsx, DestinazioniTable.tsx, actions.ts
+│   │       │   ├── nuovo/page.tsx, [id]/modifica/page.tsx
+│   │       ├── tours/           ← CRUD tours (collegato Supabase)
+│   │       │   ├── page.tsx, AdminToursTable.tsx, actions.ts
+│   │       │   ├── nuovo/page.tsx, [id]/modifica/page.tsx
 │   │       ├── crociere/        ← Placeholder
 │   │       ├── flotta/          ← Placeholder
-│   │       ├── partenze/        ← Placeholder
+│   │       ├── partenze/        ← Placeholder (sola lettura, legge da tour/crociere)
 │   │       ├── blog/            ← Placeholder
 │   │       ├── cataloghi/       ← Placeholder
 │   │       ├── media/           ← Placeholder
@@ -172,12 +176,16 @@ MISHATRAVEL/
 │   │   └── ui/                  ← 19 componenti shadcn/ui
 │   │
 │   ├── lib/
-│   │   ├── data.ts              ← Dati mock (1935 righe) - DA SOSTITUIRE CON SUPABASE
+│   │   ├── data.ts              ← Dati mock (1935 righe) - ancora usati dal sito pubblico
 │   │   ├── types.ts             ← 40 interfacce TypeScript + 3 tipi compositi
 │   │   ├── utils.ts             ← Utility (cn helper)
 │   │   └── supabase/
 │   │       ├── client.ts        ← Supabase client per browser
-│   │       └── server.ts        ← Supabase client per server (SSR)
+│   │       ├── server.ts        ← Supabase client per server (SSR)
+│   │       ├── admin.ts         ← Supabase client admin (service_role, bypassa RLS)
+│   │       └── queries/
+│   │           ├── destinations.ts ← getDestinations, getDestinationById, getDestinationOptions
+│   │           └── tours.ts       ← getTours, getTourById
 │   │
 │   └── middleware.ts             ← Middleware per refresh sessione Supabase
 │
@@ -195,11 +203,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 1 completato, Sprint 2 prossimo
-- **Ultima azione**: Schema DB eseguito su Supabase (43 tabelle), CRUD Destinazioni e Tour collegati a Supabase
-- **Prossimo step**: Completare collegamento admin panel a Supabase (crociere, flotta, blog)
+- **Sprint corrente**: Sprint 1 - Database + Admin Base (90% - mancano task 1.13 Map Picker e 1.14 Autocomplete localita)
+- **Ultima azione**: Admin collegato a Supabase (CRUD Destinazioni + Tour), preview links aggiunti, file MD aggiornati con Modifica #5
+- **Prossimo step**: Task 1.13 (Map Picker Leaflet per coordinate) oppure Sprint 2 (CRUD Crociere + Flotta)
 - **Bloccanti**: Nessuno
-- **Progresso totale**: ~35% (15/65 task completate)
+- **Progresso totale**: ~38% (17/69 task completate)
 
 ---
 
@@ -261,4 +269,4 @@ MISHATRAVEL/
 ---
 
 *Ultimo aggiornamento: 2026-02-21*
-*Versione piano: v1.4*
+*Versione piano: v1.5*

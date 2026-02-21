@@ -347,7 +347,7 @@ Pannello di amministrazione completo accessibile solo allo staff di MishaTravel.
 
 #### 4.4.2 Gestione Tour (/admin/tour)
 
-**Lista Tour**: Tabella con ricerca, filtri (destinazione, stato), azioni (modifica, duplica, elimina)
+**Lista Tour**: Tabella con ricerca, filtri (destinazione, stato), colonna anteprima (slug cliccabile che apre la pagina pubblica in nuovo tab), azioni (modifica, duplica, elimina)
 
 **Editor Tour** (Creazione/Modifica):
 
@@ -367,6 +367,7 @@ Sostituto di WordPress + ACF. L'interfaccia deve essere piu intuitiva di ACF. Ca
 - Lista dinamica di giorni. Per ogni giorno:
   - Numero giorno (auto)
   - Titolo del giorno (es. "Arrivo a Istanbul")
+  - **Localita** (con auto-suggerimento: propone localita gia inserite in altri tour dal database)
   - Descrizione del giorno (rich text)
   - Immagine del giorno (opzionale)
 - Pulsanti: Aggiungi giorno, Riordina (drag & drop), Elimina giorno
@@ -436,11 +437,13 @@ Simile ai tour ma con campi aggiuntivi specifici per le crociere. I campi condiz
 
 #### 4.4.5 Gestione Calendario Partenze (/admin/partenze)
 
-- **Vista calendario**: Visualizzazione mensile con tutte le partenze
+**Nota**: Questa pagina e in SOLA LETTURA. Le partenze vengono create e modificate direttamente dalla tab "Partenze" del form tour o crociera. La pagina calendario serve come panoramica aggregata di tutte le partenze.
+
+- **Vista calendario**: Visualizzazione mensile con indicatori colorati (verde = tour, blu = crociere)
 - **Vista tabella**: Lista filtrabile e ordinabile
-- **Creazione partenza**: Seleziona tour o crociera, data partenza, data ritorno, prezzo, posti
-- **Modifica rapida**: Click su partenza per modificare stato/posti/prezzo
-- **Gestione disponibilita**: Aggiornamento posti disponibili
+- **Filtri**: Per tipo (tour/crociere), destinazione, mese
+- **Click su partenza**: Porta alla pagina di modifica del tour/crociera corrispondente
+- **Navigazione mese**: Avanti/indietro + "Oggi"
 
 #### 4.4.6 Gestione Agenzie (/admin/agenzie)
 
@@ -539,13 +542,14 @@ INVIATA → IN LAVORAZIONE → OFFERTA INVIATA → ACCETTATA → PAGAMENTO INVIA
 
 #### 4.4.10 Gestione Destinazioni (/admin/destinazioni)
 
-- **Lista destinazioni**: Griglia con immagine, nome, numero tour/crociere associate
+- **Lista destinazioni**: Tabella con immagine, nome, anteprima (slug cliccabile che apre la pagina pubblica in nuovo tab), macro area, coordinate, stato, azioni (modifica/elimina)
 - **Editor destinazione**:
   - Nome
-  - Slug
-  - Immagine
+  - Slug (auto-generato dal nome, modificabile)
+  - Immagine copertina
   - Descrizione
-  - Macro-area (Europa, America Latina, Asia/Russia, Africa, Percorsi Fluviali)
+  - Macro-area (Europa, America Latina, Asia, Africa, Medio Oriente, Oceania)
+  - **Coordinate con Map Picker**: Componente Leaflet integrato nel form. L'utente puo cliccare sulla mappa per inserire le coordinate, oppure cercare una localita con la barra di ricerca. Pin draggabile per aggiustamento fine. Molto piu semplice del copia-incolla da Google Maps.
 
 #### 4.4.11 Gestione Cataloghi (/admin/cataloghi)
 
@@ -672,3 +676,4 @@ L'interfaccia e interamente in **italiano**. Non e prevista al momento una versi
 ---
 
 *Documento aggiornato al: 21 Febbraio 2026*
+*Versione piano: v1.5*

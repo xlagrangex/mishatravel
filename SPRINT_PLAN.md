@@ -170,6 +170,38 @@
   - Tab SEO: meta title, description, OG image
 - **Dipendenze**: 1.1, 1.5, 1.7, 1.8, 1.9 (serve destinazioni per il select)
 
+### TASK 1.11 - Collegamento Admin CRUD a Supabase (Destinazioni + Tour)
+- **Cosa**: Sostituire i dati mock nel pannello admin con query reali a Supabase:
+  - Creare `src/lib/supabase/admin.ts` (client con service_role key per bypassare RLS)
+  - Creare query functions per destinazioni e tour (`getDestinations`, `getTours`, `getById`, etc.)
+  - Creare server actions per save/delete con validazione Zod
+  - Convertire le pagine lista da client component con mock a server component con fetch reale
+  - Collegare i form (DestinationForm, TourForm) alle server actions
+  - Aggiungere gestione errori server e feedback utente
+- **Dipendenze**: 1.1, 1.9, 1.10
+- **Stato**: ✅ Completata
+
+### TASK 1.12 - Preview links nelle tabelle admin
+- **Cosa**: Nelle tabelle lista admin (destinazioni, tour, e future), aggiungere una colonna "Anteprima" con lo slug cliccabile (es. `/destinazioni/roma`, `/tours/istanbul-classica`) che apre la pagina pubblica in un nuovo tab. Icona ExternalLink accanto allo slug.
+- **Dipendenze**: 1.11
+- **Stato**: ✅ Completata
+
+### TASK 1.13 - Map Picker per input coordinate (Leaflet)
+- **Cosa**: Componente MapPicker con Leaflet + OpenStreetMap da integrare nel form destinazione per rendere l'inserimento delle coordinate piu semplice:
+  - Mappa cliccabile: click sulla mappa inserisce lat/lng nel campo coordinate
+  - Barra di ricerca localita (geocoding) per cercare un luogo e posizionare il marker
+  - Pin draggabile per aggiustamento fine
+  - Mostra coordinate correnti in tempo reale
+  - Se coordinate gia presenti, mostra il pin nella posizione corretta
+  - Installare `leaflet` e `react-leaflet`
+- **Dipendenze**: 1.11
+- **Stato**: ⚪ Da fare
+
+### TASK 1.14 - Auto-suggerimento localita nell'itinerario tour
+- **Cosa**: Nel TourForm, tab "Programma" (itinerario giorni), il campo "Localita" di ogni giorno deve suggerire localita gia inserite in precedenza in altri tour (query da `tour_itinerary_days.locality` distinte). Autocomplete con dropdown.
+- **Dipendenze**: 1.11
+- **Stato**: ⚪ Da fare
+
 ---
 
 ## SPRINT 2 - Admin Crociere + Flotta
@@ -199,8 +231,12 @@
   - Tab SEO
 - **Dipendenze**: 1.2, 1.5, 1.7, 1.8, 2.1 (serve navi per il select)
 
-### TASK 2.3 - Admin: Gestione Calendario Partenze
-- **Cosa**: Vista calendario mensile (usando un componente calendario) + vista tabella. Mostra partenze di tour e crociere con colori diversi. Creazione rapida partenza (seleziona tour/crociera, date, prezzo, posti). Modifica rapida click.
+### TASK 2.3 - Admin: Vista Calendario Partenze (sola lettura)
+- **Cosa**: Vista calendario mensile + vista tabella che LEGGE le partenze gia definite nei tour e nelle crociere (tabelle `tour_departures` e `cruise_departures`). Non e un CRUD separato: le partenze vengono create/modificate direttamente dalla tab "Partenze" del form tour o crociera. Questa pagina serve come panoramica aggregata.
+  - Vista calendario con indicatori colorati (verde = tour, blu = crociere)
+  - Vista tabella filtrabile (tipo, destinazione, mese)
+  - Click su partenza porta alla pagina modifica del tour/crociera corrispondente
+  - Navigazione mese avanti/indietro
 - **Dipendenze**: 1.1, 1.2, 1.10, 2.2
 
 ### TASK 2.4 - Admin: Gestione Blog (CRUD)
@@ -668,4 +704,5 @@
 ---
 
 *Piano creato il: 21 Febbraio 2026*
-*Totale task: ~60 task atomiche*
+*Totale task: ~69 task atomiche*
+*Versione piano: v1.5*
