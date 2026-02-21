@@ -231,11 +231,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 1 - Database + Admin Base (90% - mancano task 1.13 Map Picker e 1.14 Autocomplete localita)
-- **Ultima azione**: Admin collegato a Supabase (CRUD Destinazioni + Tour), preview links aggiunti, file MD aggiornati con Modifica #5
-- **Prossimo step**: Task 1.13 (Map Picker Leaflet per coordinate) oppure Sprint 2 (CRUD Crociere + Flotta)
+- **Sprint corrente**: Sprint 1 (90%) + Sprint 4 redesign completato
+- **Ultima azione**: Fix header routing, redesign Destinazioni (mosaico + sticky nav), Calendario Partenze (griglia mensile + lista)
+- **Prossimo step**: Task 1.13 (Map Picker Leaflet) oppure Sprint 2 (CRUD Crociere + Flotta)
 - **Bloccanti**: Nessuno
-- **Progresso totale**: ~38% (17/69 task completate)
+- **Progresso totale**: ~40% (19/69 task completate)
 
 ---
 

@@ -97,8 +97,8 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 4.1 | Calendario Partenze Pubblico | ✅ UI pronta | 2026-02-21 | Dati mock. |
-| 4.2 | Pagina Destinazioni | ✅ UI pronta | 2026-02-21 | Griglia destinazioni. Dati mock. |
+| 4.1 | Calendario Partenze Pubblico | ✅ Redesign completato | 2026-02-21 | Vista griglia calendario (default) + vista lista. Click su giorno, legenda tour/crociere, date-fns locale IT. |
+| 4.2 | Pagina Destinazioni | ✅ Redesign completato | 2026-02-21 | Hero scuro #1B2D4F, nav sticky macro area, layout mosaico, conteggio tour, smooth scroll, CTA bottom. |
 | 4.3 | Pagina Singola Destinazione | ✅ UI pronta | 2026-02-21 | Dati mock. |
 | 4.4 | Blog Pubblico | ✅ UI pronta | 2026-02-21 | Lista + singolo articolo. Dati mock. |
 | 4.5 | Cataloghi | ✅ UI pronta | 2026-02-21 | Dati mock. |
@@ -191,6 +191,17 @@
 ## Storico Modifiche al Piano
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
+
+### Modifica #6 - Fix Header Routing + Redesign Destinazioni + Calendario Griglia
+- **Data**: 2026-02-21
+- **File modificati**: src/lib/data.ts, src/app/(public)/destinazioni/page.tsx, src/app/(public)/calendario-partenze/page.tsx
+- **Richiesto da**: Utente
+- **Motivo**: Le rotte nel header puntavano a URL sbagliati. La pagina Destinazioni aveva un layout troppo basico. Il Calendario Partenze aveva solo vista lista senza griglia mensile.
+- **Cosa e cambiato**:
+  - **data.ts**: Fix navigationItems href: /crociere-fluviali → /crociere, /tour → /tours. Aggiunta funzione getTourCountPerDestination().
+  - **destinazioni/page.tsx**: Riscrittura completa. Hero compatto sfondo #1B2D4F, barra sticky con 5 filtri macro area, sezioni con layout mosaico (prima card grande 2x2, le altre normali), conteggio tour/crociere per destinazione, smooth scroll con IntersectionObserver, CTA bottom.
+  - **calendario-partenze/page.tsx**: Riscrittura completa. Aggiunta vista griglia calendario come default (7 colonne Lun-Dom, celle con indicatori partenze, click su giorno per dettagli). Toggle calendario/lista. Legenda colori (navy=tour, rosso=crociere). Pannello espandibile sotto la griglia per partenze del giorno selezionato. date-fns con locale italiana.
+- **Versione piano**: v1.6
 
 ### Modifica #5 - Miglioramenti UX Admin + Collegamento Supabase + Calendario Semplificato
 - **Data**: 2026-02-21
