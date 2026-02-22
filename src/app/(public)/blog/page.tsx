@@ -1,13 +1,14 @@
 import PageHero from "@/components/layout/PageHero";
-import BlogCard from "@/components/cards/BlogCard";
-import { getPublishedBlogPosts } from "@/lib/supabase/queries/blog";
+import { getPublishedBlogPosts, getBlogCategories } from "@/lib/supabase/queries/blog";
+import BlogArchiveClient from "./BlogArchiveClient";
 
 export const dynamic = "force-dynamic";
 
-export const revalidate = 600; // ISR: revalidate every 10 minutes
-
 export default async function BlogPage() {
-  const posts = await getPublishedBlogPosts();
+  const [posts, categories] = await Promise.all([
+    getPublishedBlogPosts(),
+    getBlogCategories(),
+  ]);
 
   return (
     <>
@@ -18,38 +19,7 @@ export default async function BlogPage() {
         breadcrumbs={[{ label: "Blog", href: "/blog" }]}
       />
 
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <p className="text-gray-600 leading-relaxed text-lg">
-            Approfondimenti culturali, racconti di viaggio e curiosita dalle nostre destinazioni.
-            Lasciati ispirare per il tuo prossimo viaggio con Misha Travel.
-          </p>
-        </div>
-      </section>
-
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          {posts.length === 0 ? (
-            <p className="text-center text-gray-500 py-12">
-              Nessun articolo pubblicato al momento. Torna a trovarci presto!
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
-                <BlogCard
-                  key={post.slug}
-                  slug={post.slug}
-                  title={post.title}
-                  category={post.category?.name ?? "Generale"}
-                  image={post.cover_image_url ?? "/images/blog/placeholder.jpg"}
-                  date={post.published_at ?? post.created_at}
-                  excerpt={post.excerpt ?? ""}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      <BlogArchiveClient posts={posts} categories={categories} />
     </>
   );
 }

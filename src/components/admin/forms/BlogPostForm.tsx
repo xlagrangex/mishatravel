@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -112,21 +113,26 @@ export default function BlogPostForm({ initialData, categories }: BlogPostFormPr
 
   const onSubmit = async (data: BlogPostFormValues) => {
     setServerError(null);
-    const result = await saveBlogPost({
-      ...data,
-      id: initialData?.id,
-      category_id: data.category_id || null,
-      cover_image_url: data.cover_image_url || null,
-      excerpt: data.excerpt || null,
-      content: data.content || null,
-      meta_title: data.meta_title || null,
-      meta_description: data.meta_description || null,
-      published_at: data.published_at || null,
-    });
-    if (!result.success) {
-      setServerError(result.error);
+    try {
+      const result = await saveBlogPost({
+        ...data,
+        id: initialData?.id,
+        category_id: data.category_id || null,
+        cover_image_url: data.cover_image_url || null,
+        excerpt: data.excerpt || null,
+        content: data.content || null,
+        meta_title: data.meta_title || null,
+        meta_description: data.meta_description || null,
+        published_at: data.published_at || null,
+      });
+      if (!result.success) {
+        setServerError(result.error);
+      } else {
+        router.push("/admin/blog");
+      }
+    } catch {
+      setServerError("Errore imprevisto durante il salvataggio.");
     }
-    // On success, the server action redirects to /admin/blog
   };
 
   return (
@@ -220,12 +226,17 @@ export default function BlogPostForm({ initialData, categories }: BlogPostFormPr
 
               {/* Contenuto */}
               <div className="space-y-2">
-                <Label htmlFor="content">Contenuto</Label>
-                <Textarea
-                  id="content"
-                  placeholder="Scrivi il contenuto dell'articolo..."
-                  rows={12}
-                  {...register("content")}
+                <Label>Contenuto</Label>
+                <Controller
+                  name="content"
+                  control={control}
+                  render={({ field }) => (
+                    <RichTextEditor
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Scrivi il contenuto dell'articolo..."
+                    />
+                  )}
                 />
               </div>
             </CardContent>
