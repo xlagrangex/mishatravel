@@ -43,6 +43,7 @@ export default async function CrocierePage() {
         durata_notti: c.duration,
         a_partire_da: String(c.priceFrom),
         tipo_crociera: "Crociera di Gruppo",
+        prezzo_su_richiesta: false,
         status: "published",
         created_at: new Date().toISOString(),
         ship_id: null,

@@ -37,6 +37,7 @@ export default async function ToursPage() {
         cover_image_url: t.image,
         durata_notti: t.duration,
         a_partire_da: String(t.priceFrom),
+        prezzo_su_richiesta: false,
         status: "published",
         created_at: new Date().toISOString(),
         destination_id: null,

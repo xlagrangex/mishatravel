@@ -116,6 +116,7 @@ export async function getDestinationWithTours(
         cover_image_url,
         durata_notti,
         a_partire_da,
+        prezzo_su_richiesta,
         status,
         created_at,
         destination:destinations(name)
@@ -135,6 +136,7 @@ export async function getDestinationWithTours(
         cover_image_url,
         durata_notti,
         a_partire_da,
+        prezzo_su_richiesta,
         tipo_crociera,
         status,
         created_at,
@@ -164,6 +166,7 @@ export async function getDestinationWithTours(
     status: row.status,
     created_at: row.created_at,
     destination_name: row.destination?.name ?? null,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
   }))
 
   const cruises: CruiseListItem[] = (cruisesResult.data ?? []).map((row: any) => ({
@@ -178,6 +181,7 @@ export async function getDestinationWithTours(
     created_at: row.created_at,
     ship_name: row.ship?.name ?? null,
     destination_name: row.destination?.name ?? null,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
   }))
 
   return { destination: dest, tours, cruises }
