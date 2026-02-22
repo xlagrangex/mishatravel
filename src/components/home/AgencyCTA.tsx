@@ -14,17 +14,17 @@ export default function AgencyCTA() {
       />
       <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
         <SectionReveal>
-          <h2 className="text-3xl md:text-4xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-5">
             Offri ai tuoi clienti il viaggio della loro vita
           </h2>
-          <p className="text-xl text-[#C41E2F] font-semibold mb-6 font-[family-name:var(--font-poppins)]">
+          <p className="text-xl text-[#C41E2F] font-semibold mb-8 font-[family-name:var(--font-poppins)]">
             Al resto pensiamo noi
           </p>
-          <p className="text-gray-600 leading-relaxed mb-4 max-w-2xl mx-auto">
+          <p className="text-gray-600 leading-relaxed mb-5 max-w-2xl mx-auto">
             Misha Travel &egrave; il partner ideale per le agenzie di viaggio che vogliono proporre tour e
             crociere fluviali progettati con cura, garantiti e personalizzabili.
           </p>
-          <p className="text-gray-600 leading-relaxed mb-8 max-w-2xl mx-auto">
+          <p className="text-gray-600 leading-relaxed mb-10 max-w-2xl mx-auto">
             Dalle esperienze culturali alle rotte fluviali esclusive, ti forniamo itinerari pronti da vendere,
             assistenza continua e materiali per la promozione.
           </p>

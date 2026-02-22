@@ -117,17 +117,17 @@ export default function HeroSection({ destinations, tours, cruises, departures }
       {/* Content */}
       <div className="relative z-10 w-full flex flex-col items-center justify-center px-4 pt-16">
         <motion.p
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="text-xs md:text-sm uppercase tracking-[0.35em] text-white/80 mb-5 font-medium"
         >
           Tour Operator B2B
         </motion.p>
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.8, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
           className="text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center font-[family-name:var(--font-poppins)] leading-tight max-w-4xl mx-auto mb-3"
           style={{ textShadow: "0 2px 20px rgba(0,0,0,0.5)" }}
         >
@@ -135,9 +135,9 @@ export default function HeroSection({ destinations, tours, cruises, departures }
           <span className="text-white">Misha Travel</span>
         </motion.h1>
         <motion.p
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.35 }}
+          transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="text-base md:text-lg text-white/80 text-center max-w-xl mx-auto mb-10"
           style={{ textShadow: "0 1px 8px rgba(0,0,0,0.4)" }}
         >
@@ -145,9 +145,9 @@ export default function HeroSection({ destinations, tours, cruises, departures }
         </motion.p>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ duration: 0.8, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
           className="w-full"
         >
           <HeroSearchBar

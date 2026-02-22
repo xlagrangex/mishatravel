@@ -53,10 +53,10 @@ export default async function HomePage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <SectionReveal>
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
               I nostri Tour
             </h2>
-            <div className="section-divider mb-10" />
+            <div className="section-divider mb-12" />
           </SectionReveal>
           {featuredTours.length > 0 ? (
             <SectionReveal delay={0.15}>
@@ -93,10 +93,10 @@ export default async function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionReveal>
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
               Crociere Fluviali
             </h2>
-            <div className="section-divider mb-10" />
+            <div className="section-divider mb-12" />
           </SectionReveal>
           {featuredCruises.length > 0 ? (
             <SectionReveal delay={0.15}>

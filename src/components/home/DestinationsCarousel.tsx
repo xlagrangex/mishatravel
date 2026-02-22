@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import SectionReveal from "./SectionReveal";
 import type { Destination } from "@/lib/types";
 
 function CarouselTrack({ items }: { items: Destination[] }) {
@@ -81,12 +82,14 @@ export default function DestinationsCarousel({
   if (items.length === 0) return null;
 
   return (
-    <section className="py-10 bg-white overflow-hidden">
-      <div className="container mx-auto px-4 mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-1">
-          Le nostre destinazioni
-        </h2>
-        <div className="section-divider mb-0" />
+    <section className="py-14 bg-white overflow-hidden">
+      <div className="container mx-auto px-4 mb-10">
+        <SectionReveal>
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
+            Le nostre destinazioni
+          </h2>
+          <div className="section-divider" />
+        </SectionReveal>
       </div>
 
       {/* Infinite scroll — JS-driven for smooth deceleration on hover */}

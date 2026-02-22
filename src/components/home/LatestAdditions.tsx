@@ -39,7 +39,7 @@ export default function LatestAdditions({
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <SectionReveal>
-          <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="flex items-center justify-center gap-3 mb-3">
             <span className="inline-block px-3 py-1 rounded-full bg-[#C41E2F]/10 text-[#C41E2F] text-xs font-bold uppercase tracking-wide">
               New
             </span>
@@ -47,7 +47,7 @@ export default function LatestAdditions({
               Ultimi viaggi aggiunti
             </h2>
           </div>
-          <div className="section-divider mb-10" />
+          <div className="section-divider mb-12" />
         </SectionReveal>
 
         <SectionReveal delay={0.1}>
