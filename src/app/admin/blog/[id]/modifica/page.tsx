@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import BlogPostForm from "@/components/admin/forms/BlogPostForm";
 import { getBlogPostById, getBlogCategories } from "@/lib/supabase/queries/blog";
 
+export const dynamic = "force-dynamic";
+
 interface ModificaArticoloPageProps {
   params: Promise<{ id: string }>;
 }

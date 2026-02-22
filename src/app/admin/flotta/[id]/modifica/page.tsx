@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import ShipForm from "@/components/admin/forms/ShipForm";
 import { getShipById } from "@/lib/supabase/queries/ships";
 
+export const dynamic = "force-dynamic";
+
 interface ModificaNavPageProps {
   params: Promise<{ id: string }>;
 }

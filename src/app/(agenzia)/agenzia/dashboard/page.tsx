@@ -20,6 +20,8 @@ import {
 } from "@/lib/supabase/queries/agency-dashboard";
 import type { QuoteRequestStatus } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 // ---------------------------------------------------------------------------
 // Status label & color mapping
 // ---------------------------------------------------------------------------

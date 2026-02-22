@@ -6,6 +6,8 @@ import {
   getUnreadNotificationCount,
 } from "@/lib/supabase/queries/agency-dashboard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Area Agenzia - MishaTravel",
   robots: "noindex, nofollow",

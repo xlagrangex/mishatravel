@@ -9,6 +9,8 @@ import {
 } from "@/lib/data";
 import CrocierePageClient from "./CrocierePageClient";
 
+export const dynamic = "force-dynamic";
+
 export const revalidate = 300; // ISR: revalidate every 5 minutes
 
 export default async function CrocierePage() {

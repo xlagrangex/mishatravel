@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import CatalogForm from "@/components/admin/forms/CatalogForm";
 import { getCatalogById } from "@/lib/supabase/queries/catalogs";
 
+export const dynamic = "force-dynamic";
+
 interface ModificaCatalogoPageProps {
   params: Promise<{ id: string }>;
 }

@@ -15,6 +15,8 @@ import StickyBottomBar from "@/components/shared/StickyBottomBar";
 import { generateTourMetadata } from "@/lib/seo/metadata";
 import { tourTripSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const tour = await getTourBySlug(slug);

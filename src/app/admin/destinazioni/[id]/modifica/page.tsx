@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import DestinationForm from "@/components/admin/forms/DestinationForm";
 import { getDestinationById } from "@/lib/supabase/queries/destinations";
 
+export const dynamic = "force-dynamic";
+
 interface ModificaDestinazionePageProps {
   params: Promise<{ id: string }>;
 }

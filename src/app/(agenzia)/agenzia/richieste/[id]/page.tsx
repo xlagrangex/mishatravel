@@ -16,6 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getQuoteById } from "@/lib/supabase/queries/quotes";
 
+export const dynamic = "force-dynamic";
+
 // ---------------------------------------------------------------------------
 // Status badge mapping (same as list page)
 // ---------------------------------------------------------------------------

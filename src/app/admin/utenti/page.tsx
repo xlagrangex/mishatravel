@@ -1,6 +1,8 @@
 import { getAdminUsers, getUserStats } from "@/lib/supabase/queries/admin-users";
 import UtentiTable from "./UtentiTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function UtentiPage() {
   const [users, stats] = await Promise.all([
     getAdminUsers(),

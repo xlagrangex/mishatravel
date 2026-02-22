@@ -2,6 +2,8 @@ import PageHero from "@/components/layout/PageHero";
 import TrovaAgenziaClient from "@/components/TrovaAgenziaClient";
 import { getActiveAgencies } from "@/lib/supabase/queries/agencies";
 
+export const dynamic = "force-dynamic";
+
 export const revalidate = 3600; // ISR: revalidate every 1 hour
 
 export const metadata = {

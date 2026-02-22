@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAgencyOffers } from "@/lib/supabase/queries/quotes";
 import { OffersList } from "./OffersList";
 
+export const dynamic = "force-dynamic";
+
 export default async function OffertePage() {
   const offers = await getAgencyOffers();
 

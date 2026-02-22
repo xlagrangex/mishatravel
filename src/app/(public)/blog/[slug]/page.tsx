@@ -10,6 +10,8 @@ import { getBlogPostBySlug, getPublishedBlogPosts } from "@/lib/supabase/queries
 import { generateBlogPostMetadata } from "@/lib/seo/metadata";
 import { articleSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getBlogPostBySlug(slug);

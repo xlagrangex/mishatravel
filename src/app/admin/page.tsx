@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { getPendingAgencies } from "@/lib/supabase/queries/admin-agencies";
 import PendingAgenciesWidget from "./PendingAgenciesWidget";
 
+export const dynamic = "force-dynamic";
+
 const stats = [
   { label: "Tour Attivi", value: "0", icon: Plane, color: "text-blue-600" },
   { label: "Crociere Attive", value: "0", icon: Ship, color: "text-cyan-600" },

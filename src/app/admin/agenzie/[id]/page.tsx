@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getAgencyById, getAgencyQuoteRequests } from "@/lib/supabase/queries/admin-agencies";
 import AgencyDetail from "./AgencyDetail";
 
+export const dynamic = "force-dynamic";
+
 interface AgencyDetailPageProps {
   params: Promise<{ id: string }>;
 }

@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import { getAgencyQuotes } from "@/lib/supabase/queries/quotes";
 
+export const dynamic = "force-dynamic";
+
 // ---------------------------------------------------------------------------
 // Status badge mapping
 // ---------------------------------------------------------------------------

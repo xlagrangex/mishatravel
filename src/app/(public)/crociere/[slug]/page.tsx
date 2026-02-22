@@ -14,6 +14,8 @@ import StickyBottomBar from "@/components/shared/StickyBottomBar";
 import { generateCruiseMetadata } from "@/lib/seo/metadata";
 import { boatTripSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const cruise = await getCruiseBySlug(slug);

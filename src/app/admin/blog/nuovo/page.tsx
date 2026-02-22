@@ -1,6 +1,8 @@
 import { getBlogCategories } from "@/lib/supabase/queries/blog";
 import BlogPostForm from "@/components/admin/forms/BlogPostForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function NuovoArticoloPage() {
   const categories = await getBlogCategories();
 

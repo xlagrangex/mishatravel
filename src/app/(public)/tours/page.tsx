@@ -6,6 +6,8 @@ import {
 } from "@/lib/data";
 import ToursPageClient from "./ToursPageClient";
 
+export const dynamic = "force-dynamic";
+
 export const revalidate = 300; // ISR: revalidate every 5 minutes
 
 export default async function ToursPage() {

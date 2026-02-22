@@ -2,6 +2,8 @@ import PageHero from "@/components/layout/PageHero";
 import ShipCard from "@/components/cards/ShipCard";
 import { getPublishedShips } from "@/lib/supabase/queries/ships";
 
+export const dynamic = "force-dynamic";
+
 export const revalidate = 3600; // ISR: revalidate every 1 hour
 
 export default async function FlottaPage() {

@@ -4,6 +4,8 @@ import { getCruiseById } from "@/lib/supabase/queries/cruises";
 import { getShipOptions } from "@/lib/supabase/queries/ships";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
 
+export const dynamic = "force-dynamic";
+
 interface ModificaCrocieraPageProps {
   params: Promise<{ id: string }>;
 }

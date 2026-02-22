@@ -2,6 +2,8 @@ import CruiseForm from "@/components/admin/forms/CruiseForm";
 import { getShipOptions } from "@/lib/supabase/queries/ships";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
 
+export const dynamic = "force-dynamic";
+
 export default async function NuovaCrocieraPage() {
   const [ships, destinations] = await Promise.all([
     getShipOptions(),

@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAgencyStatements } from "@/lib/supabase/queries/account-statements";
 import { StatementsTable } from "./StatementsTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function EstrattoContoPage({
   searchParams,
 }: {

@@ -4,6 +4,8 @@ import { getTourById } from "@/lib/supabase/queries/tours";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
 import { getDistinctLocalities } from "@/lib/supabase/queries/localities";
 
+export const dynamic = "force-dynamic";
+
 interface ModificaTourPageProps {
   params: Promise<{ id: string }>;
 }

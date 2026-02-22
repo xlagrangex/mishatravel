@@ -11,6 +11,8 @@ import { getPublishedTours } from "@/lib/supabase/queries/tours";
 import { getPublishedCruises } from "@/lib/supabase/queries/cruises";
 import { getBlogPosts } from "@/lib/supabase/queries/blog";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [destinations, tours, cruises, blogPosts] = await Promise.all([
     getPublishedDestinations(),

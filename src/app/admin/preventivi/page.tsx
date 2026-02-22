@@ -5,6 +5,8 @@ import {
 } from '@/lib/supabase/queries/admin-quotes'
 import AdminQuotesTable from './AdminQuotesTable'
 
+export const dynamic = "force-dynamic";
+
 export default async function PreventiviPage() {
   const [quotes, stats, agencies] = await Promise.all([
     getAllQuotes(),

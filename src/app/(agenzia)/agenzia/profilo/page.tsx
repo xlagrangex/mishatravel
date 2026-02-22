@@ -6,6 +6,8 @@ import { ProfileForm } from "./ProfileForm";
 import { PasswordForm } from "./PasswordForm";
 import type { Agency } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 async function getAgencyProfile(): Promise<{
   agency: Agency | null;
   email: string | null;

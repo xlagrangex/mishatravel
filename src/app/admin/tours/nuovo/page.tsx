@@ -2,6 +2,8 @@ import TourForm from "@/components/admin/forms/TourForm";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
 import { getDistinctLocalities } from "@/lib/supabase/queries/localities";
 
+export const dynamic = "force-dynamic";
+
 export default async function NuovoTourPage() {
   const [destinations, localities] = await Promise.all([
     getDestinationOptions(),

@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import { getQuoteDetail } from '@/lib/supabase/queries/admin-quotes'
 import QuoteDetailClient from './QuoteDetailClient'
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: Promise<{ id: string }>
 }
