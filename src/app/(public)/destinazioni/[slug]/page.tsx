@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { parsePrice } from "@/lib/utils";
+import { parsePrice, stripHtml } from "@/lib/utils";
 import PageHero from "@/components/layout/PageHero";
 import TourCard from "@/components/cards/TourCard";
 import CruiseCard from "@/components/cards/CruiseCard";
@@ -32,7 +32,6 @@ export default async function DestinationDetailPage({ params }: { params: Promis
       {isAdmin && <AdminEditSetter url={`/admin/destinazioni/${dest.id}/modifica`} />}
       <PageHero
         title={dest.name}
-        subtitle={dest.description ?? undefined}
         backgroundImage={dest.cover_image_url ?? undefined}
         breadcrumbs={[
           { label: "Destinazioni", href: "/destinazioni" },
@@ -45,7 +44,9 @@ export default async function DestinationDetailPage({ params }: { params: Promis
           <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
             Tour in {dest.name}
           </h2>
-          <p className="text-gray-600 mb-8">{dest.description}</p>
+          {dest.description && (
+            <p className="text-gray-600 mb-8">{stripHtml(dest.description)}</p>
+          )}
 
           {tours.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

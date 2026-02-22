@@ -39,7 +39,7 @@ function CarouselTrack({ items }: { items: Destination[] }) {
   );
 }
 
-const SPEED = 0.5; // px per frame at 60fps
+const SPEED = 0.15; // px per frame at 60fps
 
 export default function DestinationsCarousel({
   destinations,
