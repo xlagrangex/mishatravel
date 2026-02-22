@@ -1,228 +1,44 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { parsePrice } from "@/lib/utils";
-import DestinationCard from "@/components/cards/DestinationCard";
-import TourCard from "@/components/cards/TourCard";
-import CruiseCard from "@/components/cards/CruiseCard";
-import BlogCard from "@/components/cards/BlogCard";
-import HeroSlider from "@/components/home/HeroSlider";
 import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
 import { getPublishedTours } from "@/lib/supabase/queries/tours";
 import { getPublishedCruises } from "@/lib/supabase/queries/cruises";
-import { getBlogPosts } from "@/lib/supabase/queries/blog";
+import { getAllDepartures } from "@/lib/supabase/queries/departures";
+import HeroSection from "@/components/home/HeroSection";
+import DestinationsCarousel from "@/components/home/DestinationsCarousel";
+import InteractiveMap from "@/components/home/InteractiveMap";
+import DeparturesTimeline from "@/components/home/DeparturesTimeline";
+import AgencyCTA from "@/components/home/AgencyCTA";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [destinations, tours, cruises, blogPosts] = await Promise.all([
+  const [destinations, tours, cruises, departures] = await Promise.all([
     getPublishedDestinations(),
     getPublishedTours(),
     getPublishedCruises(),
-    getBlogPosts(),
+    getAllDepartures(),
   ]);
-
-  const featuredDestinations = destinations.slice(0, 8);
-  const featuredTours = tours.slice(0, 6);
-  const featuredCruises = cruises.slice(0, 6);
-  const latestPosts = blogPosts
-    .filter((p) => p.status === "published")
-    .slice(0, 3);
 
   return (
     <>
-      {/* ===== HERO SLIDER ===== */}
-      <HeroSlider />
+      {/* 1. Hero fullscreen + search bar */}
+      <HeroSection
+        destinations={destinations}
+        tours={tours}
+        cruises={cruises}
+        departures={departures}
+      />
 
-      {/* ===== DESTINAZIONI ===== */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
-            Scegli la tua destinazione
-          </h2>
-          <div className="section-divider mb-10" />
-          {featuredDestinations.length > 0 ? (
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-              {featuredDestinations.map((dest) => (
-                <div key={dest.slug} className="snap-start shrink-0 w-[200px] md:w-[220px]">
-                  <DestinationCard
-                    slug={dest.slug}
-                    name={dest.name}
-                    image={dest.cover_image_url || "/images/placeholder.jpg"}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">Nessuna destinazione disponibile al momento.</p>
-          )}
-          <div className="text-center mt-8">
-            <Button asChild size="lg" className="bg-[#C41E2F] hover:bg-[#A31825] text-white px-8">
-              <Link href="/destinazioni">Scopri tutte le destinazioni</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* 2. Destinazioni carousel */}
+      <DestinationsCarousel destinations={destinations} />
 
-      {/* ===== AGENCY CTA ===== */}
-      <section className="relative py-16 bg-gray-50 overflow-hidden">
-        {/* Dotted world map pattern background */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: "radial-gradient(circle, #1B2D4F 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-        <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">
-            Offri ai tuoi clienti il viaggio della loro vita
-          </h2>
-          <p className="text-xl text-[#C41E2F] font-semibold mb-6 font-[family-name:var(--font-poppins)]">
-            Al resto pensiamo noi
-          </p>
-          <p className="text-gray-600 leading-relaxed mb-8 max-w-2xl mx-auto">
-            Misha Travel &egrave; un tour operator B2B specializzato in viaggi culturali, grandi itinerari e
-            crociere fluviali. Lavoriamo esclusivamente con agenzie di viaggio, offrendo prodotti di alta
-            qualit&agrave;, assistenza dedicata e margini competitivi. Diventa nostro partner e offri ai tuoi
-            clienti esperienze di viaggio indimenticabili.
-          </p>
+      {/* 3. Mappa interattiva */}
+      <InteractiveMap destinations={destinations} />
 
-          {/* GIF Icons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-8">
-            <Link href="/tours" className="group flex flex-col items-center gap-3">
-              <div className="w-24 h-24 rounded-full bg-white shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/tours/icon-001.gif"
-                  alt="I nostri tour"
-                  className="w-16 h-16 object-contain"
-                />
-              </div>
-              <span className="text-sm font-semibold text-[#1B2D4F] group-hover:text-[#C41E2F] transition-colors">
-                I nostri tour
-              </span>
-            </Link>
-            <Link href="/crociere" className="group flex flex-col items-center gap-3">
-              <div className="w-24 h-24 rounded-full bg-white shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/cruises/output-onlinegiftools.gif"
-                  alt="Crociere Fluviali"
-                  className="w-16 h-16 object-contain"
-                />
-              </div>
-              <span className="text-sm font-semibold text-[#1B2D4F] group-hover:text-[#C41E2F] transition-colors">
-                Crociere Fluviali
-              </span>
-            </Link>
-          </div>
+      {/* 4. Prossime partenze timeline */}
+      <DeparturesTimeline departures={departures} />
 
-          <Button asChild size="lg" className="bg-[#C41E2F] hover:bg-[#A31825] text-white px-8">
-            <Link href="/diventa-partner">Diventa Partner</Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* ===== I NOSTRI TOUR ===== */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
-            I nostri Tour
-          </h2>
-          <div className="section-divider mb-10" />
-          {featuredTours.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredTours.map((tour) => (
-                <TourCard
-                  key={tour.slug}
-                  slug={tour.slug}
-                  title={tour.title}
-                  destination={tour.destination_name ?? ""}
-                  duration={tour.durata_notti ?? ""}
-                  priceFrom={parsePrice(tour.a_partire_da)}
-                  prezzoSuRichiesta={tour.prezzo_su_richiesta}
-                  image={tour.cover_image_url || "/images/placeholder.jpg"}
-                  type="tour"
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">Nessun tour disponibile al momento.</p>
-          )}
-          <div className="text-center mt-8">
-            <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
-              <Link href="/tours">Tutti i tour</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== LE NOSTRE CROCIERE ===== */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
-            Le nostre crociere
-          </h2>
-          <div className="section-divider mb-10" />
-          {featuredCruises.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredCruises.map((cruise) => (
-                <CruiseCard
-                  key={cruise.slug}
-                  slug={cruise.slug}
-                  title={cruise.title}
-                  ship={cruise.ship_name ?? ""}
-                  river={cruise.destination_name ?? ""}
-                  duration={cruise.durata_notti ?? ""}
-                  priceFrom={parsePrice(cruise.a_partire_da)}
-                  prezzoSuRichiesta={cruise.prezzo_su_richiesta}
-                  image={cruise.cover_image_url || "/images/placeholder.jpg"}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">Nessuna crociera disponibile al momento.</p>
-          )}
-          <div className="text-center mt-8">
-            <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
-              <Link href="/crociere">Tutte le crociere</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== BLOG ===== */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
-            I nostri ultimi Articoli dal Blog
-          </h2>
-          <div className="section-divider mb-10" />
-          {latestPosts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {latestPosts.map((post) => (
-                <BlogCard
-                  key={post.slug}
-                  slug={post.slug}
-                  title={post.title}
-                  category={post.category?.name ?? ""}
-                  image={post.cover_image_url || "/images/placeholder.jpg"}
-                  date={post.published_at || post.created_at}
-                  excerpt={post.excerpt ?? ""}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">Nessun articolo disponibile al momento.</p>
-          )}
-          <div className="text-center mt-8">
-            <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
-              <Link href="/blog">Vai al blog</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* 5. CTA Agenzie */}
+      <AgencyCTA />
     </>
   );
 }
