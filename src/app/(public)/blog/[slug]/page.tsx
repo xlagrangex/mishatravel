@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import PageHero from "@/components/layout/PageHero";
 import BlogCard from "@/components/cards/BlogCard";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, ArrowLeft, Clock } from "lucide-react";
+import { CalendarDays, ArrowLeft, Clock, ChevronRight } from "lucide-react";
 import { getBlogPostBySlug, getPublishedBlogPosts } from "@/lib/supabase/queries/blog";
 import { generateBlogPostMetadata } from "@/lib/seo/metadata";
 import { articleSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
@@ -47,65 +46,115 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   const content = post.content ?? "";
   const readingTime = estimateReadingTime(content);
 
-  // Fetch related posts (other published posts, excluding current)
+  // Fetch related posts (same category first, then others)
   const allPosts = await getPublishedBlogPosts();
-  const relatedPosts = allPosts.filter((p) => p.slug !== slug).slice(0, 3);
+  const otherPosts = allPosts.filter((p) => p.slug !== slug);
+  const sameCategoryPosts = otherPosts.filter((p) => p.category_id === post.category_id);
+  const differentCategoryPosts = otherPosts.filter((p) => p.category_id !== post.category_id);
+  const relatedPosts = [...sameCategoryPosts, ...differentCategoryPosts].slice(0, 3);
 
   return (
     <>
       {isAdmin && <AdminEditSetter url={`/admin/blog/${post.id}/modifica`} />}
 
-      <PageHero
-        title={post.title}
-        breadcrumbs={[
-          { label: "Blog", href: "/blog" },
-          { label: post.title, href: `/blog/${post.slug}` },
-        ]}
-        backgroundImage={coverImage}
-      />
+      {/* Hero - Full-width immersive cover */}
+      <section className="relative w-full h-[50vh] min-h-[400px] max-h-[600px] flex items-end overflow-hidden">
+        <Image
+          src={coverImage}
+          alt={post.title}
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <Link href="/blog" className="inline-flex items-center gap-2 text-[#C41E2F] hover:underline text-sm mb-6">
-              <ArrowLeft className="size-4" />
-              Torna al Blog
-            </Link>
+        {/* Content overlay */}
+        <div className="relative z-10 w-full pb-10 pt-20">
+          <div className="container mx-auto px-4 max-w-4xl">
+            {/* Breadcrumbs */}
+            <nav className="flex items-center gap-1.5 text-sm text-white/60 mb-4">
+              <Link href="/" className="hover:text-white transition-colors">Home</Link>
+              <ChevronRight className="size-3" />
+              <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+              <ChevronRight className="size-3" />
+              <span className="text-white/80 truncate max-w-[200px]">{post.title}</span>
+            </nav>
 
-            <div className="flex items-center gap-3 mb-6">
-              <Badge className="bg-[#C41E2F] text-white">{categoryName}</Badge>
-              <span className="flex items-center gap-1.5 text-sm text-gray-500">
+            {/* Category + Meta */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <Badge className="bg-[#C41E2F] text-white border-none text-xs px-3 py-1 rounded-full">
+                {categoryName}
+              </Badge>
+              <span className="flex items-center gap-1.5 text-sm text-white/70">
                 <CalendarDays className="size-3.5" />
                 {formattedDate}
               </span>
-              <span className="flex items-center gap-1.5 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5 text-sm text-white/70">
                 <Clock className="size-3.5" />
                 {readingTime} min di lettura
               </span>
             </div>
 
-            <div className="relative aspect-video rounded-lg overflow-hidden mb-8">
-              <Image src={coverImage} alt={post.title} fill className="object-cover" priority />
-            </div>
-
-            <h1 className="text-3xl md:text-4xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-6">
+            {/* Title */}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white font-[family-name:var(--font-poppins)] leading-tight">
               {post.title}
             </h1>
-
-            <div
-              className="prose prose-lg max-w-none text-gray-600 leading-relaxed prose-headings:text-[#1B2D4F] prose-headings:font-[family-name:var(--font-poppins)] prose-a:text-[#C41E2F] prose-img:rounded-lg"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
           </div>
         </div>
       </section>
 
+      {/* Article body */}
+      <section className="bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto py-12 md:py-16">
+            {/* Back link */}
+            <Link href="/blog" className="inline-flex items-center gap-2 text-[#C41E2F] hover:underline text-sm mb-8 group">
+              <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
+              Tutti gli articoli
+            </Link>
+
+            {/* Excerpt / Lead */}
+            {post.excerpt && (
+              <p className="text-xl md:text-2xl text-gray-500 leading-relaxed mb-10 font-light border-l-4 border-[#C41E2F] pl-6">
+                {post.excerpt}
+              </p>
+            )}
+
+            {/* Content */}
+            <div
+              className="prose prose-lg max-w-none text-gray-700 leading-relaxed prose-headings:text-[#1B2D4F] prose-headings:font-[family-name:var(--font-poppins)] prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:mb-5 prose-a:text-[#C41E2F] prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-blockquote:border-l-[#C41E2F] prose-blockquote:text-gray-500 prose-blockquote:not-italic prose-strong:text-gray-900 prose-em:text-gray-600"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
+
+            {/* Divider */}
+            <div className="border-t border-gray-200 mt-14 pt-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-sm text-gray-400">
+                  <Badge variant="outline" className="text-xs">
+                    {categoryName}
+                  </Badge>
+                  <span>{formattedDate}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Related posts */}
       {relatedPosts.length > 0 && (
-        <section className="py-12 bg-gray-50">
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-6">
-              Articoli Correlati
-            </h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)]">
+                Potrebbe interessarti
+              </h2>
+              <Link href="/blog" className="text-sm text-[#C41E2F] hover:underline font-medium">
+                Tutti gli articoli &rarr;
+              </Link>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedPosts.map((p) => (
                 <BlogCard
