@@ -209,29 +209,14 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
       `Prezzo totale: EUR ${total_price.toFixed(2)}${offer_expiry ? ` - Scadenza: ${offer_expiry}` : ''}`
     )
 
-    // If send_now, update status to 'offer_sent'
+    // If send_now, send email first then update status
     if (send_now) {
-      const { error: statusError } = await supabase
-        .from('quote_requests')
-        .update({ status: 'offer_sent' })
-        .eq('id', request_id)
-
-      if (statusError) {
-        return { success: false, error: statusError.message }
-      }
-
-      await addTimelineEntry(
-        supabase,
-        request_id,
-        'Offerta inviata all\'agenzia',
-        null
-      )
-
       // --- Email: notify agency of new offer ---
+      let emailSent = false
       try {
         const ctx = await getQuoteEmailContext(supabase, request_id)
         if (ctx?.agencyEmail) {
-          await sendTransactionalEmail(
+          emailSent = await sendTransactionalEmail(
             { email: ctx.agencyEmail, name: ctx.agencyName },
             'Nuova offerta ricevuta - MishaTravel',
             newOfferReceivedEmail(
@@ -245,6 +230,23 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
       } catch (emailErr) {
         console.error('Error sending new offer email:', emailErr)
       }
+
+      // Update status to 'offer_sent' regardless (the offer exists in DB)
+      const { error: statusError } = await supabase
+        .from('quote_requests')
+        .update({ status: 'offer_sent' })
+        .eq('id', request_id)
+
+      if (statusError) {
+        return { success: false, error: statusError.message }
+      }
+
+      await addTimelineEntry(
+        supabase,
+        request_id,
+        'Offerta inviata all\'agenzia',
+        emailSent ? 'Email inviata con successo' : 'Attenzione: invio email fallito'
+      )
     }
 
     revalidatePath('/admin/preventivi')
@@ -305,28 +307,12 @@ export async function sendPaymentDetails(
       return { success: false, error: paymentError.message }
     }
 
-    // Update status to 'payment_sent'
-    const { error: statusError } = await supabase
-      .from('quote_requests')
-      .update({ status: 'payment_sent' })
-      .eq('id', request_id)
-
-    if (statusError) {
-      return { success: false, error: statusError.message }
-    }
-
-    await addTimelineEntry(
-      supabase,
-      request_id,
-      'Estremi di pagamento inviati',
-      `Importo: EUR ${amount.toFixed(2)} - Causale: ${reference}`
-    )
-
-    // --- Email: send payment details to agency ---
+    // --- Email: send payment details to agency (before status update) ---
+    let emailSent = false
     try {
       const ctx = await getQuoteEmailContext(supabase, request_id)
       if (ctx?.agencyEmail) {
-        await sendTransactionalEmail(
+        emailSent = await sendTransactionalEmail(
           { email: ctx.agencyEmail, name: ctx.agencyName },
           'Estremi di pagamento - MishaTravel',
           paymentDetailsSentEmail(
@@ -341,6 +327,23 @@ export async function sendPaymentDetails(
     } catch (emailErr) {
       console.error('Error sending payment details email:', emailErr)
     }
+
+    // Update status to 'payment_sent'
+    const { error: statusError } = await supabase
+      .from('quote_requests')
+      .update({ status: 'payment_sent' })
+      .eq('id', request_id)
+
+    if (statusError) {
+      return { success: false, error: statusError.message }
+    }
+
+    await addTimelineEntry(
+      supabase,
+      request_id,
+      'Estremi di pagamento inviati',
+      `Importo: EUR ${amount.toFixed(2)} - Causale: ${reference}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
+    )
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
@@ -426,6 +429,21 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
   const supabase = createAdminClient()
 
   try {
+    // --- Email: notify agency first, before updating status ---
+    let emailSent = false
+    try {
+      const ctx = await getQuoteEmailContext(supabase, request_id)
+      if (ctx?.agencyEmail) {
+        emailSent = await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Aggiornamento sulla tua richiesta - MishaTravel',
+          quoteRejectedEmail(ctx.agencyName, ctx.productName, motivation)
+        )
+      }
+    } catch (emailErr) {
+      console.error('Error sending quote rejected email:', emailErr)
+    }
+
     const { error } = await supabase
       .from('quote_requests')
       .update({ status: 'rejected' })
@@ -439,22 +457,8 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
       supabase,
       request_id,
       'Richiesta rifiutata',
-      motivation
+      `${motivation}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
     )
-
-    // --- Email: notify agency that quote was rejected ---
-    try {
-      const ctx = await getQuoteEmailContext(supabase, request_id)
-      if (ctx?.agencyEmail) {
-        await sendTransactionalEmail(
-          { email: ctx.agencyEmail, name: ctx.agencyName },
-          'Aggiornamento sulla tua richiesta - MishaTravel',
-          quoteRejectedEmail(ctx.agencyName, ctx.productName, motivation)
-        )
-      }
-    } catch (emailErr) {
-      console.error('Error sending quote rejected email:', emailErr)
-    }
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)

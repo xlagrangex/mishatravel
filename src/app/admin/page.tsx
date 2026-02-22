@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Plane,
   Ship,
@@ -10,29 +11,108 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getPendingAgencies } from "@/lib/supabase/queries/admin-agencies";
+import { getPendingAgencies, getAgencyStats } from "@/lib/supabase/queries/admin-agencies";
+import { getQuoteStats, getAllQuotes } from "@/lib/supabase/queries/admin-quotes";
+import { getAllDepartures } from "@/lib/supabase/queries/departures";
+import { createAdminClient } from "@/lib/supabase/admin";
 import PendingAgenciesWidget from "./PendingAgenciesWidget";
 
 export const dynamic = "force-dynamic";
 
-const stats = [
-  { label: "Tour Attivi", value: "0", icon: Plane, color: "text-blue-600" },
-  { label: "Crociere Attive", value: "0", icon: Ship, color: "text-cyan-600" },
-  { label: "Navi", value: "0", icon: Anchor, color: "text-indigo-600" },
-  { label: "Destinazioni", value: "0", icon: MapPin, color: "text-green-600" },
-  { label: "Agenzie Registrate", value: "0", icon: Users, color: "text-purple-600" },
-  { label: "Preventivi in Attesa", value: "0", icon: FileText, color: "text-orange-600" },
-  { label: "Partenze Prossime", value: "0", icon: Calendar, color: "text-red-600" },
-  { label: "Preventivi Confermati", value: "0", icon: TrendingUp, color: "text-emerald-600" },
-];
+// ---------------------------------------------------------------------------
+// Data fetching helpers
+// ---------------------------------------------------------------------------
+
+async function getDashboardCounts() {
+  const supabase = createAdminClient();
+
+  const [toursRes, cruisesRes, shipsRes, destsRes] = await Promise.all([
+    supabase.from("tours").select("id", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("cruises").select("id", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("ships").select("id", { count: "exact", head: true }),
+    supabase.from("destinations").select("id", { count: "exact", head: true }),
+  ]);
+
+  return {
+    tours: toursRes.count ?? 0,
+    cruises: cruisesRes.count ?? 0,
+    ships: shipsRes.count ?? 0,
+    destinations: destsRes.count ?? 0,
+  };
+}
+
+function getUpcomingDeparturesCount(
+  departures: Awaited<ReturnType<typeof getAllDepartures>>
+): number {
+  const today = new Date().toISOString().slice(0, 10);
+  return departures.filter((d) => d.date >= today).length;
+}
+
+// ---------------------------------------------------------------------------
+// Status label map (Italian)
+// ---------------------------------------------------------------------------
+
+const STATUS_LABELS: Record<string, string> = {
+  sent: "Inviato",
+  in_review: "In revisione",
+  offer_sent: "Offerta inviata",
+  accepted: "Accettato",
+  declined: "Rifiutato",
+  payment_sent: "Pagamento inviato",
+  confirmed: "Confermato",
+  rejected: "Respinto",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  sent: "bg-blue-100 text-blue-800",
+  in_review: "bg-yellow-100 text-yellow-800",
+  offer_sent: "bg-purple-100 text-purple-800",
+  accepted: "bg-green-100 text-green-800",
+  declined: "bg-red-100 text-red-800",
+  payment_sent: "bg-orange-100 text-orange-800",
+  confirmed: "bg-emerald-100 text-emerald-800",
+  rejected: "bg-red-100 text-red-800",
+};
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default async function AdminDashboard() {
-  let pendingAgencies: Awaited<ReturnType<typeof getPendingAgencies>> = [];
-  try {
-    pendingAgencies = await getPendingAgencies();
-  } catch {
-    // Silently fail - widget just won't show
-  }
+  // Fetch all data in parallel
+  const [pendingAgencies, counts, agencyStats, quoteStats, recentQuotes, allDepartures] =
+    await Promise.all([
+      getPendingAgencies().catch(() => [] as Awaited<ReturnType<typeof getPendingAgencies>>),
+      getDashboardCounts().catch(() => ({ tours: 0, cruises: 0, ships: 0, destinations: 0 })),
+      getAgencyStats().catch(() => ({ total: 0, active: 0, pending: 0, blocked: 0, totalQuotes: 0 })),
+      getQuoteStats().catch(() => ({ total: 0, sent: 0, in_review: 0, offer_sent: 0, accepted: 0, declined: 0, payment_sent: 0, confirmed: 0, rejected: 0 }),
+      ),
+      getAllQuotes().catch(() => []),
+      getAllDepartures().catch(() => []),
+    ]);
+
+  const upcomingCount = getUpcomingDeparturesCount(allDepartures);
+  const pendingQuotes = quoteStats.sent + quoteStats.in_review;
+
+  const stats = [
+    { label: "Tour Attivi", value: String(counts.tours), icon: Plane, color: "text-blue-600", href: "/admin/tours" },
+    { label: "Crociere Attive", value: String(counts.cruises), icon: Ship, color: "text-cyan-600", href: "/admin/crociere" },
+    { label: "Navi", value: String(counts.ships), icon: Anchor, color: "text-indigo-600", href: "/admin/flotta" },
+    { label: "Destinazioni", value: String(counts.destinations), icon: MapPin, color: "text-green-600", href: "/admin/destinazioni" },
+    { label: "Agenzie Registrate", value: String(agencyStats.total), icon: Users, color: "text-purple-600", href: "/admin/agenzie" },
+    { label: "Preventivi in Attesa", value: String(pendingQuotes), icon: FileText, color: "text-orange-600", href: "/admin/preventivi" },
+    { label: "Partenze Prossime", value: String(upcomingCount), icon: Calendar, color: "text-red-600", href: "/admin/partenze" },
+    { label: "Preventivi Confermati", value: String(quoteStats.confirmed), icon: TrendingUp, color: "text-emerald-600", href: "/admin/preventivi" },
+  ];
+
+  // Recent quotes: take only first 5
+  const latestQuotes = recentQuotes.slice(0, 5);
+
+  // Upcoming departures: filter future, take first 5
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingDepartures = allDepartures
+    .filter((d) => d.date >= today)
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -54,17 +134,19 @@ export default async function AdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className={`rounded-lg bg-muted p-3 ${stat.color}`}>
-                <stat.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <Link key={stat.label} href={stat.href}>
+            <Card className="transition-shadow hover:shadow-md">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className={`rounded-lg bg-muted p-3 ${stat.color}`}>
+                  <stat.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
@@ -72,41 +154,129 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Requests */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-heading text-lg">
               Ultimi Preventivi
             </CardTitle>
+            {latestQuotes.length > 0 && (
+              <Link
+                href="/admin/preventivi"
+                className="text-sm text-primary hover:underline"
+              >
+                Vedi tutti
+              </Link>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <FileText className="mb-3 h-12 w-12 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">
-                Nessun preventivo ancora.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Le richieste delle agenzie appariranno qui.
-              </p>
-            </div>
+            {latestQuotes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <FileText className="mb-3 h-12 w-12 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">
+                  Nessun preventivo ancora.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Le richieste delle agenzie appariranno qui.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {latestQuotes.map((q) => (
+                  <Link
+                    key={q.id}
+                    href={`/admin/preventivi/${q.id}`}
+                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {q.tour_title || q.cruise_title || "N/D"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {q.agency_business_name ?? "Agenzia"} &middot;{" "}
+                        {new Date(q.created_at).toLocaleDateString("it-IT", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={`ml-2 shrink-0 text-xs ${STATUS_COLORS[q.status] ?? ""}`}
+                    >
+                      {STATUS_LABELS[q.status] ?? q.status}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Upcoming Departures */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-heading text-lg">
               Prossime Partenze
             </CardTitle>
+            {upcomingDepartures.length > 0 && (
+              <Link
+                href="/admin/partenze"
+                className="text-sm text-primary hover:underline"
+              >
+                Vedi tutte
+              </Link>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Calendar className="mb-3 h-12 w-12 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">
-                Nessuna partenza programmata.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Aggiungi tour e crociere per vedere le partenze.
-              </p>
-            </div>
+            {upcomingDepartures.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Calendar className="mb-3 h-12 w-12 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">
+                  Nessuna partenza programmata.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Aggiungi tour e crociere per vedere le partenze.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingDepartures.map((dep) => (
+                  <Link
+                    key={dep.id}
+                    href={`${dep.basePath}/${dep.slug}`}
+                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {dep.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dep.destination_name ?? ""}{" "}
+                        {dep.duration ? `\u00B7 ${dep.duration} notti` : ""}
+                      </p>
+                    </div>
+                    <div className="ml-2 shrink-0 text-right">
+                      <p className="text-sm font-semibold">
+                        {new Date(dep.date).toLocaleDateString("it-IT", {
+                          day: "2-digit",
+                          month: "short",
+                        })}
+                      </p>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${
+                          dep.type === "tour"
+                            ? "border-blue-200 text-blue-700"
+                            : "border-cyan-200 text-cyan-700"
+                        }`}
+                      >
+                        {dep.type === "tour" ? "Tour" : "Crociera"}
+                      </Badge>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -131,14 +301,16 @@ export default async function AdminDashboard() {
               <Badge variant="outline" className="ml-auto text-xs">Online</Badge>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-yellow-500" />
+              <div className="h-2 w-2 rounded-full bg-green-500" />
               <span className="text-sm">Auth</span>
-              <Badge variant="outline" className="ml-auto text-xs">Setup</Badge>
+              <Badge variant="outline" className="ml-auto text-xs">Attivo</Badge>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-gray-400" />
+              <div className={`h-2 w-2 rounded-full ${process.env.BREVO_API_KEY ? "bg-green-500" : "bg-yellow-500"}`} />
               <span className="text-sm">Email</span>
-              <Badge variant="outline" className="ml-auto text-xs">Sprint 8</Badge>
+              <Badge variant="outline" className="ml-auto text-xs">
+                {process.env.BREVO_API_KEY ? "Attivo" : "Non configurato"}
+              </Badge>
             </div>
           </div>
         </CardContent>
