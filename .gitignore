@@ -36,6 +36,11 @@ yarn-error.log*
 # credentials file (NEVER commit)
 CREDENTIALS.md
 
+# WordPress migration data (large files)
+*.xml
+acf-export-*.json
+scraped-data/
+
 # vercel
 .vercel
 

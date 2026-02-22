@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed-demo.ts",
-    "seed:force": "tsx scripts/seed-demo.ts --force"
+    "seed:force": "tsx scripts/seed-demo.ts --force",
+    "migrate": "tsx scripts/migrate-wp.ts",
+    "migrate:force": "tsx scripts/migrate-wp.ts --force",
+    "migrate:dry": "tsx scripts/migrate-wp.ts --dry-run",
+    "migrate:images": "tsx scripts/migrate-wp.ts --force --images"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -43,6 +47,7 @@
     "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "fast-xml-parser": "^5.3.7",
     "playwright": "^1.58.2",
     "postgres": "^3.4.8",
     "react-scan": "^0.5.3",
