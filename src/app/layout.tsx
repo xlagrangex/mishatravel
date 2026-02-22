@@ -21,7 +21,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   ...generateBaseMetadata(),
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
   },
 };
 
