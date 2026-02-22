@@ -44,15 +44,22 @@ export default function HeroSection({ destinations, tours, cruises, departures }
   const slides = buildSlides(tours, cruises);
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
-  // Key that increments every slide change to restart the CSS zoom animation
-  const [zoomKey, setZoomKey] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const zoomRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const next = useCallback(() => {
     setCurrent((c) => (c + 1) % slides.length);
-    setZoomKey((k) => k + 1);
     setProgress(0);
   }, [slides.length]);
+
+  // Restart Ken Burns zoom on the newly active slide (without remounting)
+  useEffect(() => {
+    const el = zoomRefs.current[current];
+    if (!el) return;
+    // Remove class → force reflow → re-add class to restart animation
+    el.classList.remove("hero-ken-burns");
+    void el.offsetHeight;
+    el.classList.add("hero-ken-burns");
+  }, [current]);
 
   // Auto-advance
   useEffect(() => {
@@ -75,11 +82,8 @@ export default function HeroSection({ destinations, tours, cruises, departures }
   }, [current]);
 
   return (
-    <section
-      ref={containerRef}
-      className="relative h-[600px] md:h-[680px] lg:h-[720px] flex items-center justify-center overflow-hidden bg-black"
-    >
-      {/* All slides stacked — CSS transition for silky crossfade + blur */}
+    <section className="relative h-[600px] md:h-[680px] lg:h-[720px] flex items-center justify-center overflow-hidden bg-black">
+      {/* All slides stacked — CSS transition for crossfade + blur */}
       {slides.map((slide, i) => (
         <div
           key={i}
@@ -89,10 +93,10 @@ export default function HeroSection({ destinations, tours, cruises, departures }
             filter: i === current ? "blur(0px)" : "blur(18px)",
           }}
         >
-          {/* Inner div for Ken Burns zoom — animation restarts via key */}
+          {/* Inner div for Ken Burns zoom — NO remount, animation restarted via ref */}
           <div
-            key={i === current ? zoomKey : `idle-${i}`}
-            className={i === current ? "hero-ken-burns" : ""}
+            ref={(el) => { zoomRefs.current[i] = el; }}
+            className={i === 0 ? "hero-ken-burns" : ""}
             style={{ position: "absolute", inset: 0 }}
           >
             <Image
@@ -159,7 +163,7 @@ export default function HeroSection({ destinations, tours, cruises, departures }
           {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => { setCurrent(i); setZoomKey((k) => k + 1); setProgress(0); }}
+              onClick={() => { setCurrent(i); setProgress(0); }}
               className="relative h-[3px] rounded-full overflow-hidden transition-all duration-300"
               style={{ width: i === current ? 48 : 24 }}
               aria-label={`Slide ${i + 1}`}
