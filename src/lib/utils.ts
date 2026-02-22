@@ -5,6 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Strip HTML tags from a string to get plain text. */
+export function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+}
+
 /**
  * Parse an Italian-format price string (e.g. "1.290,00" or "900,00" or "1345")
  * into a number. Returns 0 if the value is null/undefined/unparseable.
