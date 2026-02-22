@@ -36,6 +36,7 @@ type FilterState = {
   macroAreas: string[];
   destinations: string[];
   seasons: Season[];
+  exactDate: string | null;
   durations: string[];
   priceRange: [number, number];
   availabilityOnly: boolean;
@@ -52,6 +53,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
     macroAreas: [],
     destinations: [],
     seasons: [],
+    exactDate: null,
     durations: [],
     priceRange: [priceBounds.min, priceBounds.max],
     availabilityOnly: false,
@@ -108,6 +110,14 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
         const seasons = t.departures.map((d) => getSeason(d.data_partenza));
         return filters.seasons.some((s) => seasons.includes(s));
       });
+    }
+
+    // Exact date filter (match departures in same month)
+    if (filters.exactDate) {
+      const targetMonth = filters.exactDate.slice(0, 7); // "YYYY-MM"
+      result = result.filter((t) =>
+        t.departures.some((d) => d.data_partenza.startsWith(targetMonth))
+      );
     }
 
     // Duration filter
@@ -245,6 +255,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
       macroAreas: [],
       destinations: [],
       seasons: [],
+      exactDate: null,
       durations: [],
       priceRange: [priceBounds.min, priceBounds.max],
       availabilityOnly: false,
@@ -253,10 +264,12 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
   }, [priceBounds]);
 
   const handleHeroSearch = useCallback((query: { dove: string; quando: string; durata: string }) => {
+    const isDate = /^\d{4}-\d{2}-\d{2}$/.test(query.quando);
     setFilters((prev) => ({
       ...prev,
       macroAreas: query.dove ? [query.dove] : [],
-      seasons: query.quando ? [query.quando as Season] : [],
+      seasons: isDate ? [] : query.quando ? [query.quando as Season] : [],
+      exactDate: isDate ? query.quando : null,
       durations: query.durata ? [query.durata] : [],
     }));
     document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -277,12 +290,20 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
     filters.macroAreas.forEach((a) => c.push({ key: "macroAreas", label: a, value: a }));
     filters.destinations.forEach((d) => c.push({ key: "destinations", label: d, value: d }));
     filters.seasons.forEach((s) => c.push({ key: "seasons", label: SEASON_LABELS[s], value: s }));
+    if (filters.exactDate) {
+      const d = new Date(filters.exactDate + "T00:00:00");
+      const label = d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+      c.push({ key: "exactDate", label: label.charAt(0).toUpperCase() + label.slice(1), value: filters.exactDate });
+    }
     filters.durations.forEach((d) => c.push({ key: "durations", label: d + " giorni", value: d }));
     return c;
   }, [filters]);
 
   const handleChipRemove = useCallback((key: string, value: string) => {
     setFilters((prev) => {
+      if (key === "exactDate") {
+        return { ...prev, exactDate: null };
+      }
       const arr = prev[key as keyof FilterState];
       if (Array.isArray(arr) && typeof arr[0] === "string") {
         return { ...prev, [key]: (arr as string[]).filter((v) => v !== value) };

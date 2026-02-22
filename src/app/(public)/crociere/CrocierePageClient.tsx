@@ -53,6 +53,7 @@ interface CrocierePageClientProps {
 type FilterState = {
   rivers: string[];
   seasons: Season[];
+  exactDate: string | null;
   durations: string[];
   priceRange: [number, number];
   ship: string[];
@@ -70,6 +71,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
   const [filters, setFilters] = useState<FilterState>({
     rivers: [],
     seasons: [],
+    exactDate: null,
     durations: [],
     priceRange: [priceBounds.min, priceBounds.max],
     ship: [],
@@ -119,6 +121,14 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
         const seasons = c.departures.map((d) => getSeason(d.data_partenza));
         return filters.seasons.some((s) => seasons.includes(s));
       });
+    }
+
+    // Exact date filter (match departures in same month)
+    if (filters.exactDate) {
+      const targetMonth = filters.exactDate.slice(0, 7); // "YYYY-MM"
+      result = result.filter((c) =>
+        c.departures.some((d) => d.data_partenza.startsWith(targetMonth))
+      );
     }
 
     // Duration filter
@@ -257,6 +267,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
     setFilters({
       rivers: [],
       seasons: [],
+      exactDate: null,
       durations: [],
       priceRange: [priceBounds.min, priceBounds.max],
       ship: [],
@@ -266,10 +277,12 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
   }, [priceBounds]);
 
   const handleHeroSearch = useCallback((query: { dove: string; quando: string; durata: string }) => {
+    const isDate = /^\d{4}-\d{2}-\d{2}$/.test(query.quando);
     setFilters((prev) => ({
       ...prev,
       rivers: query.dove ? [query.dove] : [],
-      seasons: query.quando ? [query.quando as Season] : [],
+      seasons: isDate ? [] : query.quando ? [query.quando as Season] : [],
+      exactDate: isDate ? query.quando : null,
       durations: query.durata ? [query.durata] : [],
     }));
     // Scroll to results
@@ -289,6 +302,11 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
     const c: { key: string; label: string; value: string }[] = [];
     filters.rivers.forEach((r) => c.push({ key: "rivers", label: r, value: r }));
     filters.seasons.forEach((s) => c.push({ key: "seasons", label: SEASON_LABELS[s], value: s }));
+    if (filters.exactDate) {
+      const d = new Date(filters.exactDate + "T00:00:00");
+      const label = d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+      c.push({ key: "exactDate", label: label.charAt(0).toUpperCase() + label.slice(1), value: filters.exactDate });
+    }
     filters.durations.forEach((d) => c.push({ key: "durations", label: d + " notti", value: d }));
     filters.ship.forEach((s) => c.push({ key: "ship", label: s, value: s }));
     return c;
@@ -296,6 +314,9 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
 
   const handleChipRemove = useCallback((key: string, value: string) => {
     setFilters((prev) => {
+      if (key === "exactDate") {
+        return { ...prev, exactDate: null };
+      }
       const arr = prev[key as keyof FilterState];
       if (Array.isArray(arr) && typeof arr[0] === "string") {
         return { ...prev, [key]: (arr as string[]).filter((v) => v !== value) };

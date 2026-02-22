@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Calendar, Sun } from "lucide-react";
 
 interface HeroSearchBarProps {
   variant: "cruise" | "tour";
@@ -31,15 +31,26 @@ const TOUR_DURATION_OPTIONS = [
   { value: "13+", label: "13+ giorni" },
 ];
 
+type QuandoMode = "stagione" | "data";
+
 export default function HeroSearchBar({ variant, locationOptions, onSearch }: HeroSearchBarProps) {
   const [dove, setDove] = useState("");
-  const [quando, setQuando] = useState("");
+  const [quandoMode, setQuandoMode] = useState<QuandoMode>("stagione");
+  const [quandoStagione, setQuandoStagione] = useState("");
+  const [quandoData, setQuandoData] = useState("");
   const [durata, setDurata] = useState("");
 
   const durationOptions = variant === "cruise" ? CRUISE_DURATION_OPTIONS : TOUR_DURATION_OPTIONS;
 
   const handleSearch = () => {
+    const quando = quandoMode === "stagione" ? quandoStagione : quandoData;
     onSearch({ dove, quando, durata });
+  };
+
+  const switchMode = (mode: QuandoMode) => {
+    setQuandoMode(mode);
+    if (mode === "stagione") setQuandoData("");
+    else setQuandoStagione("");
   };
 
   return (
@@ -66,18 +77,55 @@ export default function HeroSearchBar({ variant, locationOptions, onSearch }: He
 
         {/* Quando */}
         <div className="flex-1">
-          <label className="block text-xs font-medium text-gray-500 mb-1 px-1">Quando?</label>
-          <select
-            value={quando}
-            onChange={(e) => setQuando(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C41E2F]/30 focus:border-[#C41E2F]"
-          >
-            {SEASON_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between mb-1 px-1">
+            <label className="text-xs font-medium text-gray-500">Quando?</label>
+            <div className="flex gap-0.5 rounded-md bg-gray-100 p-0.5">
+              <button
+                type="button"
+                onClick={() => switchMode("stagione")}
+                className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                  quandoMode === "stagione"
+                    ? "bg-white text-gray-800 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <Sun className="size-2.5" />
+                Stagione
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("data")}
+                className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                  quandoMode === "data"
+                    ? "bg-white text-gray-800 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <Calendar className="size-2.5" />
+                Data
+              </button>
+            </div>
+          </div>
+          {quandoMode === "stagione" ? (
+            <select
+              value={quandoStagione}
+              onChange={(e) => setQuandoStagione(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C41E2F]/30 focus:border-[#C41E2F]"
+            >
+              {SEASON_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="date"
+              value={quandoData}
+              onChange={(e) => setQuandoData(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C41E2F]/30 focus:border-[#C41E2F]"
+            />
+          )}
         </div>
 
         {/* Durata */}
