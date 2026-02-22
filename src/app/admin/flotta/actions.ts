@@ -2,7 +2,6 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
@@ -237,11 +236,12 @@ export async function saveShip(formData: unknown): Promise<ActionResult> {
     return { success: false, error: message }
   }
 
-  // 5. Revalidate and redirect
+  // 5. Revalidate
   revalidatePath('/admin/flotta')
   revalidatePath('/flotta')
   revalidatePath('/')
-  redirect('/admin/flotta')
+
+  return { success: true, id: shipId }
 }
 
 export async function deleteShipAction(id: string): Promise<ActionResult> {

@@ -35,9 +35,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${inter.variable} antialiased`}
       >
-        {process.env.NODE_ENV === "development" && (
-          <script src="https://unpkg.com/react-scan/dist/auto.global.js" crossOrigin="anonymous" />
-        )}
+        {/* react-scan disabled - was redirecting to port 3002 */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

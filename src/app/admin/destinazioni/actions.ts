@@ -2,7 +2,6 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 const destinationSchema = z.object({
@@ -49,7 +48,7 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
     revalidatePath(`/destinazioni/${cleanData.slug}`)
     revalidatePath('/destinazioni')
     revalidatePath('/')
-    redirect('/admin/destinazioni')
+    return { success: true, id }
   } else {
     // Create
     const { data: created, error } = await supabase
@@ -66,7 +65,7 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
     revalidatePath('/admin/destinazioni')
     revalidatePath('/destinazioni')
     revalidatePath('/')
-    redirect('/admin/destinazioni')
+    return { success: true, id: created.id }
   }
 }
 

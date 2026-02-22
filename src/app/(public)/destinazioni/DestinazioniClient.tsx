@@ -64,11 +64,6 @@ function DestinationMosaicCard({
             {tourCount} {tourCount === 1 ? "viaggio disponibile" : "viaggi disponibili"}
           </p>
         )}
-        {large && dest.description && (
-          <p className="text-white/70 text-sm mt-2 line-clamp-2 hidden md:block">
-            {dest.description}
-          </p>
-        )}
         <span className="inline-flex items-center gap-1 text-white text-xs font-medium mt-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
           Scopri di piu
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

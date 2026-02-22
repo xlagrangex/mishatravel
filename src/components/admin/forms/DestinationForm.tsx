@@ -117,14 +117,19 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
 
   const onSubmit = async (data: DestinationFormValues) => {
     setServerError(null);
-    const result = await saveDestination({
-      ...data,
-      id: initialData?.id,
-    });
-    if (!result.success) {
-      setServerError(result.error);
+    try {
+      const result = await saveDestination({
+        ...data,
+        id: initialData?.id,
+      });
+      if (!result.success) {
+        setServerError(result.error);
+      } else {
+        router.push("/admin/destinazioni");
+      }
+    } catch {
+      setServerError("Errore imprevisto durante il salvataggio.");
     }
-    // On success, the server action redirects to /admin/destinazioni
   };
 
   return (

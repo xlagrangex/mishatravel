@@ -2,7 +2,6 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 const catalogSchema = z.object({
@@ -46,7 +45,7 @@ export async function saveCatalog(formData: z.infer<typeof catalogSchema>): Prom
     revalidatePath('/admin/cataloghi')
     revalidatePath('/cataloghi')
     revalidatePath('/')
-    redirect('/admin/cataloghi')
+    return { success: true, id }
   } else {
     // Create
     const { data: created, error } = await supabase
@@ -60,7 +59,7 @@ export async function saveCatalog(formData: z.infer<typeof catalogSchema>): Prom
     revalidatePath('/admin/cataloghi')
     revalidatePath('/cataloghi')
     revalidatePath('/')
-    redirect('/admin/cataloghi')
+    return { success: true, id: created.id }
   }
 }
 

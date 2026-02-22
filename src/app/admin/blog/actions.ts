@@ -2,7 +2,6 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
@@ -77,7 +76,7 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
     revalidatePath(`/blog/${cleanData.slug}`)
     revalidatePath('/blog')
     revalidatePath('/')
-    redirect('/admin/blog')
+    return { success: true, id }
   } else {
     // Create
     const { data: created, error } = await supabase
@@ -94,7 +93,7 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
     revalidatePath('/admin/blog')
     revalidatePath('/blog')
     revalidatePath('/')
-    redirect('/admin/blog')
+    return { success: true, id: created.id }
   }
 }
 

@@ -1,9 +1,15 @@
 "use client";
 
-import { Phone, Mail, MapPin, UserCircle } from "lucide-react";
+import { Phone, Mail, MapPin, UserCircle, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function TopBar() {
+  const { user, role } = useAuth();
+
+  const panelUrl =
+    role === "agency" ? "/agenzia/dashboard" : "/admin";
+
   return (
     <div className="hidden lg:block w-full bg-white border-b border-gray-100">
       <div className="container mx-auto px-4 flex items-center justify-between h-10 text-sm text-gray-500">
@@ -50,13 +56,23 @@ export default function TopBar() {
             Trova Agenzia
           </Link>
           <span className="text-gray-300">|</span>
-          <Link
-            href="/login"
-            className="flex items-center gap-1.5 hover:text-[#C41E2F] transition-colors"
-          >
-            <UserCircle className="size-4" />
-            <span>Login</span>
-          </Link>
+          {user ? (
+            <Link
+              href={panelUrl}
+              className="flex items-center gap-1.5 hover:text-[#C41E2F] transition-colors"
+            >
+              <LayoutDashboard className="size-4" />
+              <span>Pannello</span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 hover:text-[#C41E2F] transition-colors"
+            >
+              <UserCircle className="size-4" />
+              <span>Login</span>
+            </Link>
+          )}
         </div>
       </div>
     </div>

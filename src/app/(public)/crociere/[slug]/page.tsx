@@ -4,6 +4,8 @@ import { getCruiseBySlug, getRelatedCruises } from "@/lib/supabase/queries/cruis
 import { generateCruiseMetadata } from "@/lib/seo/metadata";
 import { boatTripSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
 import CruiseDetailClient from "./CruiseDetailClient";
+import AdminEditSetter from "@/components/admin/AdminEditSetter";
+import { getAuthContext } from "@/lib/supabase/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +22,12 @@ export default async function CruiseDetailPage({ params }: { params: Promise<{ s
   if (!cruise) notFound();
 
   const related = await getRelatedCruises(slug, 3);
+  const { role } = await getAuthContext();
+  const isAdmin = role === "super_admin" || role === "admin" || role === "operator";
 
   return (
     <>
+      {isAdmin && <AdminEditSetter url={`/admin/crociere/${cruise.id}/modifica`} />}
       <CruiseDetailClient cruise={cruise} related={related} />
 
       <script

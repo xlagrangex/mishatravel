@@ -4,6 +4,8 @@ import { getTourBySlug, getRelatedTours } from "@/lib/supabase/queries/tours";
 import { generateTourMetadata } from "@/lib/seo/metadata";
 import { tourTripSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
 import TourDetailClient from "./TourDetailClient";
+import AdminEditSetter from "@/components/admin/AdminEditSetter";
+import { getAuthContext } from "@/lib/supabase/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +22,12 @@ export default async function TourDetailPage({ params }: { params: Promise<{ slu
   if (!tour) notFound();
 
   const related = await getRelatedTours(slug, 3);
+  const { role } = await getAuthContext();
+  const isAdmin = role === "super_admin" || role === "admin" || role === "operator";
 
   return (
     <>
+      {isAdmin && <AdminEditSetter url={`/admin/tours/${tour.id}/modifica`} />}
       <TourDetailClient tour={tour} related={related} />
 
       <script

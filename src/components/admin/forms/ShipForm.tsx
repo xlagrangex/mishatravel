@@ -5,6 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { saveShip } from "@/app/admin/flotta/actions";
 import {
   Plus,
@@ -221,17 +222,23 @@ export default function ShipForm({ initialData }: ShipFormProps) {
   // ---------------------------------------------------------------------------
 
   const [serverError, setServerError] = useState<string | null>(null);
+  const router = useRouter();
 
   const onSubmit = async (data: ShipFormValues) => {
     setServerError(null);
-    const result = await saveShip({
-      ...data,
-      id: initialData?.id,
-    });
-    if (!result.success) {
-      setServerError(result.error);
+    try {
+      const result = await saveShip({
+        ...data,
+        id: initialData?.id,
+      });
+      if (!result.success) {
+        setServerError(result.error);
+      } else {
+        router.push("/admin/flotta");
+      }
+    } catch {
+      setServerError("Errore imprevisto durante il salvataggio.");
     }
-    // On success, the server action redirects to /admin/flotta
   };
 
   // ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -58,22 +59,28 @@ export default function CatalogForm({ initialData }: CatalogFormProps) {
   });
 
   const [serverError, setServerError] = useState<string | null>(null);
+  const router = useRouter();
 
   const onSubmit = async (data: CatalogFormValues) => {
     setServerError(null);
-    const result = await saveCatalog({
-      title: data.title,
-      year: data.year ? parseInt(data.year, 10) : null,
-      sort_order: data.sort_order ? parseInt(data.sort_order, 10) : 0,
-      cover_image_url: data.cover_image_url || null,
-      pdf_url: data.pdf_url || null,
-      is_published: data.is_published,
-      id: initialData?.id,
-    });
-    if (!result.success) {
-      setServerError(result.error);
+    try {
+      const result = await saveCatalog({
+        title: data.title,
+        year: data.year ? parseInt(data.year, 10) : null,
+        sort_order: data.sort_order ? parseInt(data.sort_order, 10) : 0,
+        cover_image_url: data.cover_image_url || null,
+        pdf_url: data.pdf_url || null,
+        is_published: data.is_published,
+        id: initialData?.id,
+      });
+      if (!result.success) {
+        setServerError(result.error);
+      } else {
+        router.push("/admin/cataloghi");
+      }
+    } catch {
+      setServerError("Errore imprevisto durante il salvataggio.");
     }
-    // On success, the server action redirects to /admin/cataloghi
   };
 
   return (
