@@ -2,7 +2,6 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
@@ -98,6 +97,12 @@ const cruiseSchema = z.object({
       })
     )
     .default([]),
+
+  // Locations map: { "localita_name": { lat, lng } }
+  locations: z.record(z.string(), z.object({
+    lat: z.number(),
+    lng: z.number(),
+  })).optional().default({}),
 })
 
 type CruiseFormData = z.infer<typeof cruiseSchema>
@@ -246,6 +251,23 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
       }))
     )
 
+    // Locations (coordinate per localita)
+    if (data.locations && Object.keys(data.locations).length > 0) {
+      const locationRows: Record<string, unknown>[] = []
+      const seen = new Set<string>()
+      for (const day of data.itinerary_days) {
+        const name = day.localita.trim()
+        if (!name || seen.has(name)) continue
+        seen.add(name)
+        const coords = data.locations[name]
+        locationRows.push({
+          nome: name,
+          coordinate: coords ? `${coords.lat}, ${coords.lng}` : null,
+        })
+      }
+      await syncSubTable(supabase, 'cruise_locations', cruiseId, locationRows)
+    }
+
     // Cabins
     await syncSubTable(
       supabase,
@@ -327,17 +349,40 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
     return { success: false, error: message }
   }
 
-  // 5. Revalidate and redirect
+  // 5. Revalidate
   revalidatePath('/admin/crociere')
   revalidatePath('/crociere')
   revalidatePath('/')
-  redirect('/admin/crociere')
+
+  return { success: true, id: cruiseId }
 }
 
 export async function deleteCruiseAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
   const { error } = await supabase.from('cruises').delete().eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/crociere')
+  revalidatePath('/crociere')
+  revalidatePath('/')
+
+  return { success: true, id }
+}
+
+export async function toggleCruiseStatus(
+  id: string,
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('cruises')
+    .update({ status: newStatus })
+    .eq('id', id)
 
   if (error) {
     return { success: false, error: error.message }

@@ -3,7 +3,7 @@
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Search, Pencil, Trash2, ExternalLink, Map } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ExternalLink, Map, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +11,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { displayPrice } from "@/lib/format";
 import type { TourListItem } from "@/lib/supabase/queries/tours";
-import { deleteTourAction } from "@/app/admin/tours/actions";
+import { deleteTourAction, toggleTourStatus } from "@/app/admin/tours/actions";
 
 interface AdminToursTableProps {
   tours: TourListItem[];
@@ -22,6 +23,7 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return tours;
@@ -42,6 +44,18 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
         alert(`Errore: ${result.error}`);
       }
       setDeletingId(null);
+    });
+  };
+
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === "published" ? "draft" : "published";
+    setTogglingId(id);
+    startTransition(async () => {
+      const result = await toggleTourStatus(id, newStatus);
+      if (!result.success) {
+        alert(`Errore: ${result.error}`);
+      }
+      setTogglingId(null);
     });
   };
 
@@ -105,9 +119,8 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[64px]">Immagine</TableHead>
-                <TableHead>Titolo</TableHead>
-                <TableHead>Anteprima</TableHead>
+                <TableHead className="w-[96px]">Immagine</TableHead>
+                <TableHead>Tour</TableHead>
                 <TableHead>Destinazione</TableHead>
                 <TableHead>Durata</TableHead>
                 <TableHead>Prezzo</TableHead>
@@ -118,46 +131,44 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
             <TableBody>
               {filtered.map((tour) => (
                 <TableRow key={tour.id} className={cn(deletingId === tour.id && "opacity-50")}>
-                  {/* Thumbnail */}
+                  {/* Thumbnail - bigger */}
                   <TableCell>
                     {tour.cover_image_url ? (
-                      <div className="relative h-12 w-12 overflow-hidden rounded-md">
+                      <div className="relative h-16 w-20 overflow-hidden rounded-md">
                         <Image
                           src={tour.cover_image_url}
                           alt={tour.title}
                           fill
                           className="object-cover"
-                          sizes="48px"
+                          sizes="80px"
                         />
                       </div>
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted">
-                        <Map className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex h-16 w-20 items-center justify-center rounded-md bg-muted">
+                        <Map className="h-6 w-6 text-muted-foreground" />
                       </div>
                     )}
                   </TableCell>
 
-                  {/* Title */}
-                  <TableCell className="font-medium">
-                    <Link
-                      href={`/admin/tours/${tour.id}/modifica`}
-                      className="hover:text-primary hover:underline"
-                    >
-                      {tour.title}
-                    </Link>
-                  </TableCell>
-
-                  {/* Anteprima - slug cliccabile */}
+                  {/* Title + slug preview */}
                   <TableCell>
-                    <Link
-                      href={`/tours/${tour.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-primary"
-                    >
-                      /tours/{tour.slug}
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
+                    <div className="space-y-1">
+                      <Link
+                        href={`/admin/tours/${tour.id}/modifica`}
+                        className="font-medium hover:text-primary hover:underline line-clamp-1"
+                      >
+                        {tour.title}
+                      </Link>
+                      <Link
+                        href={`/tours/${tour.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground hover:text-primary"
+                      >
+                        /tours/{tour.slug}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
                   </TableCell>
 
                   {/* Destination */}
@@ -166,13 +177,16 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
                   </TableCell>
 
                   {/* Duration */}
-                  <TableCell className="text-muted-foreground">
-                    {tour.durata_notti ?? "\u2014"}
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {tour.durata_notti ? `${tour.durata_notti} notti` : "\u2014"}
                   </TableCell>
 
-                  {/* Price */}
-                  <TableCell className="text-sm text-muted-foreground">
-                    {tour.a_partire_da ?? "\u2014"}
+                  {/* Price - formatted */}
+                  <TableCell className="text-sm font-medium whitespace-nowrap">
+                    {tour.prezzo_su_richiesta
+                      ? <span className="text-muted-foreground">Su richiesta</span>
+                      : <span className="text-[#C41E2F]">{displayPrice(tour.a_partire_da)}</span>
+                    }
                   </TableCell>
 
                   {/* Status */}
@@ -193,6 +207,29 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
                   {/* Actions */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {/* Toggle publish/draft */}
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        title={tour.status === "published" ? "Metti in bozza" : "Pubblica"}
+                        disabled={isPending && togglingId === tour.id}
+                        onClick={() => handleToggleStatus(tour.id, tour.status)}
+                        className={cn(
+                          tour.status === "published"
+                            ? "text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                            : "text-green-600 hover:bg-green-50 hover:text-green-700"
+                        )}
+                      >
+                        {tour.status === "published" ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                        <span className="sr-only">
+                          {tour.status === "published" ? "Metti in bozza" : "Pubblica"}
+                        </span>
+                      </Button>
+
                       <Button variant="ghost" size="icon-xs" asChild>
                         <Link href={`/admin/tours/${tour.id}/modifica`}>
                           <Pencil className="h-3.5 w-3.5" />

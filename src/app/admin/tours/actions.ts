@@ -2,7 +2,6 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
@@ -99,6 +98,12 @@ const tourSchema = z.object({
       })
     )
     .default([]),
+
+  // Locations map: { "localita_name": { lat, lng } }
+  locations: z.record(z.string(), z.object({
+    lat: z.number(),
+    lng: z.number(),
+  })).optional().default({}),
 })
 
 type TourFormData = z.infer<typeof tourSchema>
@@ -242,6 +247,24 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
       }))
     )
 
+    // Locations (coordinate per localita)
+    if (data.locations && Object.keys(data.locations).length > 0) {
+      const locationRows: Record<string, unknown>[] = []
+      // Derive unique locations from itinerary days, preserving order
+      const seen = new Set<string>()
+      for (const day of data.itinerary_days) {
+        const name = day.localita.trim()
+        if (!name || seen.has(name)) continue
+        seen.add(name)
+        const coords = data.locations[name]
+        locationRows.push({
+          nome: name,
+          coordinate: coords ? `${coords.lat}, ${coords.lng}` : null,
+        })
+      }
+      await syncSubTable(supabase, 'tour_locations', tourId, locationRows)
+    }
+
     // Hotels - flatten hotel_groups into individual rows
     const flattenedHotels: Record<string, unknown>[] = []
     for (const group of data.hotel_groups) {
@@ -332,17 +355,40 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
     return { success: false, error: message }
   }
 
-  // 5. Revalidate and redirect
+  // 5. Revalidate
   revalidatePath('/admin/tours')
   revalidatePath('/tours')
   revalidatePath('/')
-  redirect('/admin/tours')
+
+  return { success: true, id: tourId }
 }
 
 export async function deleteTourAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
   const { error } = await supabase.from('tours').delete().eq('id', id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/admin/tours')
+  revalidatePath('/tours')
+  revalidatePath('/')
+
+  return { success: true, id }
+}
+
+export async function toggleTourStatus(
+  id: string,
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('tours')
+    .update({ status: newStatus })
+    .eq('id', id)
 
   if (error) {
     return { success: false, error: error.message }

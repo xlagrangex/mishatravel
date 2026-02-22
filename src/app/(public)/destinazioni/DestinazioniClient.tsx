@@ -5,13 +5,22 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Destination } from "@/lib/types";
 
-const macroAreas: { id: string; label: string; icon: string }[] = [
-  { id: "europa", label: "Europa", icon: "\u{1F3DB}" },
-  { id: "america-latina", label: "America Latina", icon: "\u{1F30E}" },
-  { id: "asia-russia", label: "Asia/Russia", icon: "\u{1F3EF}" },
-  { id: "africa", label: "Africa", icon: "\u{1F30D}" },
-  { id: "percorsi-fluviali", label: "Percorsi Fluviali", icon: "\u{1F6A2}" },
-];
+// Config map for known macro areas: icon + description.
+// Areas not listed here get a fallback icon and no description.
+const AREA_CONFIG: Record<string, { icon: string; description: string }> = {
+  "Europa": { icon: "\u{1F3DB}", description: "Capitali imperiali, borghi medievali e sapori mediterranei nel cuore del Vecchio Continente." },
+  "America Latina": { icon: "\u{1F30E}", description: "Dalle Ande alla Patagonia, un continente di contrasti e meraviglie naturali." },
+  "Asia": { icon: "\u{1F3EF}", description: "Templi millenari, steppe infinite e culture che affascinano da sempre." },
+  "Russia": { icon: "\u{1F3EF}", description: "Dalla Transiberiana alle cupole dorate, un viaggio senza confini." },
+  "Africa": { icon: "\u{1F30D}", description: "Safari, deserti e tradizioni ancestrali nel continente piu selvaggio." },
+  "I nostri fiumi": { icon: "\u{1F6A2}", description: "Crociere lungo i grandi fiumi d'Europa tra castelli, vigneti e citta storiche." },
+  "Altro": { icon: "\u{2708}\u{FE0F}", description: "Altre destinazioni selezionate per te." },
+};
+const FALLBACK_ICON = "\u{1F30F}";
+
+function toSlug(label: string): string {
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
 
 function DestinationMosaicCard({
   dest,
@@ -77,15 +86,19 @@ interface DestinazioniClientProps {
 }
 
 export default function DestinazioniClient({ grouped, tourCounts }: DestinazioniClientProps) {
-  const [activeArea, setActiveArea] = useState(macroAreas[0].id);
+  // Derive macro areas from the actual data
+  const activeMacroAreas = Object.keys(grouped)
+    .filter((label) => grouped[label].length > 0)
+    .map((label) => ({
+      id: toSlug(label),
+      label,
+      icon: AREA_CONFIG[label]?.icon ?? FALLBACK_ICON,
+      description: AREA_CONFIG[label]?.description ?? "",
+    }));
+
+  const [activeArea, setActiveArea] = useState(activeMacroAreas[0]?.id ?? "");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const navRef = useRef<HTMLDivElement>(null);
-
-  // Filter macroAreas to only those that have destinations
-  const activeMacroAreas = macroAreas.filter((area) => {
-    const dests = grouped[area.label];
-    return dests && dests.length > 0;
-  });
 
   const handleScrollTo = useCallback((areaId: string) => {
     const el = sectionRefs.current[areaId];
@@ -229,13 +242,11 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
                   {area.label}
                 </h2>
               </div>
-              <p className="text-gray-500 mb-8 ml-5 pl-4 border-l-2 border-transparent">
-                {area.label === "Europa" && "Capitali imperiali, borghi medievali e sapori mediterranei nel cuore del Vecchio Continente."}
-                {area.label === "America Latina" && "Dalle Ande alla Patagonia, un continente di contrasti e meraviglie naturali."}
-                {area.label === "Asia/Russia" && "Templi millenari, steppe infinite e culture che affascinano da sempre."}
-                {area.label === "Africa" && "Safari, deserti e tradizioni ancestrali nel continente piu selvaggio."}
-                {area.label === "Percorsi Fluviali" && "Crociere lungo i grandi fiumi d'Europa tra castelli, vigneti e citta storiche."}
-              </p>
+              {area.description && (
+                <p className="text-gray-500 mb-8 ml-5 pl-4 border-l-2 border-transparent">
+                  {area.description}
+                </p>
+              )}
 
               {/* Mosaic grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[200px] md:auto-rows-[220px]">

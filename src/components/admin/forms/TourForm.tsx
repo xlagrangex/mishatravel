@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 import FileUpload from "@/components/admin/FileUpload";
+import LocationSearchPopover from "@/components/admin/LocationSearchPopover";
+import type { LocationSearchResult } from "@/components/admin/LocationSearchPopover";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -264,21 +266,64 @@ export default function TourForm({ initialData, destinations = [], localities = 
   const penalties = useFieldArray({ control, name: "penalties" });
 
   // ---------------------------------------------------------------------------
+  // Locations map (localita name → coordinates)
+  // ---------------------------------------------------------------------------
+
+  const [locationsMap, setLocationsMap] = useState<Record<string, { lat: number; lng: number }>>(() => {
+    if (!initialData?.locations) return {};
+    const map: Record<string, { lat: number; lng: number }> = {};
+    for (const loc of initialData.locations) {
+      if (loc.nome && loc.coordinate) {
+        const parts = loc.coordinate.split(",").map((s) => parseFloat(s.trim()));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          map[loc.nome] = { lat: parts[0], lng: parts[1] };
+        }
+      }
+    }
+    return map;
+  });
+
+  const handleLocationSearch = (index: number, result: LocationSearchResult) => {
+    setValue(`itinerary_days.${index}.localita`, result.name);
+    setLocationsMap((prev) => ({
+      ...prev,
+      [result.name]: { lat: result.lat, lng: result.lng },
+    }));
+  };
+
+  // ---------------------------------------------------------------------------
   // Submit
   // ---------------------------------------------------------------------------
 
   const [serverError, setServerError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const onSubmit = async (data: TourFormValues) => {
     setServerError(null);
-    const result = await saveTour({
-      ...data,
-      id: initialData?.id,
-    });
-    if (!result.success) {
-      setServerError(result.error);
+    setValidationError(null);
+    try {
+      const result = await saveTour({
+        ...data,
+        id: initialData?.id,
+        locations: locationsMap,
+      });
+      if (!result.success) {
+        setServerError(result.error);
+      } else {
+        router.push("/admin/tours");
+      }
+    } catch {
+      setServerError("Errore imprevisto durante il salvataggio.");
     }
-    // On success, the server action redirects to /admin/tours
+  };
+
+  const onFormError = (formErrors: Record<string, unknown>) => {
+    const fields = Object.keys(formErrors);
+    setValidationError(
+      `Ci sono errori di validazione nei campi: ${fields.join(", ")}. Controlla e riprova.`
+    );
   };
 
   // ---------------------------------------------------------------------------
@@ -316,7 +361,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
   // ---------------------------------------------------------------------------
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-6">
       <Tabs defaultValue="info-base">
         {/* Tabs Navigation */}
         <TabsList className="flex w-full flex-wrap" variant="line">
@@ -622,18 +667,29 @@ export default function TourForm({ initialData, destinations = [], localities = 
                     </div>
                     <div className="space-y-2">
                       <Label>Localit\u00E0</Label>
-                      <Controller
-                        control={control}
-                        name={`itinerary_days.${index}.localita`}
-                        render={({ field }) => (
-                          <Autocomplete
-                            value={field.value}
-                            onChange={field.onChange}
-                            suggestions={localities}
-                            placeholder="es. Atene"
-                          />
-                        )}
-                      />
+                      <div className="flex gap-2">
+                        <Controller
+                          control={control}
+                          name={`itinerary_days.${index}.localita`}
+                          render={({ field }) => (
+                            <Autocomplete
+                              value={field.value}
+                              onChange={field.onChange}
+                              suggestions={localities}
+                              placeholder="es. Atene"
+                            />
+                          )}
+                        />
+                        <LocationSearchPopover
+                          currentLocationName={watch(`itinerary_days.${index}.localita`)}
+                          onSelect={(result) => handleLocationSearch(index, result)}
+                        />
+                      </div>
+                      {locationsMap[watch(`itinerary_days.${index}.localita`)] && (
+                        <p className="text-xs text-muted-foreground">
+                          Coordinate: {locationsMap[watch(`itinerary_days.${index}.localita`)].lat.toFixed(4)}, {locationsMap[watch(`itinerary_days.${index}.localita`)].lng.toFixed(4)}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -1220,9 +1276,9 @@ export default function TourForm({ initialData, destinations = [], localities = 
       {/* ================================================================= */}
       <Separator />
 
-      {serverError && (
+      {(serverError || validationError) && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {serverError}
+          {serverError || validationError}
         </div>
       )}
 

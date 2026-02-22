@@ -5,6 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { saveCruise } from "@/app/admin/crociere/actions";
 import {
   Plus,
@@ -18,6 +19,8 @@ import {
 } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 import FileUpload from "@/components/admin/FileUpload";
+import LocationSearchPopover from "@/components/admin/LocationSearchPopover";
+import type { LocationSearchResult } from "@/components/admin/LocationSearchPopover";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -282,21 +285,54 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
   const gallery = useFieldArray({ control, name: "gallery" });
 
   // ---------------------------------------------------------------------------
+  // Locations map (localita name → coordinates)
+  // ---------------------------------------------------------------------------
+
+  const [locationsMap, setLocationsMap] = useState<Record<string, { lat: number; lng: number }>>(() => {
+    if (!initialData?.locations) return {};
+    const map: Record<string, { lat: number; lng: number }> = {};
+    for (const loc of initialData.locations) {
+      if (loc.nome && loc.coordinate) {
+        const parts = loc.coordinate.split(",").map((s) => parseFloat(s.trim()));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          map[loc.nome] = { lat: parts[0], lng: parts[1] };
+        }
+      }
+    }
+    return map;
+  });
+
+  const handleLocationSearch = (index: number, result: LocationSearchResult) => {
+    setValue(`itinerary_days.${index}.localita`, result.name);
+    setLocationsMap((prev) => ({
+      ...prev,
+      [result.name]: { lat: result.lat, lng: result.lng },
+    }));
+  };
+
+  // ---------------------------------------------------------------------------
   // Submit
   // ---------------------------------------------------------------------------
 
   const [serverError, setServerError] = useState<string | null>(null);
+  const router = useRouter();
 
   const onSubmit = async (data: CruiseFormValues) => {
     setServerError(null);
-    const result = await saveCruise({
-      ...data,
-      id: initialData?.id,
-    });
-    if (!result.success) {
-      setServerError(result.error);
+    try {
+      const result = await saveCruise({
+        ...data,
+        id: initialData?.id,
+        locations: locationsMap,
+      });
+      if (!result.success) {
+        setServerError(result.error);
+      } else {
+        router.push("/admin/crociere");
+      }
+    } catch {
+      setServerError("Errore imprevisto durante il salvataggio.");
     }
-    // On success, the server action redirects to /admin/crociere
   };
 
   // ---------------------------------------------------------------------------
@@ -758,12 +794,23 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                     </div>
                     <div className="space-y-2">
                       <Label>Localit\u00E0</Label>
-                      <Input
-                        placeholder="es. Budapest"
-                        {...register(
-                          `itinerary_days.${index}.localita`,
-                        )}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="es. Budapest"
+                          {...register(
+                            `itinerary_days.${index}.localita`,
+                          )}
+                        />
+                        <LocationSearchPopover
+                          currentLocationName={watch(`itinerary_days.${index}.localita`)}
+                          onSelect={(result) => handleLocationSearch(index, result)}
+                        />
+                      </div>
+                      {locationsMap[watch(`itinerary_days.${index}.localita`)] && (
+                        <p className="text-xs text-muted-foreground">
+                          Coordinate: {locationsMap[watch(`itinerary_days.${index}.localita`)].lat.toFixed(4)}, {locationsMap[watch(`itinerary_days.${index}.localita`)].lng.toFixed(4)}
+                        </p>
+                      )}
                     </div>
                   </div>
 
