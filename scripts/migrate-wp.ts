@@ -893,7 +893,7 @@ async function importCruises(
     const content = String(item["content:encoded"] || "");
 
     // Match ship from title
-    const shipId = matchShip(title, shipMap);
+    const shipId = matchShip(title, slug, shipMap);
     // Match destination
     const destinationId = matchDestinationForCruise(meta, title, destinationMap);
 
@@ -1156,15 +1156,15 @@ const DESTINATION_KEYWORDS: Record<string, string[]> = {
   "nepal": ["nepal", "kathmandu"],
   "giordania": ["giordania", "petra", "wadi rum"],
   "turchia": ["turchia", "istanbul", "cappadocia", "anatolia", "troia"],
-  "uzbekistan": ["uzbekistan", "samarcanda", "bukhara"],
+  "uzbekistan": ["uzbekistan", "samarcanda", "bukhara", "tamerlano"],
   "georgia": ["georgia", "tbilisi"],
   "armenia": ["armenia", "yerevan"],
   "azerbaijan": ["azerbaijan", "baku"],
   "kirghizistan": ["kirghizistan", "bishkek"],
-  "mongolia": ["mongolia", "ulaanbaatar"],
+  "mongolia": ["mongolia", "ulaanbaatar", "transmongolica"],
   "giappone": ["giappone", "tokyo", "kyoto"],
   "filippine": ["filippine", "manila"],
-  "russia": ["russia", "mosca", "san pietroburgo", "transiberiana"],
+  "russia": ["russia", "mosca", "san pietroburgo", "transiberiana", "baltico", "baltiche", "vilnius", "riga", "tallinn"],
   "marocco": ["marocco", "marrakech", "fes"],
   "egitto": ["egitto", "cairo", "luxor"],
   "tunisia": ["tunisia", "tunisi"],
@@ -1184,6 +1184,14 @@ const DESTINATION_KEYWORDS: Record<string, string[]> = {
   "duero": ["douro", "duero", "porto"],
   "mosella": ["mosella"],
   "schelda": ["schelda", "bruges", "anversa", "fiamminghi", "fiamminghe", "olandesi"],
+};
+
+// Manual cruise-to-ship mapping for cruises without ship name in title
+const MANUAL_CRUISE_SHIP: Record<string, string> = {
+  "fascino-del-douro": "ms douro cruiser",
+  "crociera-speciale-fascino-del-douro-dicembre-2025": "ms douro cruiser",
+  "danubio-imperiale": "ms fidelio",
+  "romantica-mosella": "ms crucevita",
 };
 
 function matchDestination(
@@ -1230,7 +1238,14 @@ const SHIP_ALIASES: Record<string, string> = {
   "river sapphire": "river sapphire",
 };
 
-function matchShip(title: string, shipMap: Map<string, string>): string | null {
+function matchShip(title: string, slug: string, shipMap: Map<string, string>): string | null {
+  // Try manual mapping first (for cruises without ship name in title)
+  const manualShipName = MANUAL_CRUISE_SHIP[slug];
+  if (manualShipName) {
+    const manualId = shipMap.get(manualShipName);
+    if (manualId) return manualId;
+  }
+
   const titleLower = title.toLowerCase();
   // Try to find ship name in cruise title
   for (const [shipName, shipId] of shipMap.entries()) {
