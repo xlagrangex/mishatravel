@@ -6,7 +6,7 @@
  *
  * Brand colours:
  *   Primary (red)  : #C41E2F
- *   Secondary (navy): #1B2D4F
+ *   Text (dark gray): #333333
  */
 
 // ---------------------------------------------------------------------------
@@ -28,11 +28,8 @@ function baseTemplate(body: string): string {
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
           <!-- Header -->
           <tr>
-            <td style="background-color:#1B2D4F;padding:24px 32px;text-align:center;">
-              <h1 style="margin:0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:1px;">
-                MishaTravel
-              </h1>
-              <p style="margin:4px 0 0;font-size:13px;color:#94a3b8;letter-spacing:0.5px;">Tour Operator</p>
+            <td style="background-color:#ffffff;padding:24px 32px;text-align:center;border-bottom:2px solid #C41E2F;">
+              <img src="${SITE_URL}/images/logo/logo-logo.png" alt="MishaTravel - Tour Operator" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
             </td>
           </tr>
           <!-- Body -->
@@ -47,7 +44,7 @@ function baseTemplate(body: string): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="font-size:12px;color:#64748b;line-height:1.6;">
-                    <strong style="color:#1B2D4F;">MishaTravel S.r.l.</strong><br/>
+                    <strong style="color:#C41E2F;">MishaTravel S.r.l.</strong><br/>
                     Tel: +39 02 1234567 | Email: info@mishatravel.com<br/>
                     www.mishatravel.com
                   </td>
@@ -92,7 +89,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mishatravel.com";
  */
 export function welcomeAgencyEmail(agencyName: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Benvenuto su MishaTravel!</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Benvenuto su MishaTravel!</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -118,7 +115,7 @@ export function welcomeAgencyEmail(agencyName: string): string {
  */
 export function agencyApprovedEmail(agencyName: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Account approvato!</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Account approvato!</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -150,7 +147,7 @@ export function quoteRequestSubmittedEmail(
 ): string {
   const typeLabel = requestType === "tour" ? "tour" : "crociera";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Richiesta preventivo inviata</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Richiesta preventivo inviata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -161,7 +158,7 @@ export function quoteRequestSubmittedEmail(
       <tr>
         <td style="background-color:#f1f5f9;border-radius:6px;padding:16px;">
           <p style="margin:0;font-size:13px;color:#64748b;">Numero richiesta</p>
-          <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#1B2D4F;">${quoteId.slice(0, 8).toUpperCase()}</p>
+          <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#333333;">${quoteId.slice(0, 8).toUpperCase()}</p>
         </td>
       </tr>
     </table>
@@ -187,7 +184,7 @@ export function newOfferReceivedEmail(
       </p>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Nuova offerta ricevuta</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova offerta ricevuta</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -218,7 +215,7 @@ export function offerAcceptedConfirmationEmail(
   productName: string
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Offerta accettata</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Offerta accettata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -243,7 +240,7 @@ export function paymentDetailsSentEmail(
   reference: string
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Estremi di pagamento</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Estremi di pagamento</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -253,15 +250,15 @@ export function paymentDetailsSentEmail(
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;border:1px solid #e2e8f0;border-radius:6px;">
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;width:140px;">IBAN</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;font-weight:600;">${bankDetails}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">${bankDetails}</td>
       </tr>
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Importo</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;font-weight:600;">&euro; ${amount.toFixed(2)}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">&euro; ${amount.toFixed(2)}</td>
       </tr>
       <tr>
         <td style="padding:12px 16px;font-size:13px;color:#64748b;">Causale</td>
-        <td style="padding:12px 16px;font-size:14px;color:#1B2D4F;font-weight:600;">${reference}</td>
+        <td style="padding:12px 16px;font-size:14px;color:#333333;font-weight:600;">${reference}</td>
       </tr>
     </table>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
@@ -316,26 +313,26 @@ export function adminNewAgencyEmail(
   city: string | null
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Nuova agenzia registrata</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova agenzia registrata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Una nuova agenzia si &egrave; registrata sulla piattaforma e richiede l&rsquo;approvazione.
     </p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;border:1px solid #e2e8f0;border-radius:6px;">
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;width:140px;">Ragione Sociale</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;font-weight:600;">${agencyName}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">${agencyName}</td>
       </tr>
       ${contactName ? `<tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Referente</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;">${contactName}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;">${contactName}</td>
       </tr>` : ""}
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Email</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;">${email}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;">${email}</td>
       </tr>
       ${city ? `<tr>
         <td style="padding:12px 16px;font-size:13px;color:#64748b;">Citta</td>
-        <td style="padding:12px 16px;font-size:14px;color:#1B2D4F;">${city}</td>
+        <td style="padding:12px 16px;font-size:14px;color:#333333;">${city}</td>
       </tr>` : ""}
     </table>
     ${ctaButton("Gestisci agenzie", `${SITE_URL}/admin/agenzie`)}
@@ -355,26 +352,26 @@ export function adminNewQuoteRequestEmail(
 ): string {
   const typeLabel = requestType === "tour" ? "Tour" : "Crociera";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#1B2D4F;font-size:22px;">Nuova richiesta preventivo</h2>
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova richiesta preventivo</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       L&rsquo;agenzia <strong>${agencyName}</strong> ha inviato una nuova richiesta di preventivo.
     </p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;border:1px solid #e2e8f0;border-radius:6px;">
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;width:140px;">Tipo</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;font-weight:600;">${typeLabel}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">${typeLabel}</td>
       </tr>
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Prodotto</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;">${productName}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;">${productName}</td>
       </tr>
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Partecipanti</td>
-        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1B2D4F;">${adults} adulti, ${children} bambini</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;">${adults} adulti, ${children} bambini</td>
       </tr>
       <tr>
         <td style="padding:12px 16px;font-size:13px;color:#64748b;">ID Richiesta</td>
-        <td style="padding:12px 16px;font-size:14px;color:#1B2D4F;font-family:monospace;">${quoteId.slice(0, 8).toUpperCase()}</td>
+        <td style="padding:12px 16px;font-size:14px;color:#333333;font-family:monospace;">${quoteId.slice(0, 8).toUpperCase()}</td>
       </tr>
     </table>
     ${ctaButton("Gestisci preventivi", `${SITE_URL}/admin/preventivi`)}

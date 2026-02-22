@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
@@ -17,7 +18,7 @@ import {
   FileText,
   BookOpen,
   FolderOpen,
-  Image,
+  Image as ImageIcon,
   FileSpreadsheet,
   ChevronLeft,
   ChevronRight,
@@ -40,7 +41,7 @@ const navItems = [
   { type: "separator" as const, label: "Comunicazione" },
   { label: "Blog", href: "/admin/blog", icon: BookOpen, pathSegment: "blog" },
   { label: "Cataloghi", href: "/admin/cataloghi", icon: FolderOpen, pathSegment: "cataloghi" },
-  { label: "Media", href: "/admin/media", icon: Image, pathSegment: "media" },
+  { label: "Media", href: "/admin/media", icon: ImageIcon, pathSegment: "media" },
   { type: "separator" as const, label: "Gestione" },
   { label: "Agenzie", href: "/admin/agenzie", icon: Users, pathSegment: "agenzie" },
   { label: "Preventivi", href: "/admin/preventivi", icon: FileText, pathSegment: "preventivi" },
@@ -95,20 +96,26 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
       {/* Logo / Brand */}
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
         {!collapsed && (
-          <Link href="/admin" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
-              M
-            </div>
-            <span className="font-heading text-lg font-semibold text-secondary">
-              MishaTravel
-            </span>
+          <Link href="/admin" className="flex items-center">
+            <NextImage
+              src="/images/logo/logo-logo.png"
+              alt="MishaTravel"
+              width={150}
+              height={50}
+              className="object-contain"
+              priority
+            />
           </Link>
         )}
         {collapsed && (
           <Link href="/admin" className="mx-auto">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
-              M
-            </div>
+            <NextImage
+              src="/images/logo/logo-cropped-logo-270x270.png"
+              alt="MishaTravel"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
           </Link>
         )}
       </div>

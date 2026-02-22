@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -41,20 +42,26 @@ export default function AgenziaSidebar({ collapsed, onToggle }: AgenziaSidebarPr
       {/* Logo / Brand */}
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
         {!collapsed && (
-          <Link href="/agenzia/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
-              M
-            </div>
-            <span className="font-heading text-lg font-semibold text-secondary">
-              Area Agenzia
-            </span>
+          <Link href="/agenzia/dashboard" className="flex items-center">
+            <NextImage
+              src="/images/logo/logo-logo.png"
+              alt="MishaTravel"
+              width={150}
+              height={50}
+              className="object-contain"
+              priority
+            />
           </Link>
         )}
         {collapsed && (
           <Link href="/agenzia/dashboard" className="mx-auto">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
-              M
-            </div>
+            <NextImage
+              src="/images/logo/logo-cropped-logo-270x270.png"
+              alt="MishaTravel"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
           </Link>
         )}
       </div>
