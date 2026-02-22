@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export const dynamic = "force-dynamic";
+
 const BASE_URL = 'https://www.mishatravel.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
