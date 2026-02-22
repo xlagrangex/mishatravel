@@ -4,11 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/email/brevo";
 import { passwordResetEmail } from "@/lib/email/templates";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://mishatravel.com";
-
 export async function requestPasswordReset(
-  email: string
+  email: string,
+  origin: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!email || !email.includes("@")) {
     return { success: false, error: "Inserisci un indirizzo email valido." };
@@ -37,7 +35,9 @@ export async function requestPasswordReset(
 
     // Build a direct link to our site with token_hash as query param.
     // The client will use verifyOtp to exchange the token for a session.
-    const resetLink = `${SITE_URL}/reset?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
+    // Use the origin passed from the client so it works on any deployment URL
+    const baseUrl = origin || process.env.NEXT_PUBLIC_SITE_URL || "https://mishatravel.com";
+    const resetLink = `${baseUrl}/reset?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
 
     // Send branded email via Brevo
     const emailSent = await sendTransactionalEmail(

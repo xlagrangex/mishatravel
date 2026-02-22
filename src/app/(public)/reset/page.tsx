@@ -63,7 +63,7 @@ function RequestResetView() {
     setError(null);
 
     try {
-      const result = await requestPasswordReset(formData.email);
+      const result = await requestPasswordReset(formData.email, window.location.origin);
 
       if (!result.success) {
         setError(result.error ?? "Errore imprevisto. Riprova più tardi.");
