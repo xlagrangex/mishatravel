@@ -12,6 +12,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { parsePrice } from "@/lib/utils";
 import ImageGallerySlider from "@/components/detail/ImageGallerySlider";
 import BookingWidget from "@/components/detail/BookingWidget";
 import QuickInfoBar from "@/components/detail/QuickInfoBar";
@@ -74,7 +75,7 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
   const [configuratorOpen, setConfiguratorOpen] = useState(false);
   const [preselectedDepId, setPreselectedDepId] = useState<string | undefined>(undefined);
 
-  const priceNum = cruise.a_partire_da ? Number(cruise.a_partire_da) : null;
+  const priceNum = parsePrice(cruise.a_partire_da) || null;
   const coverImage = cruise.cover_image_url || "/images/placeholder.jpg";
   const destinationName = cruise.destination?.name ?? "";
   const shipName = cruise.ship?.name ?? "";
@@ -190,10 +191,8 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
                   durataNotti={cruise.durata_notti}
                   destinationName={destinationName}
                   programmaPdfUrl={cruise.programma_pdf_url}
-                  departures={cruise.departures ?? []}
                   shipName={shipName}
-                  decks={decks}
-                  onRequestQuote={(depId) => openConfigurator(depId)}
+                  onRequestQuote={() => openConfigurator()}
                 />
               </div>
             </div>
@@ -401,7 +400,7 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
                   ship={c.ship_name ?? ""}
                   river={c.destination_name ?? ""}
                   duration={c.durata_notti ?? ""}
-                  priceFrom={c.a_partire_da ? Number(c.a_partire_da) : 0}
+                  priceFrom={parsePrice(c.a_partire_da)}
                   prezzoSuRichiesta={c.prezzo_su_richiesta}
                   image={c.cover_image_url || "/images/placeholder.jpg"}
                 />
@@ -414,7 +413,7 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
       {/* Sticky Bottom Bar (mobile) */}
       {priceNum && <StickyBottomBar price={priceNum} />}
 
-      {/* Hidden CruiseConfigurator Dialog */}
+      {/* CruiseConfigurator Dialog (controlled) */}
       <CruiseConfigurator
         cruiseId={cruise.id}
         cruiseTitle={cruise.title}
@@ -422,19 +421,10 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
         supplements={cruise.supplements ?? []}
         cabins={cruise.cabins ?? []}
         decks={decks}
+        open={configuratorOpen}
+        onOpenChange={setConfiguratorOpen}
         preselectedDepartureId={preselectedDepId}
-      >
-        <button
-          ref={(el) => {
-            if (el && configuratorOpen) {
-              el.click();
-              setConfiguratorOpen(false);
-            }
-          }}
-          className="hidden"
-          aria-hidden
-        />
-      </CruiseConfigurator>
+      />
     </>
   );
 }

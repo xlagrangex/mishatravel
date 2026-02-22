@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { parsePrice } from "@/lib/utils";
 import PageHero from "@/components/layout/PageHero";
 import TourCard from "@/components/cards/TourCard";
 import CruiseCard from "@/components/cards/CruiseCard";
@@ -7,6 +8,8 @@ import { getDestinationWithTours } from "@/lib/supabase/queries/destinations";
 import { getDestinationBySlug } from "@/lib/supabase/queries/destinations";
 import { generateDestinationMetadata } from "@/lib/seo/metadata";
 import { breadcrumbSchema } from "@/lib/seo/structured-data";
+import AdminEditSetter from "@/components/admin/AdminEditSetter";
+import { getAuthContext } from "@/lib/supabase/auth";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -21,9 +24,12 @@ export default async function DestinationDetailPage({ params }: { params: Promis
   if (!result) notFound();
 
   const { destination: dest, tours, cruises } = result;
+  const { role } = await getAuthContext();
+  const isAdmin = role === "super_admin" || role === "admin" || role === "operator";
 
   return (
     <>
+      {isAdmin && <AdminEditSetter url={`/admin/destinazioni/${dest.id}/modifica`} />}
       <PageHero
         title={dest.name}
         subtitle={dest.description ?? undefined}
@@ -50,7 +56,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                   title={tour.title}
                   destination={tour.destination_name ?? dest.name}
                   duration={tour.durata_notti ?? ""}
-                  priceFrom={tour.a_partire_da ? Number(tour.a_partire_da) : 0}
+                  priceFrom={parsePrice(tour.a_partire_da)}
                   prezzoSuRichiesta={tour.prezzo_su_richiesta}
                   image={tour.cover_image_url || "/images/placeholder.jpg"}
                   type="tour"
@@ -83,7 +89,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                     ship={cruise.ship_name ?? ""}
                     river={cruise.destination_name ?? dest.name}
                     duration={cruise.durata_notti ?? ""}
-                    priceFrom={cruise.a_partire_da ? Number(cruise.a_partire_da) : 0}
+                    priceFrom={parsePrice(cruise.a_partire_da)}
                     prezzoSuRichiesta={cruise.prezzo_su_richiesta}
                     image={cruise.cover_image_url || "/images/placeholder.jpg"}
                   />

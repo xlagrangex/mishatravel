@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { parsePrice } from "@/lib/utils";
 import PageHero from "@/components/layout/PageHero";
 import CruiseCard from "@/components/cards/CruiseCard";
 import { Badge } from "@/components/ui/badge";
@@ -159,7 +160,7 @@ export default async function ShipDetailPage({ params }: { params: Promise<{ slu
                     ship={c.ship_name ?? ""}
                     river={c.destination_name ?? ""}
                     duration={c.durata_notti ?? ""}
-                    priceFrom={c.a_partire_da ? Number(c.a_partire_da) : 0}
+                    priceFrom={parsePrice(c.a_partire_da)}
                     prezzoSuRichiesta={c.prezzo_su_richiesta}
                     image={c.cover_image_url || "/images/placeholder.jpg"}
                   />

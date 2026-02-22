@@ -12,6 +12,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { parsePrice } from "@/lib/utils";
 import ImageGallerySlider from "@/components/detail/ImageGallerySlider";
 import BookingWidget from "@/components/detail/BookingWidget";
 import QuickInfoBar from "@/components/detail/QuickInfoBar";
@@ -74,7 +75,7 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
   const [configuratorOpen, setConfiguratorOpen] = useState(false);
   const [preselectedDepId, setPreselectedDepId] = useState<string | undefined>(undefined);
 
-  const priceNum = tour.a_partire_da ? Number(tour.a_partire_da) : null;
+  const priceNum = parsePrice(tour.a_partire_da) || null;
   const coverImage = tour.cover_image_url || "/images/placeholder.jpg";
   const destinationName = tour.destination?.name ?? "";
 
@@ -187,8 +188,7 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                   durataNotti={tour.durata_notti}
                   destinationName={destinationName}
                   programmaPdfUrl={tour.programma_pdf_url}
-                  departures={tour.departures ?? []}
-                  onRequestQuote={(depId) => openConfigurator(depId)}
+                  onRequestQuote={() => openConfigurator()}
                 />
               </div>
             </div>
@@ -397,7 +397,7 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                   title={t.title}
                   destination={t.destination_name ?? ""}
                   duration={t.durata_notti ?? ""}
-                  priceFrom={t.a_partire_da ? Number(t.a_partire_da) : 0}
+                  priceFrom={parsePrice(t.a_partire_da)}
                   prezzoSuRichiesta={t.prezzo_su_richiesta}
                   image={t.cover_image_url || "/images/placeholder.jpg"}
                   type="tour"
@@ -411,25 +411,16 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
       {/* Sticky Bottom Bar (mobile) */}
       {priceNum && <StickyBottomBar price={priceNum} />}
 
-      {/* Hidden TourConfigurator Dialog (triggered programmatically) */}
+      {/* TourConfigurator Dialog (controlled) */}
       <TourConfigurator
         tourId={tour.id}
         tourTitle={tour.title}
         departures={tour.departures ?? []}
         supplements={tour.supplements ?? []}
+        open={configuratorOpen}
+        onOpenChange={setConfiguratorOpen}
         preselectedDepartureId={preselectedDepId}
-      >
-        <button
-          ref={(el) => {
-            if (el && configuratorOpen) {
-              el.click();
-              setConfiguratorOpen(false);
-            }
-          }}
-          className="hidden"
-          aria-hidden
-        />
-      </TourConfigurator>
+      />
     </>
   );
 }

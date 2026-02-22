@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { parsePrice } from "@/lib/utils";
 import HeroSearchBar from "@/components/search/HeroSearchBar";
 import RiverNavigation from "@/components/navigation/RiverNavigation";
 import FilterSidebar, { type FilterGroup } from "@/components/filters/FilterSidebar";
@@ -62,7 +63,7 @@ type FilterState = {
 export default function CrocierePageClient({ cruises, ships, destinations }: CrocierePageClientProps) {
   // Price bounds
   const priceBounds = useMemo(() => {
-    const prices = cruises.map((c) => Number(c.a_partire_da) || 0).filter((p) => p > 0);
+    const prices = cruises.map((c) => parsePrice(c.a_partire_da)).filter((p) => p > 0);
     return { min: Math.min(...prices, 0), max: Math.max(...prices, 10000) };
   }, [cruises]);
 
@@ -80,7 +81,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
   const riverInfos = useMemo(() => {
     return destinations.map((dest) => {
       const riverCruises = cruises.filter((c) => c.destination_name === dest.name);
-      const prices = riverCruises.map((c) => Number(c.a_partire_da) || 0).filter((p) => p > 0);
+      const prices = riverCruises.map((c) => parsePrice(c.a_partire_da)).filter((p) => p > 0);
       return {
         name: dest.name,
         image: dest.image,
@@ -131,7 +132,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
     // Price filter (always include "prezzo su richiesta" cruises)
     result = result.filter((c) => {
       if (c.prezzo_su_richiesta) return true;
-      const price = Number(c.a_partire_da) || 0;
+      const price = parsePrice(c.a_partire_da);
       return price >= filters.priceRange[0] && price <= filters.priceRange[1];
     });
 
@@ -148,8 +149,8 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
 
     // Sort
     result.sort((a, b) => {
-      const priceA = Number(a.a_partire_da) || 0;
-      const priceB = Number(b.a_partire_da) || 0;
+      const priceA = parsePrice(a.a_partire_da);
+      const priceB = parsePrice(b.a_partire_da);
       switch (filters.sortBy) {
         case "prezzo-asc": return priceA - priceB;
         case "prezzo-desc": return priceB - priceA;
@@ -181,7 +182,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
             date: d.data_partenza,
             destination: c.destination_name ?? "",
             duration: c.durata_notti ?? "",
-            price: d.prezzo_main_deck ?? Number(c.a_partire_da) ?? 0,
+            price: d.prezzo_main_deck ?? parsePrice(c.a_partire_da),
           })),
       )
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -407,7 +408,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
                       shipName={cruise.ship_name ?? ""}
                       river={cruise.destination_name ?? ""}
                       duration={cruise.durata_notti ?? ""}
-                      priceFrom={Number(cruise.a_partire_da) || 0}
+                      priceFrom={parsePrice(cruise.a_partire_da)}
                       prezzoSuRichiesta={cruise.prezzo_su_richiesta}
                       image={cruise.cover_image_url || "/images/placeholder.jpg"}
                       departures={cruise.departures}

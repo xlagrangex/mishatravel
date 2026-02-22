@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,11 +59,12 @@ interface CruiseConfiguratorProps {
   departures: CruiseDeparture[];
   supplements: CruiseSupplement[];
   cabins: CruiseCabin[];
-  /** Deck labels from the cruise record */
   decks: DeckConfig[];
-  /** If provided, only this departure is pre-selected and the select is hidden */
+  /** Controlled open state */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** If provided, this departure is pre-selected */
   preselectedDepartureId?: string;
-  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,6 +106,12 @@ function getDeparturePrice(
   }
 }
 
+function toNumber(val: number | string | null): number | null {
+  if (val === null) return null;
+  const n = typeof val === "string" ? parseFloat(val) : val;
+  return isNaN(n) ? null : n;
+}
+
 // ---------------------------------------------------------------------------
 // Steps
 // ---------------------------------------------------------------------------
@@ -123,10 +129,10 @@ export default function CruiseConfigurator({
   supplements,
   cabins,
   decks,
+  open,
+  onOpenChange,
   preselectedDepartureId,
-  children,
 }: CruiseConfiguratorProps) {
-  const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("form");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -141,10 +147,20 @@ export default function CruiseConfigurator({
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
 
+  const hasCabins = cabins.length > 0;
+  const hasDecks = decks.length > 0;
+
   const selectedDeparture = departures.find((d) => d.id === departureId);
   const selectedDeckConfig = decks.find((d) => d.value === selectedDeck);
 
-  // Filter cabin types by selected deck (ponte field)
+  // Sync preselectedDepartureId when dialog opens
+  useEffect(() => {
+    if (open && preselectedDepartureId) {
+      setDepartureId(preselectedDepartureId);
+    }
+  }, [open, preselectedDepartureId]);
+
+  // Filter cabin types by selected deck
   const filteredCabinTypes = useMemo(() => {
     if (!selectedDeck) return cabins;
     const filtered = cabins.filter(
@@ -153,7 +169,6 @@ export default function CruiseConfigurator({
     return filtered.length > 0 ? filtered : cabins;
   }, [cabins, selectedDeck]);
 
-  // Get unique cabin type names for the select
   const uniqueCabinTypes = useMemo(() => {
     const names = new Set<string>();
     filteredCabinTypes.forEach((c) => {
@@ -166,19 +181,26 @@ export default function CruiseConfigurator({
   const indicativePrice = useMemo(() => {
     if (!selectedDeparture) return null;
     if (selectedDeck) {
-      return getDeparturePrice(selectedDeparture, selectedDeck);
+      return toNumber(getDeparturePrice(selectedDeparture, selectedDeck));
     }
-    return selectedDeparture.prezzo_main_deck;
+    return toNumber(selectedDeparture.prezzo_main_deck);
   }, [selectedDeparture, selectedDeck]);
+
+  // Estimated total: price * adults * numCabins
+  const estimatedTotal = useMemo(() => {
+    if (!indicativePrice) return null;
+    const cabinCount = hasCabins ? numCabins : 1;
+    return indicativePrice * (adults + children_) * cabinCount;
+  }, [indicativePrice, adults, children_, numCabins, hasCabins]);
 
   // Reset form when dialog closes
   function handleOpenChange(isOpen: boolean) {
-    setOpen(isOpen);
+    onOpenChange(isOpen);
     if (!isOpen) {
       setTimeout(() => {
         setStep("form");
         setError(null);
-        if (!preselectedDepartureId) setDepartureId("");
+        setDepartureId("");
         setSelectedDeck("");
         setCabinType("");
         setNumCabins(1);
@@ -190,7 +212,6 @@ export default function CruiseConfigurator({
     }
   }
 
-  // Reset cabin type when deck changes (conditional filtering)
   function handleDeckChange(value: string) {
     setSelectedDeck(value);
     setCabinType("");
@@ -202,8 +223,9 @@ export default function CruiseConfigurator({
     );
   }
 
+  // Cabin type is NOT required - only departure + adults are mandatory
   function canProceedToSummary(): boolean {
-    return !!departureId && adults >= 1 && !!cabinType && numCabins >= 1;
+    return !!departureId && adults >= 1;
   }
 
   function handleSubmit() {
@@ -215,8 +237,8 @@ export default function CruiseConfigurator({
       departure_id: departureId,
       participants_adults: adults,
       participants_children: children_,
-      cabin_type: cabinType,
-      num_cabins: numCabins,
+      cabin_type: cabinType || null,
+      num_cabins: hasCabins ? numCabins : 1,
       deck: selectedDeck || null,
       notes: notes || null,
       extras: selectedExtras,
@@ -235,14 +257,6 @@ export default function CruiseConfigurator({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children ?? (
-          <Button className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
-            Richiedi Preventivo
-          </Button>
-        )}
-      </DialogTrigger>
-
       <DialogContent className="sm:max-w-[560px] max-h-[90vh] p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-[#1B2D4F] font-[family-name:var(--font-poppins)]">
@@ -276,31 +290,23 @@ export default function CruiseConfigurator({
                     <CalendarDays className="size-4 text-[#1B2D4F]" />
                     Data di Partenza *
                   </Label>
-                  {preselectedDepartureId ? (
-                    <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
-                      {selectedDeparture
-                        ? `${formatDate(selectedDeparture.data_partenza)} - da ${selectedDeparture.from_city}`
-                        : "Partenza selezionata"}
-                    </p>
-                  ) : (
-                    <Select value={departureId} onValueChange={setDepartureId}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleziona data di partenza" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departures.map((dep) => (
-                          <SelectItem key={dep.id} value={dep.id}>
-                            {formatDate(dep.data_partenza)} - da {dep.from_city}{" "}
-                            ({formatPrice(dep.prezzo_main_deck)})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <Select value={departureId} onValueChange={setDepartureId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Seleziona data di partenza" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departures.map((dep) => (
+                        <SelectItem key={dep.id} value={dep.id}>
+                          {formatDate(dep.data_partenza)} - da {dep.from_city}{" "}
+                          ({formatPrice(dep.prezzo_main_deck)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Deck Selection */}
-                {decks.length > 0 && (
+                {/* Deck Selection - only show if decks exist */}
+                {hasDecks && (
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Layers className="size-4 text-[#1B2D4F]" />
@@ -308,7 +314,7 @@ export default function CruiseConfigurator({
                     </Label>
                     <Select value={selectedDeck} onValueChange={handleDeckChange}>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleziona ponte" />
+                        <SelectValue placeholder="Seleziona ponte (opzionale)" />
                       </SelectTrigger>
                       <SelectContent>
                         {decks.map((d) => (
@@ -321,54 +327,58 @@ export default function CruiseConfigurator({
                   </div>
                 )}
 
-                {/* Cabin Type (filtered by deck) */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Bed className="size-4 text-[#1B2D4F]" />
-                    Tipo Cabina *
-                  </Label>
-                  {uniqueCabinTypes.length > 0 ? (
-                    <Select value={cabinType} onValueChange={setCabinType}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleziona tipo cabina" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {uniqueCabinTypes.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      placeholder="Tipo cabina desiderato"
-                      value={cabinType}
-                      onChange={(e) => setCabinType(e.target.value)}
-                    />
-                  )}
-                </div>
+                {/* Cabin Type - only show if cabins exist in DB */}
+                {hasCabins && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Bed className="size-4 text-[#1B2D4F]" />
+                      Tipo Cabina
+                    </Label>
+                    {uniqueCabinTypes.length > 0 ? (
+                      <Select value={cabinType} onValueChange={setCabinType}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Seleziona tipo cabina (opzionale)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {uniqueCabinTypes.map((t) => (
+                            <SelectItem key={t} value={t}>
+                              {t}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder="Tipo cabina desiderato (opzionale)"
+                        value={cabinType}
+                        onChange={(e) => setCabinType(e.target.value)}
+                      />
+                    )}
+                  </div>
+                )}
 
-                {/* Number of Cabins */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Ship className="size-4 text-[#1B2D4F]" />
-                    Numero Cabine *
-                  </Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={numCabins}
-                    onChange={(e) => setNumCabins(Math.max(1, parseInt(e.target.value) || 1))}
-                  />
-                </div>
+                {/* Number of Cabins - only show if cabins exist */}
+                {hasCabins && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Ship className="size-4 text-[#1B2D4F]" />
+                      Numero Cabine
+                    </Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={numCabins}
+                      onChange={(e) => setNumCabins(Math.max(1, parseInt(e.target.value) || 1))}
+                    />
+                  </div>
+                )}
 
                 {/* Participants */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Users className="size-4 text-[#1B2D4F]" />
-                    Partecipanti per Cabina
+                    {hasCabins ? "Partecipanti per Cabina" : "Partecipanti"}
                   </Label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -432,17 +442,32 @@ export default function CruiseConfigurator({
                   />
                 </div>
 
-                {/* Indicative Price */}
+                {/* Live Price Preview */}
                 {indicativePrice && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-                    <span className="text-blue-700">Prezzo indicativo a persona: </span>
-                    <span className="font-bold text-[#C41E2F]">
-                      {formatPrice(indicativePrice)}
-                    </span>
-                    {selectedDeckConfig && (
-                      <span className="text-blue-600 ml-1">
-                        ({selectedDeckConfig.label})
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">
+                        Prezzo indicativo a persona:
                       </span>
+                      <span className="font-bold text-[#C41E2F]">
+                        {formatPrice(indicativePrice)}
+                      </span>
+                    </div>
+                    {selectedDeckConfig && (
+                      <div className="text-blue-600 text-xs">
+                        ({selectedDeckConfig.label})
+                      </div>
+                    )}
+                    {estimatedTotal && (
+                      <div className="flex justify-between border-t border-blue-200 pt-1">
+                        <span className="text-blue-700">
+                          Totale stimato
+                          {hasCabins && numCabins > 1 ? ` (${numCabins} cabine x ${adults + children_} pers.)` : ` (${adults + children_} ${adults + children_ === 1 ? "persona" : "persone"})`}:
+                        </span>
+                        <span className="font-bold text-[#C41E2F] text-base">
+                          {formatPrice(estimatedTotal)}
+                        </span>
+                      </div>
                     )}
                   </div>
                 )}
@@ -491,23 +516,29 @@ export default function CruiseConfigurator({
                       </div>
                     </>
                   )}
+                  {cabinType && (
+                    <>
+                      <Separator />
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Tipo Cabina</span>
+                        <span>{cabinType}</span>
+                      </div>
+                    </>
+                  )}
+                  {hasCabins && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Numero Cabine</span>
+                      <span>{numCabins}</span>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Tipo Cabina</span>
-                    <span>{cabinType}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Numero Cabine</span>
-                    <span>{numCabins}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Adulti per cabina</span>
+                    <span className="text-gray-500">{hasCabins ? "Adulti per cabina" : "Adulti"}</span>
                     <span>{adults}</span>
                   </div>
                   {children_ > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Bambini per cabina</span>
+                      <span className="text-gray-500">{hasCabins ? "Bambini per cabina" : "Bambini"}</span>
                       <span>{children_}</span>
                     </div>
                   )}
@@ -548,6 +579,14 @@ export default function CruiseConfigurator({
                           {formatPrice(indicativePrice)}
                         </span>
                       </div>
+                      {estimatedTotal && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Totale stimato</span>
+                          <span className="font-bold text-[#C41E2F]">
+                            {formatPrice(estimatedTotal)}
+                          </span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

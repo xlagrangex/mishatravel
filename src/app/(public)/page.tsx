@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { parsePrice } from "@/lib/utils";
 import DestinationCard from "@/components/cards/DestinationCard";
 import TourCard from "@/components/cards/TourCard";
 import CruiseCard from "@/components/cards/CruiseCard";
@@ -139,7 +140,7 @@ export default async function HomePage() {
                   title={tour.title}
                   destination={tour.destination_name ?? ""}
                   duration={tour.durata_notti ?? ""}
-                  priceFrom={tour.a_partire_da ? Number(tour.a_partire_da) : 0}
+                  priceFrom={parsePrice(tour.a_partire_da)}
                   prezzoSuRichiesta={tour.prezzo_su_richiesta}
                   image={tour.cover_image_url || "/images/placeholder.jpg"}
                   type="tour"
@@ -174,7 +175,7 @@ export default async function HomePage() {
                   ship={cruise.ship_name ?? ""}
                   river={cruise.destination_name ?? ""}
                   duration={cruise.durata_notti ?? ""}
-                  priceFrom={cruise.a_partire_da ? Number(cruise.a_partire_da) : 0}
+                  priceFrom={parsePrice(cruise.a_partire_da)}
                   prezzoSuRichiesta={cruise.prezzo_su_richiesta}
                   image={cruise.cover_image_url || "/images/placeholder.jpg"}
                 />

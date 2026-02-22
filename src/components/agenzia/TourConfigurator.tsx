@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,9 +50,11 @@ interface TourConfiguratorProps {
   tourTitle: string;
   departures: TourDeparture[];
   supplements: TourSupplement[];
-  /** If provided, only this departure is pre-selected and the select is hidden */
+  /** Controlled open state */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** If provided, this departure is pre-selected */
   preselectedDepartureId?: string;
-  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +80,12 @@ function formatPrice(price: number | null): string {
   }).format(price);
 }
 
+function parsePriceStr(val: string | null): number | null {
+  if (!val) return null;
+  const n = parseFloat(val);
+  return isNaN(n) ? null : n;
+}
+
 // ---------------------------------------------------------------------------
 // Steps
 // ---------------------------------------------------------------------------
@@ -94,16 +101,17 @@ export default function TourConfigurator({
   tourTitle,
   departures,
   supplements,
+  open,
+  onOpenChange,
   preselectedDepartureId,
-  children,
 }: TourConfiguratorProps) {
-  const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("form");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   // Form state
   const [departureId, setDepartureId] = useState(preselectedDepartureId ?? "");
+  const [selectedStars, setSelectedStars] = useState("3");
   const [adults, setAdults] = useState(2);
   const [children_, setChildren] = useState(0);
   const [cameraType, setCameraType] = useState("");
@@ -112,14 +120,36 @@ export default function TourConfigurator({
 
   const selectedDeparture = departures.find((d) => d.id === departureId);
 
+  // Sync preselectedDepartureId when dialog opens
+  useEffect(() => {
+    if (open && preselectedDepartureId) {
+      setDepartureId(preselectedDepartureId);
+    }
+  }, [open, preselectedDepartureId]);
+
+  // Live price preview
+  const indicativePrice = useMemo(() => {
+    if (!selectedDeparture) return null;
+    if (selectedStars === "4") {
+      return parsePriceStr(selectedDeparture.prezzo_4_stelle) ?? selectedDeparture.prezzo_3_stelle;
+    }
+    return selectedDeparture.prezzo_3_stelle;
+  }, [selectedDeparture, selectedStars]);
+
+  const estimatedTotal = useMemo(() => {
+    if (!indicativePrice) return null;
+    return indicativePrice * (adults + children_);
+  }, [indicativePrice, adults, children_]);
+
   // Reset form when dialog closes
   function handleOpenChange(isOpen: boolean) {
-    setOpen(isOpen);
+    onOpenChange(isOpen);
     if (!isOpen) {
       setTimeout(() => {
         setStep("form");
         setError(null);
-        if (!preselectedDepartureId) setDepartureId("");
+        setDepartureId("");
+        setSelectedStars("3");
         setAdults(2);
         setChildren(0);
         setCameraType("");
@@ -166,14 +196,6 @@ export default function TourConfigurator({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children ?? (
-          <Button className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
-            Richiedi Preventivo
-          </Button>
-        )}
-      </DialogTrigger>
-
       <DialogContent className="sm:max-w-[560px] max-h-[90vh] p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-[#1B2D4F] font-[family-name:var(--font-poppins)]">
@@ -207,27 +229,36 @@ export default function TourConfigurator({
                     <CalendarDays className="size-4 text-[#1B2D4F]" />
                     Data di Partenza *
                   </Label>
-                  {preselectedDepartureId ? (
-                    <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
-                      {selectedDeparture
-                        ? `${formatDate(selectedDeparture.data_partenza)} - da ${selectedDeparture.from_city}`
-                        : "Partenza selezionata"}
-                    </p>
-                  ) : (
-                    <Select value={departureId} onValueChange={setDepartureId}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleziona data di partenza" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departures.map((dep) => (
-                          <SelectItem key={dep.id} value={dep.id}>
-                            {formatDate(dep.data_partenza)} - da {dep.from_city}{" "}
-                            ({formatPrice(dep.prezzo_3_stelle)})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <Select value={departureId} onValueChange={setDepartureId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Seleziona data di partenza" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departures.map((dep) => (
+                        <SelectItem key={dep.id} value={dep.id}>
+                          {formatDate(dep.data_partenza)} - da {dep.from_city}{" "}
+                          ({formatPrice(dep.prezzo_3_stelle)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Hotel Stars */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Bed className="size-4 text-[#1B2D4F]" />
+                    Categoria Hotel
+                  </Label>
+                  <Select value={selectedStars} onValueChange={setSelectedStars}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">Hotel 3 stelle</SelectItem>
+                      <SelectItem value="4">Hotel 4 stelle</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Participants */}
@@ -318,6 +349,28 @@ export default function TourConfigurator({
                   />
                 </div>
 
+                {/* Live Price Preview */}
+                {indicativePrice && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Prezzo indicativo a persona:</span>
+                      <span className="font-bold text-[#C41E2F]">
+                        {formatPrice(indicativePrice)}
+                      </span>
+                    </div>
+                    {estimatedTotal && (
+                      <div className="flex justify-between border-t border-blue-200 pt-1">
+                        <span className="text-blue-700">
+                          Totale stimato ({adults + children_} {adults + children_ === 1 ? "persona" : "persone"}):
+                        </span>
+                        <span className="font-bold text-[#C41E2F] text-base">
+                          {formatPrice(estimatedTotal)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Action */}
                 <Button
                   className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white"
@@ -351,14 +404,13 @@ export default function TourConfigurator({
                         <span className="text-gray-500">Da</span>
                         <span>{selectedDeparture.from_city}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Prezzo indicativo</span>
-                        <span className="font-bold text-[#C41E2F]">
-                          {formatPrice(selectedDeparture.prezzo_3_stelle)}
-                        </span>
-                      </div>
                     </>
                   )}
+                  <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Categoria Hotel</span>
+                    <span>{selectedStars === "4" ? "4 stelle" : "3 stelle"}</span>
+                  </div>
                   <Separator />
                   <div className="flex justify-between">
                     <span className="text-gray-500">Adulti</span>
@@ -405,6 +457,25 @@ export default function TourConfigurator({
                         <span className="text-gray-500 block mb-1">Note</span>
                         <p className="text-gray-700 whitespace-pre-wrap">{notes}</p>
                       </div>
+                    </>
+                  )}
+                  {indicativePrice && (
+                    <>
+                      <Separator />
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Prezzo indicativo /persona</span>
+                        <span className="font-bold text-[#C41E2F]">
+                          {formatPrice(indicativePrice)}
+                        </span>
+                      </div>
+                      {estimatedTotal && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Totale stimato</span>
+                          <span className="font-bold text-[#C41E2F]">
+                            {formatPrice(estimatedTotal)}
+                          </span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

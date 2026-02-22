@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { parsePrice } from "@/lib/utils";
 import HeroSearchBar from "@/components/search/HeroSearchBar";
 import MacroAreaNavigation from "@/components/navigation/MacroAreaNavigation";
 import FilterSidebar, { type FilterGroup } from "@/components/filters/FilterSidebar";
@@ -43,7 +44,7 @@ type FilterState = {
 
 export default function ToursPageClient({ tours, destinations }: ToursPageClientProps) {
   const priceBounds = useMemo(() => {
-    const prices = tours.map((t) => Number(t.a_partire_da) || 0).filter((p) => p > 0);
+    const prices = tours.map((t) => parsePrice(t.a_partire_da)).filter((p) => p > 0);
     return { min: Math.min(...prices, 0), max: Math.max(...prices, 10000) };
   }, [tours]);
 
@@ -120,7 +121,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
     // Price filter (always include "prezzo su richiesta" tours)
     result = result.filter((t) => {
       if (t.prezzo_su_richiesta) return true;
-      const price = Number(t.a_partire_da) || 0;
+      const price = parsePrice(t.a_partire_da);
       return price >= filters.priceRange[0] && price <= filters.priceRange[1];
     });
 
@@ -132,8 +133,8 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
 
     // Sort
     result.sort((a, b) => {
-      const priceA = Number(a.a_partire_da) || 0;
-      const priceB = Number(b.a_partire_da) || 0;
+      const priceA = parsePrice(a.a_partire_da);
+      const priceB = parsePrice(b.a_partire_da);
       switch (filters.sortBy) {
         case "prezzo-asc": return priceA - priceB;
         case "prezzo-desc": return priceB - priceA;
@@ -165,7 +166,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
             date: d.data_partenza,
             destination: t.destination_name ?? "",
             duration: t.durata_notti ?? "",
-            price: d.prezzo_3_stelle ?? Number(t.a_partire_da) ?? 0,
+            price: d.prezzo_3_stelle ?? parsePrice(t.a_partire_da),
           })),
       )
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -390,7 +391,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
                       title={tour.title}
                       destination={tour.destination_name ?? ""}
                       duration={tour.durata_notti ?? ""}
-                      priceFrom={Number(tour.a_partire_da) || 0}
+                      priceFrom={parsePrice(tour.a_partire_da)}
                       prezzoSuRichiesta={tour.prezzo_su_richiesta}
                       image={tour.cover_image_url || "/images/placeholder.jpg"}
                       departures={tour.departures}
