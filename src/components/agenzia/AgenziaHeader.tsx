@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, Menu, User } from "lucide-react";
+import { Bell, Globe, LogOut, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -88,6 +88,10 @@ export default function AgenziaHeader({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => router.push("/")}>
+              <Globe className="mr-2 h-4 w-4" />
+              Vai al sito
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push("/agenzia/profilo")}>
               <User className="mr-2 h-4 w-4" />
               Profilo

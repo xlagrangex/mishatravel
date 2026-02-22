@@ -22,6 +22,7 @@ import {
   FileSpreadsheet,
   ChevronLeft,
   ChevronRight,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -175,6 +176,33 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
           })}
         </ul>
       </nav>
+
+      {/* Go to public site */}
+      <div className="border-t border-border px-2 py-2">
+        {collapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Link
+                href="/"
+                className="flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Globe className="h-5 w-5 shrink-0" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="font-medium">
+              Vai al sito
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Link
+            href="/"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+          >
+            <Globe className="h-5 w-5 shrink-0" />
+            <span>Vai al sito</span>
+          </Link>
+        )}
+      </div>
 
       {/* Collapse toggle */}
       <div className="border-t border-border p-2">
