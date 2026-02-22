@@ -1,12 +1,17 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { parsePrice } from "@/lib/utils";
+import TourCard from "@/components/cards/TourCard";
+import CruiseCard from "@/components/cards/CruiseCard";
+import HeroSection from "@/components/home/HeroSection";
+import DeparturesTimeline from "@/components/home/DeparturesTimeline";
+import AgencyCTA from "@/components/home/AgencyCTA";
+import DestinationsCarousel from "@/components/home/DestinationsCarousel";
+import SectionReveal from "@/components/home/SectionReveal";
 import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
 import { getPublishedTours } from "@/lib/supabase/queries/tours";
 import { getPublishedCruises } from "@/lib/supabase/queries/cruises";
 import { getAllDepartures } from "@/lib/supabase/queries/departures";
-import HeroSection from "@/components/home/HeroSection";
-import DestinationsCarousel from "@/components/home/DestinationsCarousel";
-import InteractiveMap from "@/components/home/InteractiveMap";
-import DeparturesTimeline from "@/components/home/DeparturesTimeline";
-import AgencyCTA from "@/components/home/AgencyCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +23,12 @@ export default async function HomePage() {
     getAllDepartures(),
   ]);
 
+  const featuredTours = tours.slice(0, 6);
+  const featuredCruises = cruises.slice(0, 6);
+
   return (
     <>
-      {/* 1. Hero fullscreen + search bar */}
+      {/* 1. Hero con parallax + search bar */}
       <HeroSection
         destinations={destinations}
         tours={tours}
@@ -28,17 +36,94 @@ export default async function HomePage() {
         departures={departures}
       />
 
-      {/* 2. Destinazioni carousel */}
-      <DestinationsCarousel destinations={destinations} />
-
-      {/* 3. Mappa interattiva */}
-      <InteractiveMap destinations={destinations} />
-
-      {/* 4. Prossime partenze timeline */}
+      {/* 2. Prossime partenze */}
       <DeparturesTimeline departures={departures} />
 
-      {/* 5. CTA Agenzie */}
+      {/* 3. CTA Agenzie */}
       <AgencyCTA />
+
+      {/* 4. I nostri Tour */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <SectionReveal>
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
+              I nostri Tour
+            </h2>
+            <div className="section-divider mb-10" />
+          </SectionReveal>
+          {featuredTours.length > 0 ? (
+            <SectionReveal delay={0.15}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredTours.map((tour) => (
+                  <TourCard
+                    key={tour.slug}
+                    slug={tour.slug}
+                    title={tour.title}
+                    destination={tour.destination_name ?? ""}
+                    duration={tour.durata_notti ?? ""}
+                    priceFrom={parsePrice(tour.a_partire_da)}
+                    prezzoSuRichiesta={tour.prezzo_su_richiesta}
+                    image={tour.cover_image_url || "/images/placeholder.jpg"}
+                    type="tour"
+                  />
+                ))}
+              </div>
+            </SectionReveal>
+          ) : (
+            <p className="text-center text-gray-500">Nessun tour disponibile al momento.</p>
+          )}
+          <SectionReveal delay={0.3}>
+            <div className="text-center mt-8">
+              <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
+                <Link href="/tours">Tutti i tour</Link>
+              </Button>
+            </div>
+          </SectionReveal>
+        </div>
+      </section>
+
+      {/* 5. Crociere Fluviali */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <SectionReveal>
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2">
+              Crociere Fluviali
+            </h2>
+            <div className="section-divider mb-10" />
+          </SectionReveal>
+          {featuredCruises.length > 0 ? (
+            <SectionReveal delay={0.15}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredCruises.map((cruise) => (
+                  <CruiseCard
+                    key={cruise.slug}
+                    slug={cruise.slug}
+                    title={cruise.title}
+                    ship={cruise.ship_name ?? ""}
+                    river={cruise.destination_name ?? ""}
+                    duration={cruise.durata_notti ?? ""}
+                    priceFrom={parsePrice(cruise.a_partire_da)}
+                    prezzoSuRichiesta={cruise.prezzo_su_richiesta}
+                    image={cruise.cover_image_url || "/images/placeholder.jpg"}
+                  />
+                ))}
+              </div>
+            </SectionReveal>
+          ) : (
+            <p className="text-center text-gray-500">Nessuna crociera disponibile al momento.</p>
+          )}
+          <SectionReveal delay={0.3}>
+            <div className="text-center mt-8">
+              <Button asChild variant="outline" size="lg" className="border-[#C41E2F] text-[#C41E2F] hover:bg-[#C41E2F] hover:text-white px-8">
+                <Link href="/crociere">Tutte le crociere</Link>
+              </Button>
+            </div>
+          </SectionReveal>
+        </div>
+      </section>
+
+      {/* 6. Carousel destinazioni in loop */}
+      <DestinationsCarousel destinations={destinations} />
     </>
   );
 }

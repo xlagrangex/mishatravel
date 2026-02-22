@@ -3,8 +3,8 @@ import SectionReveal from "./SectionReveal";
 
 export default function AgencyCTA() {
   return (
-    <section className="relative py-20 bg-gray-50 overflow-hidden">
-      {/* Dotted world map pattern background */}
+    <section className="relative py-16 bg-gray-50 overflow-hidden">
+      {/* Dotted pattern background */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
@@ -20,11 +20,13 @@ export default function AgencyCTA() {
           <p className="text-xl text-[#C41E2F] font-semibold mb-6 font-[family-name:var(--font-poppins)]">
             Al resto pensiamo noi
           </p>
+          <p className="text-gray-600 leading-relaxed mb-4 max-w-2xl mx-auto">
+            Misha Travel &egrave; il partner ideale per le agenzie di viaggio che vogliono proporre tour e
+            crociere fluviali progettati con cura, garantiti e personalizzabili.
+          </p>
           <p className="text-gray-600 leading-relaxed mb-8 max-w-2xl mx-auto">
-            Misha Travel &egrave; un tour operator B2B specializzato in viaggi culturali, grandi itinerari e
-            crociere fluviali. Lavoriamo esclusivamente con agenzie di viaggio, offrendo prodotti di alta
-            qualit&agrave;, assistenza dedicata e margini competitivi. Diventa nostro partner e offri ai tuoi
-            clienti esperienze di viaggio indimenticabili.
+            Dalle esperienze culturali alle rotte fluviali esclusive, ti forniamo itinerari pronti da vendere,
+            assistenza continua e materiali per la promozione.
           </p>
         </SectionReveal>
 
@@ -63,7 +65,7 @@ export default function AgencyCTA() {
         <SectionReveal delay={0.3}>
           <Link
             href="/diventa-partner"
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#C41E2F] hover:bg-[#A31825] text-white font-semibold transition-colors text-lg"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-[#C41E2F] hover:bg-[#A31825] text-white font-semibold transition-colors text-lg"
           >
             Diventa Partner
           </Link>

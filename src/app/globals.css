@@ -228,6 +228,15 @@ html {
   display: none;
 }
 
+/* Infinite marquee animation for destination carousel */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
 /* Narrower container on desktop — outside @layer for higher specificity */
 .container {
   max-width: 1400px !important;
