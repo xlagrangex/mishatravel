@@ -402,6 +402,7 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
                   river={c.destination_name ?? ""}
                   duration={c.durata_notti ?? ""}
                   priceFrom={c.a_partire_da ? Number(c.a_partire_da) : 0}
+                  prezzoSuRichiesta={c.prezzo_su_richiesta}
                   image={c.cover_image_url || "/images/placeholder.jpg"}
                 />
               ))}

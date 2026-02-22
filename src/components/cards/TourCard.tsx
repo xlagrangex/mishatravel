@@ -10,6 +10,7 @@ interface TourCardProps {
   destination: string;
   duration: string;
   priceFrom: number;
+  prezzoSuRichiesta?: boolean;
   image: string;
   type: "tour";
   departureFrom?: string;
@@ -21,15 +22,18 @@ export default function TourCard({
   destination,
   duration,
   priceFrom,
+  prezzoSuRichiesta,
   image,
   departureFrom,
 }: TourCardProps) {
-  const formattedPrice = new Intl.NumberFormat("it-IT", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(priceFrom);
+  const formattedPrice = prezzoSuRichiesta
+    ? "Su richiesta"
+    : new Intl.NumberFormat("it-IT", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(priceFrom);
 
   return (
     <div className="group bg-white rounded-lg overflow-hidden shadow-sm card-hover border border-gray-100">
@@ -77,10 +81,18 @@ export default function TourCard({
 
         {/* Price */}
         <p className="text-sm text-gray-600">
-          Prezzo a partire da:{" "}
-          <span className="font-bold text-[#C41E2F] text-base">
-            {formattedPrice}
-          </span>
+          {prezzoSuRichiesta ? (
+            <span className="font-bold text-[#C41E2F] text-base">
+              Prezzo su richiesta
+            </span>
+          ) : (
+            <>
+              Prezzo a partire da:{" "}
+              <span className="font-bold text-[#C41E2F] text-base">
+                {formattedPrice}
+              </span>
+            </>
+          )}
         </p>
 
         {/* CTA */}

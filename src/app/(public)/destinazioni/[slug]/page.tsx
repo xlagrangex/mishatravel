@@ -51,6 +51,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                   destination={tour.destination_name ?? dest.name}
                   duration={tour.durata_notti ?? ""}
                   priceFrom={tour.a_partire_da ? Number(tour.a_partire_da) : 0}
+                  prezzoSuRichiesta={tour.prezzo_su_richiesta}
                   image={tour.cover_image_url || "/images/placeholder.jpg"}
                   type="tour"
                 />
@@ -83,6 +84,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                     river={cruise.destination_name ?? dest.name}
                     duration={cruise.durata_notti ?? ""}
                     priceFrom={cruise.a_partire_da ? Number(cruise.a_partire_da) : 0}
+                    prezzoSuRichiesta={cruise.prezzo_su_richiesta}
                     image={cruise.cover_image_url || "/images/placeholder.jpg"}
                   />
                 ))}

@@ -128,8 +128,9 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
       });
     }
 
-    // Price filter
+    // Price filter (always include "prezzo su richiesta" cruises)
     result = result.filter((c) => {
+      if (c.prezzo_su_richiesta) return true;
       const price = Number(c.a_partire_da) || 0;
       return price >= filters.priceRange[0] && price <= filters.priceRange[1];
     });
@@ -407,6 +408,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
                       river={cruise.destination_name ?? ""}
                       duration={cruise.durata_notti ?? ""}
                       priceFrom={Number(cruise.a_partire_da) || 0}
+                      prezzoSuRichiesta={cruise.prezzo_su_richiesta}
                       image={cruise.cover_image_url || "/images/placeholder.jpg"}
                       departures={cruise.departures}
                     />

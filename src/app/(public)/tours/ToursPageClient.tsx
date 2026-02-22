@@ -117,8 +117,9 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
       });
     }
 
-    // Price filter
+    // Price filter (always include "prezzo su richiesta" tours)
     result = result.filter((t) => {
+      if (t.prezzo_su_richiesta) return true;
       const price = Number(t.a_partire_da) || 0;
       return price >= filters.priceRange[0] && price <= filters.priceRange[1];
     });
@@ -390,6 +391,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
                       destination={tour.destination_name ?? ""}
                       duration={tour.durata_notti ?? ""}
                       priceFrom={Number(tour.a_partire_da) || 0}
+                      prezzoSuRichiesta={tour.prezzo_su_richiesta}
                       image={tour.cover_image_url || "/images/placeholder.jpg"}
                       departures={tour.departures}
                     />

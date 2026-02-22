@@ -13,6 +13,7 @@ interface CruiseResultCardProps {
   river: string;
   duration: string;
   priceFrom: number;
+  prezzoSuRichiesta?: boolean;
   image: string;
   departures: { data_partenza: string; prezzo_main_deck: number | null }[];
   onCompareToggle?: () => void;
@@ -26,6 +27,7 @@ export default function CruiseResultCard({
   river,
   duration,
   priceFrom,
+  prezzoSuRichiesta,
   image,
   departures,
   onCompareToggle,
@@ -87,9 +89,15 @@ export default function CruiseResultCard({
           {/* Price + CTA */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
             <div>
-              <span className="text-xs text-gray-500">da</span>
-              <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(priceFrom)}</span>
-              <span className="text-xs text-gray-500 ml-1">/ persona</span>
+              {prezzoSuRichiesta ? (
+                <span className="text-lg font-bold text-[#C41E2F]">Prezzo su richiesta</span>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">da</span>
+                  <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(priceFrom)}</span>
+                  <span className="text-xs text-gray-500 ml-1">/ persona</span>
+                </>
+              )}
             </div>
             <Link
               href={`/crociere/${slug}`}

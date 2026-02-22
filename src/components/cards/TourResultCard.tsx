@@ -12,6 +12,7 @@ interface TourResultCardProps {
   destination: string;
   duration: string;
   priceFrom: number;
+  prezzoSuRichiesta?: boolean;
   image: string;
   departures: { data_partenza: string; prezzo_3_stelle: number | null }[];
   onCompareToggle?: () => void;
@@ -24,6 +25,7 @@ export default function TourResultCard({
   destination,
   duration,
   priceFrom,
+  prezzoSuRichiesta,
   image,
   departures,
   onCompareToggle,
@@ -84,9 +86,15 @@ export default function TourResultCard({
           {/* Price + CTA */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
             <div>
-              <span className="text-xs text-gray-500">da</span>
-              <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(priceFrom)}</span>
-              <span className="text-xs text-gray-500 ml-1">/ persona</span>
+              {prezzoSuRichiesta ? (
+                <span className="text-lg font-bold text-[#C41E2F]">Prezzo su richiesta</span>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-500">da</span>
+                  <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(priceFrom)}</span>
+                  <span className="text-xs text-gray-500 ml-1">/ persona</span>
+                </>
+              )}
             </div>
             <Link
               href={`/tours/${slug}`}

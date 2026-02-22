@@ -398,6 +398,7 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                   destination={t.destination_name ?? ""}
                   duration={t.durata_notti ?? ""}
                   priceFrom={t.a_partire_da ? Number(t.a_partire_da) : 0}
+                  prezzoSuRichiesta={t.prezzo_su_richiesta}
                   image={t.cover_image_url || "/images/placeholder.jpg"}
                   type="tour"
                 />

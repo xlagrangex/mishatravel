@@ -12,6 +12,7 @@ export type CruiseListItem = {
   cover_image_url: string | null
   durata_notti: string | null
   a_partire_da: string | null
+  prezzo_su_richiesta: boolean
   tipo_crociera: string | null
   status: string
   created_at: string
@@ -39,6 +40,7 @@ export async function getCruises(): Promise<CruiseListItem[]> {
       cover_image_url,
       durata_notti,
       a_partire_da,
+      prezzo_su_richiesta,
       tipo_crociera,
       status,
       created_at,
@@ -59,6 +61,7 @@ export async function getCruises(): Promise<CruiseListItem[]> {
     cover_image_url: row.cover_image_url,
     durata_notti: row.durata_notti,
     a_partire_da: row.a_partire_da,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
     tipo_crociera: row.tipo_crociera,
     status: row.status,
     created_at: row.created_at,
@@ -83,6 +86,7 @@ export async function getPublishedCruises(): Promise<CruiseListItem[]> {
       cover_image_url,
       durata_notti,
       a_partire_da,
+      prezzo_su_richiesta,
       tipo_crociera,
       status,
       created_at,
@@ -104,6 +108,7 @@ export async function getPublishedCruises(): Promise<CruiseListItem[]> {
     cover_image_url: row.cover_image_url,
     durata_notti: row.durata_notti,
     a_partire_da: row.a_partire_da,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
     tipo_crociera: row.tipo_crociera,
     status: row.status,
     created_at: row.created_at,
@@ -181,6 +186,7 @@ export async function getCruisesForDestination(destinationId: string): Promise<C
       cover_image_url,
       durata_notti,
       a_partire_da,
+      prezzo_su_richiesta,
       tipo_crociera,
       status,
       created_at,
@@ -203,6 +209,7 @@ export async function getCruisesForDestination(destinationId: string): Promise<C
     cover_image_url: row.cover_image_url,
     durata_notti: row.durata_notti,
     a_partire_da: row.a_partire_da,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
     tipo_crociera: row.tipo_crociera,
     status: row.status,
     created_at: row.created_at,
@@ -227,6 +234,7 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
       cover_image_url,
       durata_notti,
       a_partire_da,
+      prezzo_su_richiesta,
       tipo_crociera,
       status,
       created_at,
@@ -249,6 +257,7 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
     cover_image_url: row.cover_image_url,
     durata_notti: row.durata_notti,
     a_partire_da: row.a_partire_da,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
     tipo_crociera: row.tipo_crociera,
     status: row.status,
     created_at: row.created_at,
@@ -284,6 +293,7 @@ export async function getPublishedCruisesWithDepartures(): Promise<CruiseListIte
       cover_image_url,
       durata_notti,
       a_partire_da,
+      prezzo_su_richiesta,
       tipo_crociera,
       status,
       created_at,
@@ -308,6 +318,7 @@ export async function getPublishedCruisesWithDepartures(): Promise<CruiseListIte
     cover_image_url: row.cover_image_url,
     durata_notti: row.durata_notti,
     a_partire_da: row.a_partire_da,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
     tipo_crociera: row.tipo_crociera,
     status: row.status,
     created_at: row.created_at,
@@ -422,6 +433,7 @@ export async function getRelatedCruises(
       cover_image_url,
       durata_notti,
       a_partire_da,
+      prezzo_su_richiesta,
       tipo_crociera,
       status,
       created_at,
@@ -446,6 +458,7 @@ export async function getRelatedCruises(
     cover_image_url: row.cover_image_url,
     durata_notti: row.durata_notti,
     a_partire_da: row.a_partire_da,
+    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
     tipo_crociera: row.tipo_crociera,
     status: row.status,
     created_at: row.created_at,
