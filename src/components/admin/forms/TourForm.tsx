@@ -73,7 +73,7 @@ const departureSchema = z.object({
 });
 
 const supplementSchema = z.object({
-  titolo: z.string().min(1, "Obbligatorio"),
+  titolo: z.string(),
   prezzo: z.string().nullable(),
 });
 
@@ -84,7 +84,7 @@ const excursionSchema = z.object({
 });
 
 const textItemSchema = z.object({
-  titolo: z.string().min(1, "Obbligatorio"),
+  titolo: z.string(),
 });
 
 const tourFormSchema = z.object({
@@ -306,6 +306,11 @@ export default function TourForm({ initialData, destinations = [], localities = 
     try {
       const result = await saveTour({
         ...data,
+        inclusions: data.inclusions.filter((i) => i.titolo.trim()),
+        exclusions: data.exclusions.filter((i) => i.titolo.trim()),
+        terms: data.terms.filter((i) => i.titolo.trim()),
+        penalties: data.penalties.filter((i) => i.titolo.trim()),
+        supplements: data.supplements.filter((s) => s.titolo.trim()),
         id: initialData?.id,
         locations: locationsMap,
       });
