@@ -52,6 +52,55 @@ function logOk(msg: string) { console.log(`${c.green}  [OK]${c.reset} ${msg}`); 
 function logWarn(msg: string) { console.log(`${c.yellow}[WARN]${c.reset} ${msg}`); }
 function logErr(msg: string) { console.error(`${c.red}[ERR]${c.reset} ${msg}`); }
 function logSection(msg: string) { console.log(`\n${c.bold}${c.cyan}═══ ${msg} ═══${c.reset}`); }
+function logImage(current: number, total: number, msg: string) {
+  console.log(`${c.dim}  [IMG ${current}/${total}]${c.reset} ${msg}`);
+}
+
+// ============================================================
+// CONCURRENCY LIMITER
+// ============================================================
+const IMAGE_CONCURRENCY = 5;
+
+/**
+ * Runs an array of async task factories with a maximum concurrency limit.
+ * Each factory is a zero-argument function that returns a Promise.
+ */
+async function runWithConcurrency<T>(
+  tasks: (() => Promise<T>)[],
+  limit: number
+): Promise<T[]> {
+  const results: T[] = new Array(tasks.length);
+  let index = 0;
+
+  async function worker() {
+    while (index < tasks.length) {
+      const i = index++;
+      results[i] = await tasks[i]();
+    }
+  }
+
+  const workers: Promise<void>[] = [];
+  for (let w = 0; w < Math.min(limit, tasks.length); w++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+  return results;
+}
+
+// ============================================================
+// IMAGE PROGRESS TRACKER
+// ============================================================
+let imageTotal = 0;
+let imageCount = 0;
+
+function resetImageProgress(total: number) {
+  imageTotal = total;
+  imageCount = 0;
+}
+
+function nextImageIndex(): number {
+  return ++imageCount;
+}
 
 // ============================================================
 // TYPES
@@ -265,6 +314,7 @@ async function safeUpsert(table: string, data: Record<string, unknown> | Record<
 // ============================================================
 async function downloadAndUpload(wpUrl: string, bucket: string, path: string): Promise<string | null> {
   if (!wpUrl || DRY_RUN) return wpUrl || null;
+  const idx = nextImageIndex();
   try {
     const resp = await fetch(wpUrl);
     if (!resp.ok) {
@@ -284,6 +334,7 @@ async function downloadAndUpload(wpUrl: string, bucket: string, path: string): P
     }
 
     const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+    logImage(idx, imageTotal, `${bucket}/${path}`);
     return urlData.publicUrl;
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -348,7 +399,78 @@ async function clearExistingData() {
 }
 
 // ============================================================
-// 11. IMPORT DESTINATIONS
+// 11. COUNT TOTAL IMAGES (for progress tracking)
+// ============================================================
+function countTotalImages(items: WPItem[]): number {
+  if (!MIGRATE_IMAGES) return 0;
+  let count = 0;
+
+  const attachmentMap = new Map<number, string>();
+  for (const item of items) {
+    if (item["wp:post_type"] === "attachment" && item["wp:attachment_url"]) {
+      attachmentMap.set(Number(item["wp:post_id"]), String(item["wp:attachment_url"]));
+    }
+  }
+
+  function hasThumb(item: WPItem): boolean {
+    const entries = Array.isArray(item["wp:postmeta"]) ? item["wp:postmeta"] : [item["wp:postmeta"]].filter(Boolean);
+    const thumbEntry = entries.find(m => String(m["wp:meta_key"]) === "_thumbnail_id");
+    if (thumbEntry) {
+      const val = String(thumbEntry["wp:meta_value"]);
+      if (/^\d+$/.test(val) && attachmentMap.has(parseInt(val, 10))) return true;
+      if (val.startsWith("http")) return true;
+    }
+    return false;
+  }
+
+  // Destinations: 1 thumbnail each
+  const destinations = items.filter(i => i["wp:post_type"] === "destinazioni" && i["wp:status"] === "publish");
+  for (const item of destinations) {
+    if (hasThumb(item)) count++;
+  }
+
+  // Ships: thumbnail + deck plan + gallery + cabin images
+  const ships = items.filter(i => i["wp:post_type"] === "imbarcazioni" && i["wp:status"] === "publish");
+  for (const item of ships) {
+    const meta = getMetaMap(item);
+    if (hasThumb(item)) count++;
+    if (meta.piani_ponte) count++;
+    count += phpUnserializeArray(meta.galleria || "").length;
+    const cabine = extractRepeater(meta, "cabine_dettaglio", ["immagine_cabina"]);
+    for (const cab of cabine) {
+      if (cab.immagine_cabina) count++;
+    }
+  }
+
+  // Tours: thumbnail + pdf + gallery
+  const tours = items.filter(i => i["wp:post_type"] === "tours" && i["wp:status"] === "publish");
+  for (const item of tours) {
+    const meta = getMetaMap(item);
+    if (hasThumb(item)) count++;
+    if (meta.d_programma) count++;
+    count += phpUnserializeArray(meta.gallery || "").length;
+  }
+
+  // Cruises: thumbnail + pdf + gallery
+  const cruises = items.filter(i => i["wp:post_type"] === "crociere" && i["wp:status"] === "publish");
+  for (const item of cruises) {
+    const meta = getMetaMap(item);
+    if (hasThumb(item)) count++;
+    if (meta.programma_pdf) count++;
+    count += phpUnserializeArray(meta.gallery || "").length;
+  }
+
+  // Blog: thumbnail each
+  const blogPosts = items.filter(i => i["wp:post_type"] === "post" && i["wp:status"] === "publish");
+  for (const item of blogPosts) {
+    if (hasThumb(item)) count++;
+  }
+
+  return count;
+}
+
+// ============================================================
+// 12. IMPORT DESTINATIONS
 // ============================================================
 async function importDestinations(
   items: WPItem[],
@@ -373,6 +495,8 @@ async function importDestinations(
     const thumbnailId = meta._thumbnail_id || (getMetaMap({ ...item, "wp:postmeta": item["wp:postmeta"] } as WPItem))["_thumbnail_id"];
 
     // Get thumbnail from meta (need to also check underscore-prefixed keys)
+    // NOTE: "destinations" bucket does not exist, so we use "general" bucket
+    // with a "destinations/" subfolder prefix
     let coverUrl: string | null = null;
     const thumbMeta = item["wp:postmeta"];
     if (thumbMeta) {
@@ -382,8 +506,8 @@ async function importDestinations(
         coverUrl = await resolveImageUrl(
           attachmentMap,
           String(thumbEntry["wp:meta_value"]),
-          "destinations",
-          slug
+          "general",
+          `destinations/${slug}`
         );
       }
     }
@@ -417,7 +541,7 @@ async function importDestinations(
 }
 
 // ============================================================
-// 12. IMPORT SHIPS
+// 13. IMPORT SHIPS
 // ============================================================
 async function importShips(
   items: WPItem[],
@@ -497,35 +621,36 @@ async function importShips(
       );
     }
 
-    // Gallery
+    // Gallery (with concurrency limiter)
     const galleryIds = phpUnserializeArray(meta.galleria || "");
     if (galleryIds.length) {
-      const galleryRows = [];
-      for (let i = 0; i < galleryIds.length; i++) {
-        const imgUrl = await resolveImageUrl(attachmentMap, galleryIds[i], "ships", `${slug}/gallery`);
-        if (imgUrl) {
-          galleryRows.push({ ship_id: shipId, image_url: imgUrl, sort_order: i });
-        }
-      }
+      const galleryTasks = galleryIds.map((gid, i) => () =>
+        resolveImageUrl(attachmentMap, gid, "ships", `${slug}/gallery`).then(imgUrl => ({
+          imgUrl, index: i,
+        }))
+      );
+      const galleryResults = await runWithConcurrency(galleryTasks, IMAGE_CONCURRENCY);
+      const galleryRows = galleryResults
+        .filter(r => r.imgUrl)
+        .map(r => ({ ship_id: shipId, image_url: r.imgUrl!, sort_order: r.index }));
       if (galleryRows.length) await safeInsert("ship_gallery", galleryRows);
     }
 
-    // Cabin details
+    // Cabin details (with concurrency limiter for images)
     const cabine = extractRepeater(meta, "cabine_dettaglio", ["titolo", "tipologia", "immagine_cabina", "descrizione"]);
     if (cabine.length) {
-      const cabinRows = [];
-      for (let i = 0; i < cabine.length; i++) {
-        const cab = cabine[i];
+      const cabinTasks = cabine.map((cab, i) => async () => {
         const imgUrl = await resolveImageUrl(attachmentMap, cab.immagine_cabina, "ships", `${slug}/cabins`);
-        cabinRows.push({
+        return {
           ship_id: shipId,
           titolo: cab.titolo,
           tipologia: cab.tipologia || null,
           immagine_url: imgUrl,
           descrizione: cab.descrizione || null,
           sort_order: i,
-        });
-      }
+        };
+      });
+      const cabinRows = await runWithConcurrency(cabinTasks, IMAGE_CONCURRENCY);
       await safeInsert("ship_cabin_details", cabinRows);
     }
   }
@@ -535,7 +660,7 @@ async function importShips(
 }
 
 // ============================================================
-// 13. IMPORT TOURS
+// 14. IMPORT TOURS
 // ============================================================
 async function importTours(
   items: WPItem[],
@@ -711,16 +836,18 @@ async function importTours(
       );
     }
 
-    // Gallery
+    // Gallery (with concurrency limiter)
     const galleryIds = phpUnserializeArray(meta.gallery || "");
     if (galleryIds.length) {
-      const galleryRows = [];
-      for (let i = 0; i < galleryIds.length; i++) {
-        const imgUrl = await resolveImageUrl(attachmentMap, galleryIds[i], "tours", `${slug}/gallery`);
-        if (imgUrl) {
-          galleryRows.push({ tour_id: tourId, image_url: imgUrl, sort_order: i });
-        }
-      }
+      const galleryTasks = galleryIds.map((gid, i) => () =>
+        resolveImageUrl(attachmentMap, gid, "tours", `${slug}/gallery`).then(imgUrl => ({
+          imgUrl, index: i,
+        }))
+      );
+      const galleryResults = await runWithConcurrency(galleryTasks, IMAGE_CONCURRENCY);
+      const galleryRows = galleryResults
+        .filter(r => r.imgUrl)
+        .map(r => ({ tour_id: tourId, image_url: r.imgUrl!, sort_order: r.index }));
       if (galleryRows.length) await safeInsert("tour_gallery", galleryRows);
     }
 
@@ -743,7 +870,7 @@ async function importTours(
 }
 
 // ============================================================
-// 14. IMPORT CRUISES
+// 15. IMPORT CRUISES
 // ============================================================
 async function importCruises(
   items: WPItem[],
@@ -921,16 +1048,18 @@ async function importCruises(
       );
     }
 
-    // Gallery
+    // Gallery (with concurrency limiter)
     const galleryIds = phpUnserializeArray(meta.gallery || "");
     if (galleryIds.length) {
-      const galleryRows = [];
-      for (let i = 0; i < galleryIds.length; i++) {
-        const imgUrl = await resolveImageUrl(attachmentMap, galleryIds[i], "cruises", `${slug}/gallery`);
-        if (imgUrl) {
-          galleryRows.push({ cruise_id: cruiseId, image_url: imgUrl, sort_order: i });
-        }
-      }
+      const galleryTasks = galleryIds.map((gid, i) => () =>
+        resolveImageUrl(attachmentMap, gid, "cruises", `${slug}/gallery`).then(imgUrl => ({
+          imgUrl, index: i,
+        }))
+      );
+      const galleryResults = await runWithConcurrency(galleryTasks, IMAGE_CONCURRENCY);
+      const galleryRows = galleryResults
+        .filter(r => r.imgUrl)
+        .map(r => ({ cruise_id: cruiseId, image_url: r.imgUrl!, sort_order: r.index }));
       if (galleryRows.length) await safeInsert("cruise_gallery", galleryRows);
     }
   }
@@ -939,7 +1068,7 @@ async function importCruises(
 }
 
 // ============================================================
-// 15. IMPORT BLOG
+// 16. IMPORT BLOG
 // ============================================================
 async function importBlog(items: WPItem[], attachmentMap: Map<number, string>) {
   logSection("IMPORTING BLOG");
@@ -1019,7 +1148,7 @@ async function importBlog(items: WPItem[], attachmentMap: Map<number, string>) {
 }
 
 // ============================================================
-// 16. DESTINATION MATCHING LOGIC
+// 17. DESTINATION MATCHING LOGIC
 // ============================================================
 // Maps of known tour-destination associations based on common patterns
 const DESTINATION_KEYWORDS: Record<string, string[]> = {
@@ -1145,6 +1274,13 @@ ${c.bold}${c.cyan}╔═══════════════════�
   // Build attachment map
   const attachmentMap = buildAttachmentMap(items);
 
+  // Count total images for progress tracking
+  if (MIGRATE_IMAGES) {
+    const totalImages = countTotalImages(items);
+    resetImageProgress(totalImages);
+    log(`Total images to migrate: ~${totalImages} (max ${IMAGE_CONCURRENCY} concurrent downloads)`);
+  }
+
   // Count items by type
   const typeCounts: Record<string, number> = {};
   for (const item of items) {
@@ -1170,6 +1306,9 @@ ${c.bold}${c.cyan}╔═══════════════════�
 
   // Summary
   logSection("MIGRATION COMPLETE");
+  if (MIGRATE_IMAGES) {
+    logOk(`Image migration: ${imageCount} images processed`);
+  }
   if (DRY_RUN) {
     logWarn("This was a DRY RUN - no data was written to the database.");
     log("Run without --dry-run to perform the actual migration.");
