@@ -4,9 +4,10 @@ import { parsePrice } from "@/lib/utils";
 import TourCard from "@/components/cards/TourCard";
 import CruiseCard from "@/components/cards/CruiseCard";
 import HeroSection from "@/components/home/HeroSection";
+import DestinationsCarousel from "@/components/home/DestinationsCarousel";
+import LatestAdditions from "@/components/home/LatestAdditions";
 import DeparturesTimeline from "@/components/home/DeparturesTimeline";
 import AgencyCTA from "@/components/home/AgencyCTA";
-import DestinationsCarousel from "@/components/home/DestinationsCarousel";
 import SectionReveal from "@/components/home/SectionReveal";
 import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
 import { getPublishedTours } from "@/lib/supabase/queries/tours";
@@ -28,7 +29,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 1. Hero con parallax + search bar */}
+      {/* 1. Hero con slideshow + search bar */}
       <HeroSection
         destinations={destinations}
         tours={tours}
@@ -36,13 +37,19 @@ export default async function HomePage() {
         departures={departures}
       />
 
-      {/* 2. Prossime partenze */}
+      {/* 2. Carousel destinazioni — subito sotto la hero */}
+      <DestinationsCarousel destinations={destinations} />
+
+      {/* 3. Ultimi viaggi aggiunti */}
+      <LatestAdditions tours={tours} cruises={cruises} />
+
+      {/* 4. Prossime partenze */}
       <DeparturesTimeline departures={departures} />
 
-      {/* 3. CTA Agenzie */}
+      {/* 5. CTA Agenzie */}
       <AgencyCTA />
 
-      {/* 4. I nostri Tour */}
+      {/* 6. I nostri Tour */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <SectionReveal>
@@ -82,7 +89,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 5. Crociere Fluviali */}
+      {/* 7. Crociere Fluviali */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionReveal>
@@ -121,9 +128,6 @@ export default async function HomePage() {
           </SectionReveal>
         </div>
       </section>
-
-      {/* 6. Carousel destinazioni in loop */}
-      <DestinationsCarousel destinations={destinations} />
     </>
   );
 }

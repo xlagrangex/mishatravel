@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Search, MapPin, Ship, Calendar } from "lucide-react";
 import type { Destination } from "@/lib/types";
 import type { TourListItem } from "@/lib/supabase/queries/tours";
@@ -37,67 +37,50 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
 
   const futureMonths = useMemo(() => getFutureMonths(18), []);
 
-  // Filter autocomplete suggestions
   const suggestions = useMemo(() => {
     if (query.length < 2) return [];
     const q = query.toLowerCase();
-    return destinations
-      .filter((d) => d.name.toLowerCase().includes(q))
-      .slice(0, 6);
+    return destinations.filter((d) => d.name.toLowerCase().includes(q)).slice(0, 6);
   }, [query, destinations]);
 
-  // Search results
   const results = useMemo(() => {
     const q = query.toLowerCase();
     const today = new Date().toISOString().slice(0, 10);
+    let filtered = departures.filter((d) => d.date >= today);
 
-    // Get future departures
-    const futureDeps = departures.filter((d) => d.date >= today);
-
-    // Filter by type
-    let filtered = futureDeps;
     if (tipo === "tour") filtered = filtered.filter((d) => d.type === "tour");
     if (tipo === "crociera") filtered = filtered.filter((d) => d.type === "crociera");
-
-    // Filter by month
-    if (mese) {
-      filtered = filtered.filter((d) => d.date.startsWith(mese));
-    }
-
-    // Filter by destination query
+    if (mese) filtered = filtered.filter((d) => d.date.startsWith(mese));
     if (q.length >= 2) {
       filtered = filtered.filter(
-        (d) =>
-          d.destination_name?.toLowerCase().includes(q) ||
-          d.title.toLowerCase().includes(q)
+        (d) => d.destination_name?.toLowerCase().includes(q) || d.title.toLowerCase().includes(q)
       );
     }
 
-    // Deduplicate by slug (keep earliest departure per product)
     const seen = new Map<string, UnifiedDeparture>();
     for (const dep of filtered) {
-      if (!seen.has(dep.slug)) {
-        seen.set(dep.slug, dep);
-      }
+      if (!seen.has(dep.slug)) seen.set(dep.slug, dep);
     }
 
-    // Enrich with cover images
     return Array.from(seen.values())
       .slice(0, 12)
       .map((dep) => {
-        let image: string | null = null;
-        if (dep.type === "tour") {
-          image = tours.find((t) => t.slug === dep.slug)?.cover_image_url ?? null;
-        } else {
-          image = cruises.find((c) => c.slug === dep.slug)?.cover_image_url ?? null;
-        }
+        const image =
+          dep.type === "tour"
+            ? tours.find((t) => t.slug === dep.slug)?.cover_image_url ?? null
+            : cruises.find((c) => c.slug === dep.slug)?.cover_image_url ?? null;
         return { ...dep, cover_image_url: image };
       });
   }, [query, tipo, mese, departures, tours, cruises]);
 
-  function handleSearch() {
+  const handleSearch = useCallback(() => {
     setShowAutocomplete(false);
     setShowResults(true);
+  }, []);
+
+  function selectSuggestion(name: string) {
+    setQuery(name);
+    setShowAutocomplete(false);
   }
 
   // Close on outside click
@@ -113,39 +96,49 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
   }, []);
 
   return (
-    <div ref={wrapperRef} className="relative w-full max-w-4xl mx-auto px-4">
+    <div ref={wrapperRef} className="relative w-full max-w-4xl mx-auto px-4" style={{ zIndex: 40 }}>
       {/* Glass bar */}
-      <div className="backdrop-blur-xl bg-white/15 border border-white/20 rounded-2xl shadow-2xl p-3 md:p-4">
+      <div className="backdrop-blur-md bg-white/15 border border-white/25 rounded-2xl shadow-2xl p-3 md:p-4">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Destination input */}
           <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/70" />
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/60 pointer-events-none" />
             <input
               type="text"
               placeholder="Dove vuoi andare?"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
-                setShowAutocomplete(true);
+                setShowAutocomplete(e.target.value.length >= 2);
                 setShowResults(false);
               }}
-              onFocus={() => query.length >= 2 && setShowAutocomplete(true)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-sm md:text-base"
+              onFocus={() => {
+                if (query.length >= 2) setShowAutocomplete(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+                if (e.key === "Escape") {
+                  setShowAutocomplete(false);
+                  setShowResults(false);
+                }
+              }}
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:bg-white/15 focus:border-white/40 transition-all text-sm md:text-base"
+              autoComplete="off"
             />
-            {/* Autocomplete */}
+            {/* Autocomplete dropdown */}
             {showAutocomplete && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl overflow-hidden z-50">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl overflow-hidden" style={{ zIndex: 60 }}>
                 {suggestions.map((dest) => (
                   <button
                     key={dest.id}
-                    onClick={() => {
-                      setQuery(dest.name);
-                      setShowAutocomplete(false);
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent input blur
+                      selectSuggestion(dest.name);
                     }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-gray-800 text-sm flex items-center gap-2"
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-gray-800 text-sm flex items-center gap-2 cursor-pointer"
                   >
-                    <MapPin className="size-4 text-[#C41E2F]" />
+                    <MapPin className="size-4 text-[#C41E2F] shrink-0" />
                     {dest.name}
                   </button>
                 ))}
@@ -155,11 +148,11 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
 
           {/* Type select */}
           <div className="relative md:w-44">
-            <Ship className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/70 pointer-events-none" />
+            <Ship className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/60 pointer-events-none" />
             <select
               value={tipo}
               onChange={(e) => setTipo(e.target.value as "tutti" | "tour" | "crociera")}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all appearance-none text-sm md:text-base [&>option]:text-gray-800"
+              className="w-full pl-10 pr-8 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:bg-white/15 focus:border-white/40 transition-all appearance-none cursor-pointer text-sm md:text-base [&>option]:text-gray-800 [&>option]:bg-white"
             >
               <option value="tutti">Tutti</option>
               <option value="tour">Tour</option>
@@ -169,11 +162,11 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
 
           {/* Month select */}
           <div className="relative md:w-52">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/70 pointer-events-none" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/60 pointer-events-none" />
             <select
               value={mese}
               onChange={(e) => setMese(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all appearance-none text-sm md:text-base [&>option]:text-gray-800"
+              className="w-full pl-10 pr-8 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:bg-white/15 focus:border-white/40 transition-all appearance-none cursor-pointer text-sm md:text-base [&>option]:text-gray-800 [&>option]:bg-white"
             >
               <option value="">Quando?</option>
               {futureMonths.map((m) => (
@@ -186,8 +179,9 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
 
           {/* Search button */}
           <button
+            type="button"
             onClick={handleSearch}
-            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#C41E2F] hover:bg-[#A31825] text-white font-semibold transition-colors shrink-0 text-sm md:text-base"
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#C41E2F] hover:bg-[#A31825] text-white font-semibold transition-colors shrink-0 cursor-pointer text-sm md:text-base"
           >
             <Search className="size-5" />
             <span>Cerca</span>
@@ -195,12 +189,9 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
         </div>
       </div>
 
-      {/* Search Results Dropdown */}
+      {/* Search Results */}
       {showResults && (
-        <SearchResultsDropdown
-          results={results}
-          onClose={() => setShowResults(false)}
-        />
+        <SearchResultsDropdown results={results} onClose={() => setShowResults(false)} />
       )}
     </div>
   );

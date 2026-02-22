@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import HeroSearchBar from "./HeroSearchBar";
 import type { Destination } from "@/lib/types";
 import type { TourListItem } from "@/lib/supabase/queries/tours";
@@ -16,68 +16,132 @@ type Props = {
   departures: UnifiedDeparture[];
 };
 
+type Slide = { image: string; label: string };
+
+function buildSlides(tours: TourListItem[], cruises: CruiseListItem[]): Slide[] {
+  const all = [
+    ...tours
+      .filter((t) => t.cover_image_url)
+      .slice(0, 3)
+      .map((t) => ({ image: t.cover_image_url!, label: t.title })),
+    ...cruises
+      .filter((c) => c.cover_image_url)
+      .slice(0, 2)
+      .map((c) => ({ image: c.cover_image_url!, label: c.title })),
+  ];
+  // Fallback if not enough DB images
+  if (all.length === 0) {
+    return [
+      { image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=80", label: "Scopri il mondo" },
+      { image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=80", label: "Viaggi indimenticabili" },
+    ];
+  }
+  return all;
+}
+
+const INTERVAL = 5000;
+
 export default function HeroSection({ destinations, tours, cruises, departures }: Props) {
+  const slides = buildSlides(tours, cruises);
+  const [current, setCurrent] = useState(0);
+  const [progress, setProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
-  const imageY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const imageY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+
+  const next = useCallback(() => {
+    setCurrent((c) => (c + 1) % slides.length);
+    setProgress(0);
+  }, [slides.length]);
+
+  // Auto-advance every 5s
+  useEffect(() => {
+    const timer = setInterval(next, INTERVAL);
+    return () => clearInterval(timer);
+  }, [next]);
+
+  // Progress bar animation
+  useEffect(() => {
+    setProgress(0);
+    const start = Date.now();
+    let raf: number;
+    function tick() {
+      const elapsed = Date.now() - start;
+      setProgress(Math.min(elapsed / INTERVAL, 1));
+      if (elapsed < INTERVAL) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [current]);
 
   return (
     <section
       ref={containerRef}
-      className="relative h-[600px] md:h-[700px] lg:h-[750px] flex items-center justify-center overflow-hidden"
+      className="relative h-[600px] md:h-[680px] lg:h-[720px] flex items-center justify-center overflow-hidden bg-black"
     >
-      {/* Background image with parallax */}
-      <motion.div className="absolute inset-0" style={{ y: imageY }}>
-        <Image
-          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=80"
-          alt="Scopri il mondo con Misha Travel"
-          fill
-          className="object-cover scale-110"
-          priority
-          sizes="100vw"
-        />
-      </motion.div>
+      {/* Slideshow images — all stacked, cross-fade via opacity */}
+      {slides.map((slide, i) => (
+        <motion.div
+          key={i}
+          animate={{ opacity: i === current ? 1 : 0 }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
+          className="absolute inset-0"
+          style={{ y: imageY }}
+        >
+          <Image
+            src={slide.image}
+            alt={slide.label}
+            fill
+            className="object-cover scale-105"
+            priority={i === 0}
+            sizes="100vw"
+          />
+        </motion.div>
+      ))}
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+      {/* Gradient overlay - stronger for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70 z-[1]" />
 
       {/* Content */}
-      <div className="relative z-10 w-full flex flex-col items-center justify-center px-4 pt-20">
+      <div className="relative z-10 w-full flex flex-col items-center justify-center px-4 pt-16">
         {/* Headline */}
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-sm md:text-base uppercase tracking-[0.3em] text-white/70 mb-4 font-[family-name:var(--font-poppins)]"
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-xs md:text-sm uppercase tracking-[0.35em] text-white/80 mb-5 font-medium"
         >
           Tour Operator B2B
         </motion.p>
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25 }}
-          className="text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center font-[family-name:var(--font-poppins)] leading-tight max-w-4xl mx-auto mb-3"
-        >
-          Scopri il mondo con{" "}
-          <span className="text-[#C41E2F]">Misha Travel</span>
-        </motion.h1>
-        <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-          className="text-base md:text-lg text-white/70 text-center max-w-2xl mx-auto mb-10"
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center font-[family-name:var(--font-poppins)] leading-tight max-w-4xl mx-auto mb-3"
+          style={{ textShadow: "0 2px 20px rgba(0,0,0,0.5)" }}
         >
-          Tour culturali, grandi itinerari e crociere fluviali per agenzie di viaggio
+          Scopri il mondo con{" "}
+          <span className="text-white">Misha Travel</span>
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.35 }}
+          className="text-base md:text-lg text-white/80 text-center max-w-xl mx-auto mb-10"
+          style={{ textShadow: "0 1px 8px rgba(0,0,0,0.4)" }}
+        >
+          Tour culturali, grandi itinerari e crociere fluviali
         </motion.p>
 
         {/* Search bar */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.55 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
           className="w-full"
         >
           <HeroSearchBar
@@ -87,6 +151,27 @@ export default function HeroSection({ destinations, tours, cruises, departures }
             departures={departures}
           />
         </motion.div>
+
+        {/* Slide indicators + progress bar */}
+        <div className="flex items-center gap-2 mt-8">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => { setCurrent(i); setProgress(0); }}
+              className="relative h-[3px] rounded-full overflow-hidden transition-all duration-300"
+              style={{ width: i === current ? 48 : 24 }}
+              aria-label={`Slide ${i + 1}`}
+            >
+              <div className="absolute inset-0 bg-white/30 rounded-full" />
+              {i === current && (
+                <div
+                  className="absolute inset-y-0 left-0 bg-white rounded-full"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );
