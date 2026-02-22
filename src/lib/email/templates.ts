@@ -132,6 +132,29 @@ export function agencyApprovedEmail(agencyName: string): string {
   `);
 }
 
+/**
+ * Password reset email with branded template.
+ */
+export function passwordResetEmail(resetLink: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Recupera la tua password</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Hai richiesto il recupero della password per il tuo account MishaTravel.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Clicca il pulsante qui sotto per impostare una nuova password:
+    </p>
+    ${ctaButton("Reimposta Password", resetLink)}
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Il link scadr&agrave; tra 1 ora. Se non hai richiesto tu il recupero della password, puoi ignorare questa email in sicurezza.
+    </p>
+    <p style="color:#64748b;font-size:13px;margin-top:24px;">
+      Se il pulsante non funziona, copia e incolla questo link nel tuo browser:<br/>
+      <a href="${resetLink}" style="color:#C41E2F;word-break:break-all;">${resetLink}</a>
+    </p>
+  `);
+}
+
 // ---------------------------------------------------------------------------
 // 2. Quote flow emails (to Agency)
 // ---------------------------------------------------------------------------

@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
+import { requestPasswordReset } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -62,16 +63,10 @@ function RequestResetView() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        formData.email,
-        {
-          redirectTo: window.location.origin + "/reset?mode=update",
-        }
-      );
+      const result = await requestPasswordReset(formData.email);
 
-      if (resetError) {
-        setError(resetError.message);
+      if (!result.success) {
+        setError(result.error ?? "Errore imprevisto. Riprova più tardi.");
         setIsLoading(false);
         return;
       }
