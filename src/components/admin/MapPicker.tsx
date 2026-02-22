@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,97 +22,10 @@ interface NominatimResult {
 }
 
 // ---------------------------------------------------------------------------
-// Inner Map Component (loaded dynamically with ssr: false)
+// Dynamic import of inner map (ssr: false to avoid Leaflet SSR issues)
 // ---------------------------------------------------------------------------
 
-interface InnerMapProps {
-  position: [number, number];
-  onPositionChange: (lat: number, lng: number) => void;
-}
-
-function InnerMapComponent({ position, onPositionChange }: InnerMapProps) {
-  // These imports must happen only on the client side
-  const L = require("leaflet") as typeof import("leaflet");
-  require("leaflet/dist/leaflet.css");
-  const {
-    MapContainer,
-    TileLayer,
-    Marker,
-    useMapEvents,
-    useMap,
-  } = require("react-leaflet");
-
-  // Fix Leaflet default marker icon issue with bundlers
-  useEffect(() => {
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      iconRetinaUrl:
-        "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      shadowUrl:
-        "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    });
-  }, [L.Icon.Default]);
-
-  // Component to handle click events on the map
-  function ClickHandler() {
-    useMapEvents({
-      click(e: any) {
-        onPositionChange(e.latlng.lat, e.latlng.lng);
-      },
-    });
-    return null;
-  }
-
-  // Component to recenter the map when position changes externally (search)
-  function RecenterMap({ center }: { center: [number, number] }) {
-    const map = useMap();
-    useEffect(() => {
-      map.setView(center, map.getZoom());
-    }, [center, map]);
-    return null;
-  }
-
-  const markerRef = useRef<any>(null);
-
-  const eventHandlers = useMemo(
-    () => ({
-      dragend() {
-        const marker = markerRef.current;
-        if (marker != null) {
-          const latlng = marker.getLatLng();
-          onPositionChange(latlng.lat, latlng.lng);
-        }
-      },
-    }),
-    [onPositionChange]
-  );
-
-  return (
-    <MapContainer
-      center={position}
-      zoom={5}
-      style={{ height: "100%", width: "100%" }}
-      className="rounded-lg z-0"
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Marker
-        position={position}
-        draggable={true}
-        ref={markerRef}
-        eventHandlers={eventHandlers}
-      />
-      <ClickHandler />
-      <RecenterMap center={position} />
-    </MapContainer>
-  );
-}
-
-// Dynamic import with SSR disabled
-const DynamicMap = dynamic(() => Promise.resolve(InnerMapComponent), {
+const DynamicMap = dynamic(() => import("./MapPickerInner"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center rounded-lg border bg-muted/50">
