@@ -83,12 +83,18 @@ export default function HeroSection({ destinations, tours, cruises, departures }
       ref={containerRef}
       className="relative h-[600px] md:h-[680px] lg:h-[720px] flex items-center justify-center overflow-hidden bg-black"
     >
-      {/* Slideshow images — all stacked, cross-fade via opacity */}
+      {/* Slideshow images — all stacked, cross-fade + slow Ken Burns zoom */}
       {slides.map((slide, i) => (
         <motion.div
           key={i}
-          animate={{ opacity: i === current ? 1 : 0 }}
-          transition={{ duration: 1.2, ease: "easeInOut" }}
+          animate={{
+            opacity: i === current ? 1 : 0,
+            scale: i === current ? 1.08 : 1,
+          }}
+          transition={{
+            opacity: { duration: 1.2, ease: "easeInOut" },
+            scale: { duration: 5.5, ease: "linear" },
+          }}
           className="absolute inset-0"
           style={{ y: imageY }}
         >
@@ -96,7 +102,7 @@ export default function HeroSection({ destinations, tours, cruises, departures }
             src={slide.image}
             alt={slide.label}
             fill
-            className="object-cover scale-105"
+            className="object-cover"
             priority={i === 0}
             sizes="100vw"
           />
