@@ -5,7 +5,7 @@ export async function getActiveAgencies(): Promise<Agency[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('agencies')
-    .select('id, business_name, city, province, phone, email, address')
+    .select('id, business_name, city, province, region, phone, email, address, zip_code, latitude, longitude')
     .eq('status', 'active')
     .order('business_name', { ascending: true })
 

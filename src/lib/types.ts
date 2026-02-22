@@ -384,10 +384,13 @@ export interface Agency {
   city: string | null;
   zip_code: string | null;
   province: string | null;
+  region: string | null;
   contact_name: string | null;
   phone: string | null;
   email: string | null;
   website: string | null;
+  latitude: number | null;
+  longitude: number | null;
   status: AgencyStatus;
   created_at: string;
   updated_at: string;

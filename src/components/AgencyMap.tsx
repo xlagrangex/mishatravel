@@ -27,10 +27,11 @@ const DynamicMap = dynamic(() => import("./AgencyMapInner"), {
 interface AgencyMapProps {
   agencies: AgencyMarker[];
   selectedId?: string | null;
+  onMarkerClick?: (id: string) => void;
 }
 
-export default function AgencyMap({ agencies, selectedId }: AgencyMapProps) {
-  return <DynamicMap agencies={agencies} selectedId={selectedId} />;
+export default function AgencyMap({ agencies, selectedId, onMarkerClick }: AgencyMapProps) {
+  return <DynamicMap agencies={agencies} selectedId={selectedId} onMarkerClick={onMarkerClick} />;
 }
 
 export type { AgencyMarker };

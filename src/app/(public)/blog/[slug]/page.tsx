@@ -5,10 +5,12 @@ import Link from "next/link";
 import PageHero from "@/components/layout/PageHero";
 import BlogCard from "@/components/cards/BlogCard";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, ArrowLeft } from "lucide-react";
+import { CalendarDays, ArrowLeft, Clock } from "lucide-react";
 import { getBlogPostBySlug, getPublishedBlogPosts } from "@/lib/supabase/queries/blog";
 import { generateBlogPostMetadata } from "@/lib/seo/metadata";
 import { articleSchema, breadcrumbSchema } from "@/lib/seo/structured-data";
+import AdminEditSetter from "@/components/admin/AdminEditSetter";
+import { getAuthContext } from "@/lib/supabase/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +21,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return generateBlogPostMetadata(post);
 }
 
+function estimateReadingTime(html: string): number {
+  const text = html.replace(/<[^>]*>/g, "");
+  const words = text.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getBlogPostBySlug(slug);
   if (!post) notFound();
+
+  const { role } = await getAuthContext();
+  const isAdmin = role === "super_admin" || role === "admin" || role === "operator";
 
   const dateStr = post.published_at ?? post.created_at;
   const formattedDate = new Intl.DateTimeFormat("it-IT", {
@@ -34,6 +45,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   const categoryName = post.category?.name ?? "Generale";
   const coverImage = post.cover_image_url ?? "/images/blog/placeholder.jpg";
   const content = post.content ?? "";
+  const readingTime = estimateReadingTime(content);
 
   // Fetch related posts (other published posts, excluding current)
   const allPosts = await getPublishedBlogPosts();
@@ -41,6 +53,8 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <>
+      {isAdmin && <AdminEditSetter url={`/admin/blog/${post.id}/modifica`} />}
+
       <PageHero
         title={post.title}
         breadcrumbs={[
@@ -64,6 +78,10 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
                 <CalendarDays className="size-3.5" />
                 {formattedDate}
               </span>
+              <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                <Clock className="size-3.5" />
+                {readingTime} min di lettura
+              </span>
             </div>
 
             <div className="relative aspect-video rounded-lg overflow-hidden mb-8">
@@ -74,11 +92,10 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
               {post.title}
             </h1>
 
-            <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed">
-              {content.split("\n\n").map((paragraph, i) => (
-                <p key={i} className="mb-4">{paragraph}</p>
-              ))}
-            </div>
+            <div
+              className="prose prose-lg max-w-none text-gray-600 leading-relaxed prose-headings:text-[#1B2D4F] prose-headings:font-[family-name:var(--font-poppins)] prose-a:text-[#C41E2F] prose-img:rounded-lg"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
           </div>
         </div>
       </section>
