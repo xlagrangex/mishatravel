@@ -57,8 +57,8 @@ export default function LatestAdditions({
               const price = parsePrice(item.a_partire_da);
 
               return (
-                <Link key={item.slug} href={href} className="group">
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100">
+                <Link key={item.slug} href={href} className="group h-full">
+                  <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 h-full flex flex-col">
                     {/* Image */}
                     <div className="relative aspect-[4/3] overflow-hidden">
                       {item.cover_image_url ? (
@@ -87,7 +87,7 @@ export default function LatestAdditions({
                     </div>
 
                     {/* Content */}
-                    <div className="p-4">
+                    <div className="p-4 flex flex-col flex-1">
                       <h3 className="font-semibold text-[#1B2D4F] text-sm mb-2 line-clamp-2 group-hover:text-[#C41E2F] transition-colors leading-snug">
                         {item.title}
                       </h3>
@@ -105,16 +105,18 @@ export default function LatestAdditions({
                           </span>
                         )}
                       </div>
-                      {item.prezzo_su_richiesta ? (
-                        <p className="text-xs font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
-                      ) : price > 0 ? (
-                        <p className="text-xs text-gray-400">
-                          da{" "}
-                          <span className="font-bold text-[#C41E2F] text-sm">
-                            &euro;{price.toLocaleString("it-IT")}
-                          </span>
-                        </p>
-                      ) : null}
+                      <div className="mt-auto">
+                        {item.prezzo_su_richiesta ? (
+                          <p className="text-xs font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
+                        ) : price > 0 ? (
+                          <p className="text-xs text-gray-400">
+                            da{" "}
+                            <span className="font-bold text-[#C41E2F] text-sm">
+                              &euro;{price.toLocaleString("it-IT")}
+                            </span>
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 </Link>

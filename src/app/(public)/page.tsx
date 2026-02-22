@@ -44,7 +44,7 @@ export default async function HomePage() {
       <LatestAdditions tours={tours} cruises={cruises} />
 
       {/* 4. Prossime partenze */}
-      <DeparturesTimeline departures={departures} />
+      <DeparturesTimeline departures={departures} tours={tours} cruises={cruises} />
 
       {/* 5. CTA Agenzie */}
       <AgencyCTA />

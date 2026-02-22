@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion } from "motion/react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import HeroSearchBar from "./HeroSearchBar";
 import type { Destination } from "@/lib/types";
@@ -29,7 +29,6 @@ function buildSlides(tours: TourListItem[], cruises: CruiseListItem[]): Slide[] 
       .slice(0, 2)
       .map((c) => ({ image: c.cover_image_url!, label: c.title })),
   ];
-  // Fallback if not enough DB images
   if (all.length === 0) {
     return [
       { image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=80", label: "Scopri il mondo" },
@@ -45,26 +44,23 @@ export default function HeroSection({ destinations, tours, cruises, departures }
   const slides = buildSlides(tours, cruises);
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
+  // Key that increments every slide change to restart the CSS zoom animation
+  const [zoomKey, setZoomKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"],
-  });
-  const imageY = useTransform(scrollYProgress, [0, 1], [0, 120]);
 
   const next = useCallback(() => {
     setCurrent((c) => (c + 1) % slides.length);
+    setZoomKey((k) => k + 1);
     setProgress(0);
   }, [slides.length]);
 
-  // Auto-advance every 5s
+  // Auto-advance
   useEffect(() => {
     const timer = setInterval(next, INTERVAL);
     return () => clearInterval(timer);
   }, [next]);
 
-  // Progress bar animation
+  // Progress bar
   useEffect(() => {
     setProgress(0);
     const start = Date.now();
@@ -83,38 +79,39 @@ export default function HeroSection({ destinations, tours, cruises, departures }
       ref={containerRef}
       className="relative h-[600px] md:h-[680px] lg:h-[720px] flex items-center justify-center overflow-hidden bg-black"
     >
-      {/* Slideshow images — all stacked, cross-fade + slow Ken Burns zoom */}
+      {/* All slides stacked — CSS transition for silky crossfade + blur */}
       {slides.map((slide, i) => (
-        <motion.div
+        <div
           key={i}
-          animate={{
+          className="absolute inset-0 transition-[opacity,filter] duration-[1500ms] ease-in-out"
+          style={{
             opacity: i === current ? 1 : 0,
-            scale: i === current ? 1.08 : 1,
+            filter: i === current ? "blur(0px)" : "blur(18px)",
           }}
-          transition={{
-            opacity: { duration: 1.2, ease: "easeInOut" },
-            scale: { duration: 5.5, ease: "linear" },
-          }}
-          className="absolute inset-0"
-          style={{ y: imageY }}
         >
-          <Image
-            src={slide.image}
-            alt={slide.label}
-            fill
-            className="object-cover"
-            priority={i === 0}
-            sizes="100vw"
-          />
-        </motion.div>
+          {/* Inner div for Ken Burns zoom — animation restarts via key */}
+          <div
+            key={i === current ? zoomKey : `idle-${i}`}
+            className={i === current ? "hero-ken-burns" : ""}
+            style={{ position: "absolute", inset: 0 }}
+          >
+            <Image
+              src={slide.image}
+              alt={slide.label}
+              fill
+              className="object-cover"
+              priority={i === 0}
+              sizes="100vw"
+            />
+          </div>
+        </div>
       ))}
 
-      {/* Gradient overlay - stronger for text readability */}
+      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70 z-[1]" />
 
       {/* Content */}
       <div className="relative z-10 w-full flex flex-col items-center justify-center px-4 pt-16">
-        {/* Headline */}
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -143,7 +140,6 @@ export default function HeroSection({ destinations, tours, cruises, departures }
           Tour culturali, grandi itinerari e crociere fluviali
         </motion.p>
 
-        {/* Search bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -158,12 +154,12 @@ export default function HeroSection({ destinations, tours, cruises, departures }
           />
         </motion.div>
 
-        {/* Slide indicators + progress bar */}
+        {/* Slide indicators */}
         <div className="flex items-center gap-2 mt-8">
           {slides.map((_, i) => (
             <button
               key={i}
-              onClick={() => { setCurrent(i); setProgress(0); }}
+              onClick={() => { setCurrent(i); setZoomKey((k) => k + 1); setProgress(0); }}
               className="relative h-[3px] rounded-full overflow-hidden transition-all duration-300"
               style={{ width: i === current ? 48 : 24 }}
               aria-label={`Slide ${i + 1}`}

@@ -1,12 +1,13 @@
 "use client";
 
+import { useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Destination } from "@/lib/types";
 
 function CarouselTrack({ items }: { items: Destination[] }) {
   return (
-    <div className="flex shrink-0 animate-marquee">
+    <div className="flex shrink-0">
       {items.map((dest) => (
         <Link
           key={dest.slug}
@@ -38,12 +39,45 @@ function CarouselTrack({ items }: { items: Destination[] }) {
   );
 }
 
+const SPEED = 0.5; // px per frame at 60fps
+
 export default function DestinationsCarousel({
   destinations,
 }: {
   destinations: Destination[];
 }) {
   const items = destinations.slice(0, 14);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const hoveredRef = useRef(false);
+  const currentSpeedRef = useRef(SPEED);
+  const offsetRef = useRef(0);
+  const rafRef = useRef<number>(0);
+
+  const animate = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    // Ease speed towards target
+    const target = hoveredRef.current ? 0 : SPEED;
+    currentSpeedRef.current += (target - currentSpeedRef.current) * 0.04;
+
+    offsetRef.current += currentSpeedRef.current;
+
+    // Get width of one track copy (half of scrollWidth since we duplicate)
+    const halfWidth = track.scrollWidth / 2;
+    if (halfWidth > 0 && offsetRef.current >= halfWidth) {
+      offsetRef.current -= halfWidth;
+    }
+
+    track.style.transform = `translateX(-${offsetRef.current}px)`;
+    rafRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  useEffect(() => {
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [animate]);
+
   if (items.length === 0) return null;
 
   return (
@@ -55,20 +89,16 @@ export default function DestinationsCarousel({
         <div className="section-divider mb-0" />
       </div>
 
-      {/* Infinite marquee */}
+      {/* Infinite scroll — JS-driven for smooth deceleration on hover */}
       <div
-        className="flex overflow-hidden"
-        onMouseEnter={(e) => {
-          e.currentTarget.querySelectorAll<HTMLElement>(".animate-marquee")
-            .forEach((t) => (t.style.animationPlayState = "paused"));
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.querySelectorAll<HTMLElement>(".animate-marquee")
-            .forEach((t) => (t.style.animationPlayState = "running"));
-        }}
+        className="overflow-hidden"
+        onMouseEnter={() => { hoveredRef.current = true; }}
+        onMouseLeave={() => { hoveredRef.current = false; }}
       >
-        <CarouselTrack items={items} />
-        <CarouselTrack items={items} />
+        <div ref={trackRef} className="flex will-change-transform">
+          <CarouselTrack items={items} />
+          <CarouselTrack items={items} />
+        </div>
       </div>
 
       <div className="container mx-auto px-4">

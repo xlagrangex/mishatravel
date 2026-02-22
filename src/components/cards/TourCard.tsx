@@ -36,7 +36,7 @@ export default function TourCard({
       }).format(priceFrom);
 
   return (
-    <div className="group bg-white rounded-lg overflow-hidden shadow-sm card-hover border border-gray-100">
+    <div className="group bg-white rounded-lg overflow-hidden shadow-sm card-hover border border-gray-100 h-full flex flex-col">
       {/* Image */}
       <div className="relative aspect-video overflow-hidden">
         <Image
@@ -55,7 +55,7 @@ export default function TourCard({
       </div>
 
       {/* Content */}
-      <div className="p-4 flex flex-col gap-3">
+      <div className="p-4 flex flex-col gap-3 flex-1">
         <h3 className="font-semibold text-lg text-gray-900 font-[family-name:var(--font-poppins)] line-clamp-2">
           {title}
         </h3>
@@ -80,7 +80,7 @@ export default function TourCard({
         </div>
 
         {/* Price */}
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mt-auto">
           {prezzoSuRichiesta ? (
             <span className="font-bold text-[#C41E2F] text-base">
               Prezzo su richiesta
@@ -96,7 +96,7 @@ export default function TourCard({
         </p>
 
         {/* CTA */}
-        <Button asChild className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white mt-1">
+        <Button asChild className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white">
           <Link href={`/tours/${slug}`}>Scopri di Pi&ugrave;</Link>
         </Button>
       </div>

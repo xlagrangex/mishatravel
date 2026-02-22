@@ -237,6 +237,15 @@ html {
   animation: marquee 80s linear infinite;
 }
 
+/* Ken Burns slow zoom for hero slideshow */
+@keyframes hero-ken-burns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+.hero-ken-burns {
+  animation: hero-ken-burns 5.5s ease-out forwards;
+}
+
 /* Narrower container on desktop — outside @layer for higher specificity */
 .container {
   max-width: 1400px !important;
