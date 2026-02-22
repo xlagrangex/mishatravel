@@ -30,7 +30,7 @@
 | 6 | Area Riservata Agenzie | ✅ Completato | ██████████ 100% | Layout, dashboard, configuratori, richieste, offerte, estratto conto, profilo. |
 | 7 | Flusso Preventivi + Gestione Utenti | ✅ Completato | ██████████ 100% | Preventivi workflow completo, gestione agenzie, utenti e ruoli, sidebar permessi, notifiche. |
 | 8 | Email Transazionali (Brevo) | ✅ Completato | ██████████ 100% | brevo.ts + templates.ts + integrazione in 5 server actions. 11 template email. |
-| 9 | Migrazione Dati WordPress | 🟡 Parziale | ██░░░░░░░░ 15% | ACF export analizzato, mapping campi completato |
+| 9 | Migrazione Dati WordPress | 🟡 In corso | ████████░░ 80% | Dati importati in Supabase (31 dest, 9 navi, 34 tour, 28 crociere, 5 blog). Manca migrazione immagini su Storage. |
 | 10 | SEO, Performance, Deploy | 🟡 In corso | ████████░░ 60% | Task 10.1, 10.3, 10.4 completate. Solo 10.2 (redirect 301) e 10.5 (deploy) rimaste. |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 
@@ -157,13 +157,13 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 9.0 | Raccolta Credenziali/Dati WordPress | ✅ Parziale | 2026-02-21 | ACF export JSON fornito e analizzato |
-| 9.1 | Analisi struttura dati WP/ACF | ✅ Completata | 2026-02-21 | 5 field groups analizzati: Tours (19 campi), Crociere (22 campi), Imbarcazioni (8 campi), Destinazioni (1 campo), Estratti Conto (4 campi). Mapping ACF→Supabase completato. |
-| 9.2 | Script importazione Tour | ⚪ Da fare | - | |
-| 9.3 | Script importazione Crociere + Flotta | ⚪ Da fare | - | |
-| 9.4 | Script importazione Blog + Dest. + Cat. | ⚪ Da fare | - | |
-| 9.5 | Migrazione immagini | ⚪ Da fare | - | |
-| 9.6 | Verifica e correzioni post-import | ⚪ Da fare | - | |
+| 9.0 | Raccolta Credenziali/Dati WordPress | ✅ Completata | 2026-02-22 | XML export + ACF JSON + credenziali FTP Hostinger forniti |
+| 9.1 | Analisi struttura dati WP/ACF | ✅ Completata | 2026-02-22 | 5 field groups analizzati: Tours (19 campi), Crociere (22 campi), Imbarcazioni (8 campi), Destinazioni (1 campo), Estratti Conto (4 campi). Mapping ACF→Supabase completato. |
+| 9.2 | Script importazione Tour | ✅ Completata | 2026-02-22 | 34 tour importati con itinerario, hotel, partenze, supplementi, inclusi/esclusi, penali, termini, gallery, escursioni opzionali. 31/34 collegati a destinazione. |
+| 9.3 | Script importazione Crociere + Flotta | ✅ Completata | 2026-02-22 | 9 navi + 28 crociere importate. 25/28 crociere collegate a nave, 28/28 a destinazione. Sub-tabelle: cabine, itinerario, partenze (3 deck), supplementi, gallery. |
+| 9.4 | Script importazione Blog + Dest. + Cat. | ✅ Completata | 2026-02-22 | 31 destinazioni + 5 blog post + 3 categorie blog importati. Destinazioni con coordinate e macro area. |
+| 9.5 | Migrazione immagini | ⚪ Da fare | - | Immagini puntano ancora a WP URLs (funzionanti). Script pronto con flag --images per migrare a Supabase Storage. |
+| 9.6 | Verifica e correzioni post-import | ⚪ Da fare | - | Verificare dati dall'admin panel e sito pubblico. |
 
 ### SPRINT 10 - SEO, Performance, Deploy
 
