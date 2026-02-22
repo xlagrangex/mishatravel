@@ -1,13 +1,15 @@
 import CruiseForm from "@/components/admin/forms/CruiseForm";
 import { getShipOptions } from "@/lib/supabase/queries/ships";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
+import { getDistinctLocalities } from "@/lib/supabase/queries/localities";
 
 export const dynamic = "force-dynamic";
 
 export default async function NuovaCrocieraPage() {
-  const [ships, destinations] = await Promise.all([
+  const [ships, destinations, localities] = await Promise.all([
     getShipOptions(),
     getDestinationOptions(),
+    getDistinctLocalities(),
   ]);
 
   return (
@@ -21,7 +23,7 @@ export default async function NuovaCrocieraPage() {
         </p>
       </div>
 
-      <CruiseForm ships={ships} destinations={destinations} />
+      <CruiseForm ships={ships} destinations={destinations} localities={localities} />
     </div>
   );
 }

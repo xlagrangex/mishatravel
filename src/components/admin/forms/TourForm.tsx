@@ -89,8 +89,8 @@ const textItemSchema = z.object({
 
 const tourFormSchema = z.object({
   // Tab 1: Info Base
-  title: z.string().min(1, "Il titolo \u00E8 obbligatorio"),
-  slug: z.string().min(1, "Lo slug \u00E8 obbligatorio"),
+  title: z.string().min(1, "Il titolo è obbligatorio"),
+  slug: z.string().min(1, "Lo slug è obbligatorio"),
   destination_id: z.string().nullable(),
   a_partire_da: z.string().nullable(),
   prezzo_su_richiesta: z.boolean(),
@@ -463,7 +463,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
                   <Label htmlFor="a_partire_da">A Partire Da</Label>
                   <Input
                     id="a_partire_da"
-                    placeholder="es. 1.290\u20AC a persona"
+                    placeholder="es. 1.290€ a persona"
                     {...register("a_partire_da")}
                   />
                 </div>
@@ -659,14 +659,14 @@ export default function TourForm({ initialData, destinations = [], localities = 
                     <div className="space-y-2">
                       <Label>Numero Giorno</Label>
                       <Input
-                        placeholder="es. 1\u00B0 giorno"
+                        placeholder="es. 1° giorno"
                         {...register(
                           `itinerary_days.${index}.numero_giorno`,
                         )}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Localit\u00E0</Label>
+                      <Label>Località</Label>
                       <div className="flex gap-2">
                         <Controller
                           control={control}
@@ -685,11 +685,46 @@ export default function TourForm({ initialData, destinations = [], localities = 
                           onSelect={(result) => handleLocationSearch(index, result)}
                         />
                       </div>
-                      {locationsMap[watch(`itinerary_days.${index}.localita`)] && (
-                        <p className="text-xs text-muted-foreground">
-                          Coordinate: {locationsMap[watch(`itinerary_days.${index}.localita`)].lat.toFixed(4)}, {locationsMap[watch(`itinerary_days.${index}.localita`)].lng.toFixed(4)}
-                        </p>
-                      )}
+                      <div className="mt-1 grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Latitudine</Label>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="es. 37.9838"
+                            value={locationsMap[watch(`itinerary_days.${index}.localita`)]?.lat ?? ""}
+                            onChange={(e) => {
+                              const loc = watch(`itinerary_days.${index}.localita`);
+                              if (!loc) return;
+                              const val = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                              if (val !== undefined && isNaN(val)) return;
+                              setLocationsMap((prev) => ({
+                                ...prev,
+                                [loc]: { lat: val ?? 0, lng: prev[loc]?.lng ?? 0 },
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Longitudine</Label>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="es. 23.7275"
+                            value={locationsMap[watch(`itinerary_days.${index}.localita`)]?.lng ?? ""}
+                            onChange={(e) => {
+                              const loc = watch(`itinerary_days.${index}.localita`);
+                              if (!loc) return;
+                              const val = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                              if (val !== undefined && isNaN(val)) return;
+                              setLocationsMap((prev) => ({
+                                ...prev,
+                                [loc]: { lat: prev[loc]?.lat ?? 0, lng: val ?? 0 },
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -698,7 +733,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
                     <Label>Descrizione</Label>
                     <Textarea
                       rows={4}
-                      placeholder="Descrivi le attivit\u00E0 del giorno..."
+                      placeholder="Descrivi le attività del giorno..."
                       {...register(
                         `itinerary_days.${index}.descrizione`,
                       )}
@@ -729,13 +764,13 @@ export default function TourForm({ initialData, destinations = [], localities = 
                 }
               >
                 <Plus className="mr-2 size-4" />
-                Aggiungi Localit\u00E0
+                Aggiungi Località
               </Button>
             </CardHeader>
             <CardContent className="space-y-6">
               {hotelGroups.fields.length === 0 && (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  Nessun albergo aggiunto. Clicca &quot;Aggiungi Localit\u00E0&quot; per iniziare.
+                  Nessun albergo aggiunto. Clicca &quot;Aggiungi Località&quot; per iniziare.
                 </p>
               )}
 
@@ -825,7 +860,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
                         </Label>
                         <Input
                           type="number"
-                          placeholder="\u20AC"
+                          placeholder="€"
                           {...register(`departures.${index}.prezzo_3_stelle`, {
                             setValueAs: (v) =>
                               v === "" || v === null ? null : Number(v),
@@ -837,7 +872,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
                           Prezzo 4 Stelle
                         </Label>
                         <Input
-                          placeholder="\u20AC"
+                          placeholder="€"
                           {...register(`departures.${index}.prezzo_4_stelle`)}
                         />
                       </div>
@@ -898,7 +933,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
                     <div className="w-32 space-y-1">
                       <Label className="text-xs">Prezzo</Label>
                       <Input
-                        placeholder="\u20AC"
+                        placeholder="€"
                         {...register(`supplements.${index}.prezzo`)}
                       />
                     </div>
@@ -974,10 +1009,10 @@ export default function TourForm({ initialData, destinations = [], localities = 
                         />
                       </div>
                       <div className="w-32 space-y-2">
-                        <Label>Prezzo (\u20AC)</Label>
+                        <Label>Prezzo (€)</Label>
                         <Input
                           type="number"
-                          placeholder="\u20AC"
+                          placeholder="€"
                           {...register(
                             `optional_excursions.${index}.prezzo`,
                             {
@@ -1325,7 +1360,7 @@ function HotelGroupSection({
     <div className="rounded-lg border bg-muted/30 p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex-1 space-y-2">
-          <Label>Localit\u00E0</Label>
+          <Label>Località</Label>
           <Input
             placeholder="es. Atene"
             {...register(`hotel_groups.${groupIndex}.localita`)}
@@ -1362,7 +1397,7 @@ function HotelGroupSection({
 
         {hotels.fields.length === 0 && (
           <p className="py-2 text-xs text-muted-foreground">
-            Nessun albergo per questa localit\u00E0.
+            Nessun albergo per questa località.
           </p>
         )}
 

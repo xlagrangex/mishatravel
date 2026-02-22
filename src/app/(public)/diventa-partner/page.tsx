@@ -22,10 +22,10 @@ const steps = [
 ];
 
 const faq = [
-  { q: "Quali sono i requisiti per diventare partner?", a: "Cerchiamo agenzie serie e motivate a offrire un servizio di qualit\u00e0. Non ci sono requisiti di fatturato minimo: valutiamo ogni potenziale partner per la professionalit\u00e0 e la condivisione dei nostri valori." },
+  { q: "Quali sono i requisiti per diventare partner?", a: "Cerchiamo agenzie serie e motivate a offrire un servizio di qualità. Non ci sono requisiti di fatturato minimo: valutiamo ogni potenziale partner per la professionalità e la condivisione dei nostri valori." },
   { q: "Come sono strutturate le commissioni?", a: "Offriamo condizioni commerciali trasparenti e competitive. Le commissioni variano in base al tipo di servizio e al volume di collaborazione. Tutti i dettagli vengono chiariti durante il primo incontro." },
   { q: "Quale supporto ricevono i partner?", a: "Ogni partner ha un referente dedicato e accesso ai nostri strumenti professionali. Organizziamo anche incontri formativi periodici per mantenervi sempre aggiornati." },
-  { q: "\u00C8 possibile personalizzare i viaggi?", a: "Certamente. Una delle nostre peculiarit\u00e0 \u00e8 proprio la capacit\u00e0 di adattare le proposte alle esigenze specifiche dei clienti finali." },
+  { q: "È possibile personalizzare i viaggi?", a: "Certamente. Una delle nostre peculiarità è proprio la capacità di adattare le proposte alle esigenze specifiche dei clienti finali." },
 ];
 
 export default function DiventaPartnerPage() {
@@ -95,8 +95,8 @@ export default function DiventaPartnerPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { name: "Agenzia Viaggi Roma", text: "Collaboriamo con Misha Travel da 3 anni. I loro prodotti si vendono da soli e il supporto \u00e8 sempre impeccabile.", role: "Direttore" },
-              { name: "Turismo & Cultura Napoli", text: "I fam trip organizzati da Misha Travel sono un'opportunit\u00e0 straordinaria per conoscere i prodotti e le destinazioni.", role: "Responsabile Vendite" },
+              { name: "Agenzia Viaggi Roma", text: "Collaboriamo con Misha Travel da 3 anni. I loro prodotti si vendono da soli e il supporto è sempre impeccabile.", role: "Direttore" },
+              { name: "Turismo & Cultura Napoli", text: "I fam trip organizzati da Misha Travel sono un'opportunità straordinaria per conoscere i prodotti e le destinazioni.", role: "Responsabile Vendite" },
               { name: "Mondo Viaggi Milano", text: "Le commissioni competitive e il portale B2B intuitivo rendono Misha Travel il partner ideale per la nostra agenzia.", role: "Titolare" },
             ].map((t) => (
               <div key={t.name} className="bg-white rounded-lg p-6 border border-gray-100">

@@ -24,6 +24,7 @@ import type { LocationSearchResult } from "@/components/admin/LocationSearchPopo
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Autocomplete } from "@/components/ui/autocomplete";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -86,8 +87,8 @@ const galleryItemSchema = z.object({
 
 const cruiseFormSchema = z.object({
   // Tab 1: Info Base
-  title: z.string().min(1, "Il titolo \u00E8 obbligatorio"),
-  slug: z.string().min(1, "Lo slug \u00E8 obbligatorio"),
+  title: z.string().min(1, "Il titolo è obbligatorio"),
+  slug: z.string().min(1, "Lo slug è obbligatorio"),
   ship_id: z.string().nullable(),
   destination_id: z.string().nullable(),
   tipo_crociera: z.enum(["Crociera di Gruppo", "Crociera"]).nullable(),
@@ -154,13 +155,14 @@ interface CruiseFormProps {
   initialData?: CruiseWithRelations;
   ships?: { id: string; name: string }[];
   destinations?: { id: string; name: string; slug: string; coordinate: string | null }[];
+  localities?: string[];
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export default function CruiseForm({ initialData, ships = [], destinations = [] }: CruiseFormProps) {
+export default function CruiseForm({ initialData, ships = [], destinations = [], localities = [] }: CruiseFormProps) {
   // ---------------------------------------------------------------------------
   // Form setup
   // ---------------------------------------------------------------------------
@@ -538,7 +540,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                   <Label htmlFor="a_partire_da">A Partire Da</Label>
                   <Input
                     id="a_partire_da"
-                    placeholder="es. 1.490\u20AC a persona"
+                    placeholder="es. 1.490€ a persona"
                     {...register("a_partire_da")}
                   />
                 </div>
@@ -786,19 +788,25 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                     <div className="space-y-2">
                       <Label>Numero Giorno</Label>
                       <Input
-                        placeholder="es. 1\u00B0 giorno"
+                        placeholder="es. 1° giorno"
                         {...register(
                           `itinerary_days.${index}.numero_giorno`,
                         )}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Localit\u00E0</Label>
+                      <Label>Località</Label>
                       <div className="flex gap-2">
-                        <Input
-                          placeholder="es. Budapest"
-                          {...register(
-                            `itinerary_days.${index}.localita`,
+                        <Controller
+                          control={control}
+                          name={`itinerary_days.${index}.localita`}
+                          render={({ field }) => (
+                            <Autocomplete
+                              value={field.value}
+                              onChange={field.onChange}
+                              suggestions={localities}
+                              placeholder="es. Budapest"
+                            />
                           )}
                         />
                         <LocationSearchPopover
@@ -806,11 +814,46 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                           onSelect={(result) => handleLocationSearch(index, result)}
                         />
                       </div>
-                      {locationsMap[watch(`itinerary_days.${index}.localita`)] && (
-                        <p className="text-xs text-muted-foreground">
-                          Coordinate: {locationsMap[watch(`itinerary_days.${index}.localita`)].lat.toFixed(4)}, {locationsMap[watch(`itinerary_days.${index}.localita`)].lng.toFixed(4)}
-                        </p>
-                      )}
+                      <div className="mt-1 grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Latitudine</Label>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="es. 37.9838"
+                            value={locationsMap[watch(`itinerary_days.${index}.localita`)]?.lat ?? ""}
+                            onChange={(e) => {
+                              const loc = watch(`itinerary_days.${index}.localita`);
+                              if (!loc) return;
+                              const val = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                              if (val !== undefined && isNaN(val)) return;
+                              setLocationsMap((prev) => ({
+                                ...prev,
+                                [loc]: { lat: val ?? 0, lng: prev[loc]?.lng ?? 0 },
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Longitudine</Label>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="es. 23.7275"
+                            value={locationsMap[watch(`itinerary_days.${index}.localita`)]?.lng ?? ""}
+                            onChange={(e) => {
+                              const loc = watch(`itinerary_days.${index}.localita`);
+                              if (!loc) return;
+                              const val = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                              if (val !== undefined && isNaN(val)) return;
+                              setLocationsMap((prev) => ({
+                                ...prev,
+                                [loc]: { lat: prev[loc]?.lat ?? 0, lng: val ?? 0 },
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -818,7 +861,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                     <Label>Descrizione</Label>
                     <Textarea
                       rows={4}
-                      placeholder="Descrivi le attivit\u00E0 del giorno..."
+                      placeholder="Descrivi le attività del giorno..."
                       {...register(
                         `itinerary_days.${index}.descrizione`,
                       )}
@@ -862,7 +905,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                 <div className="space-y-4">
                   {/* Column headers (visible on sm+) */}
                   <div className="hidden gap-4 sm:grid sm:grid-cols-[1fr_1fr_1fr_auto]">
-                    <Label className="text-xs text-muted-foreground">Localit\u00E0</Label>
+                    <Label className="text-xs text-muted-foreground">Località</Label>
                     <Label className="text-xs text-muted-foreground">
                       Tipologia Camera
                     </Label>
@@ -878,7 +921,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                       className="grid gap-4 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:border-0 sm:p-0"
                     >
                       <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">Localit\u00E0</Label>
+                        <Label className="text-xs sm:hidden">Località</Label>
                         <Input
                           placeholder="es. Ponte Principale"
                           {...register(`cabins.${index}.localita`)}
@@ -996,7 +1039,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                         </Label>
                         <Input
                           type="number"
-                          placeholder="\u20AC"
+                          placeholder="€"
                           {...register(`departures.${index}.prezzo_main_deck`, {
                             setValueAs: (v) =>
                               v === "" || v === null ? null : Number(v),
@@ -1008,7 +1051,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                           Middle Deck
                         </Label>
                         <Input
-                          placeholder="\u20AC"
+                          placeholder="€"
                           {...register(`departures.${index}.prezzo_middle_deck`)}
                         />
                       </div>
@@ -1017,7 +1060,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                           Superior Deck
                         </Label>
                         <Input
-                          placeholder="\u20AC"
+                          placeholder="€"
                           {...register(`departures.${index}.prezzo_superior_deck`)}
                         />
                       </div>
@@ -1076,7 +1119,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [] 
                   <div className="w-32 space-y-1">
                     <Label className="text-xs">Prezzo</Label>
                     <Input
-                      placeholder="\u20AC"
+                      placeholder="€"
                       {...register(`supplements.${index}.prezzo`)}
                     />
                   </div>

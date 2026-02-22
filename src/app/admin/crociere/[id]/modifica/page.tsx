@@ -3,6 +3,7 @@ import CruiseForm from "@/components/admin/forms/CruiseForm";
 import { getCruiseById } from "@/lib/supabase/queries/cruises";
 import { getShipOptions } from "@/lib/supabase/queries/ships";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
+import { getDistinctLocalities } from "@/lib/supabase/queries/localities";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,11 @@ interface ModificaCrocieraPageProps {
 export default async function ModificaCrocieraPage({ params }: ModificaCrocieraPageProps) {
   const { id } = await params;
 
-  const [cruise, ships, destinations] = await Promise.all([
+  const [cruise, ships, destinations, localities] = await Promise.all([
     getCruiseById(id),
     getShipOptions(),
     getDestinationOptions(),
+    getDistinctLocalities(),
   ]);
 
   if (!cruise) notFound();
@@ -32,7 +34,7 @@ export default async function ModificaCrocieraPage({ params }: ModificaCrocieraP
         </p>
       </div>
 
-      <CruiseForm initialData={cruise} ships={ships} destinations={destinations} />
+      <CruiseForm initialData={cruise} ships={ships} destinations={destinations} localities={localities} />
     </div>
   );
 }

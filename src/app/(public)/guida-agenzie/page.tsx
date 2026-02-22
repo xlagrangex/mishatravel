@@ -132,7 +132,7 @@ export default function GuidaAgenziePage() {
               {
                 step: "3",
                 title: "Invia la richiesta",
-                desc: "Dopo aver compilato il modulo, riceverai un'email di conferma ricezione. Il nostro team verificher\u00e0 i dati entro 24-48 ore lavorative.",
+                desc: "Dopo aver compilato il modulo, riceverai un'email di conferma ricezione. Il nostro team verificherà i dati entro 24-48 ore lavorative.",
               },
               {
                 step: "4",
@@ -251,7 +251,7 @@ export default function GuidaAgenziePage() {
                 {
                   num: "3",
                   title: "Richiedi il preventivo",
-                  desc: "Clicca su \"Richiedi Preventivo\" nella scheda prodotto. Se sei loggato verrai portato direttamente al riepilogo; altrimenti ti sar\u00e0 chiesto di effettuare il login.",
+                  desc: "Clicca su \"Richiedi Preventivo\" nella scheda prodotto. Se sei loggato verrai portato direttamente al riepilogo; altrimenti ti sarà chiesto di effettuare il login.",
                 },
                 {
                   num: "4",
@@ -266,7 +266,7 @@ export default function GuidaAgenziePage() {
                 {
                   num: "6",
                   title: "Ricevi il preventivo",
-                  desc: "Il nostro booking team ti invier\u00e0 il preventivo dettagliato, scaricabile in PDF dalla tua area riservata. Da l\u00ec potrai confermare la prenotazione.",
+                  desc: "Il nostro booking team ti invierà il preventivo dettagliato, scaricabile in PDF dalla tua area riservata. Da lì potrai confermare la prenotazione.",
                 },
               ].map((step) => (
                 <div key={step.num} className="flex gap-5 relative">
