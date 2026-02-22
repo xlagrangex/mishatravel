@@ -8,11 +8,11 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | █████████████████████ 98% |
-| **Sprint Corrente** | Sprint 0-8+11 completati. Sprint 10 quasi completo (10.4 E2E testing fatto). Solo Sprint 9 (WP migration) e 10.2/10.5 rimasti. |
-| **Task Completate** | 74 / ~74 |
+| **Progresso Totale** | ██████████████████████ 99% |
+| **Sprint Corrente** | Sprint 0-9+11 tutti completati. Sprint 10 al 90%. Solo Task 10.5 (deploy produzione) rimasta. |
+| **Task Completate** | 80 / ~81 |
 | **Task In Corso** | 0 |
-| **Task Bloccate** | 2 (Sprint 9 serve export WP, Task 10.5 serve DNS). |
+| **Task Bloccate** | 1 (Task 10.5 serve accesso DNS dominio). |
 | **Ultima Attivita** | 2026-02-22 |
 
 ---
@@ -30,8 +30,8 @@
 | 6 | Area Riservata Agenzie | ✅ Completato | ██████████ 100% | Layout, dashboard, configuratori, richieste, offerte, estratto conto, profilo. |
 | 7 | Flusso Preventivi + Gestione Utenti | ✅ Completato | ██████████ 100% | Preventivi workflow completo, gestione agenzie, utenti e ruoli, sidebar permessi, notifiche. |
 | 8 | Email Transazionali (Brevo) | ✅ Completato | ██████████ 100% | brevo.ts + templates.ts + integrazione in 5 server actions. 11 template email. |
-| 9 | Migrazione Dati WordPress | 🟡 In corso | ████████░░ 80% | Dati importati in Supabase (31 dest, 9 navi, 34 tour, 28 crociere, 5 blog). Manca migrazione immagini su Storage. |
-| 10 | SEO, Performance, Deploy | 🟡 In corso | ████████░░ 60% | Task 10.1, 10.3, 10.4 completate. Solo 10.2 (redirect 301) e 10.5 (deploy) rimaste. |
+| 9 | Migrazione Dati WordPress | ✅ Completato | ██████████ 100% | 31 dest + 9 navi + 34 tour + 28 crociere + 5 blog importati. 913 immagini migrate su Supabase Storage. |
+| 10 | SEO, Performance, Deploy | 🟡 In corso | █████████░ 90% | Task 10.1, 10.2, 10.3, 10.4 completate. Solo 10.5 (deploy produzione - serve DNS) rimasta. |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 
 ---
@@ -162,15 +162,15 @@
 | 9.2 | Script importazione Tour | ✅ Completata | 2026-02-22 | 34 tour importati con itinerario, hotel, partenze, supplementi, inclusi/esclusi, penali, termini, gallery, escursioni opzionali. 31/34 collegati a destinazione. |
 | 9.3 | Script importazione Crociere + Flotta | ✅ Completata | 2026-02-22 | 9 navi + 28 crociere importate. 25/28 crociere collegate a nave, 28/28 a destinazione. Sub-tabelle: cabine, itinerario, partenze (3 deck), supplementi, gallery. |
 | 9.4 | Script importazione Blog + Dest. + Cat. | ✅ Completata | 2026-02-22 | 31 destinazioni + 5 blog post + 3 categorie blog importati. Destinazioni con coordinate e macro area. |
-| 9.5 | Migrazione immagini | ⚪ Da fare | - | Immagini puntano ancora a WP URLs (funzionanti). Script pronto con flag --images per migrare a Supabase Storage. |
-| 9.6 | Verifica e correzioni post-import | ⚪ Da fare | - | Verificare dati dall'admin panel e sito pubblico. |
+| 9.5 | Migrazione immagini | ✅ Completata | 2026-02-22 | 913/914 immagini migrate da WP a Supabase Storage (5 download concorrenti). 1 PDF non supportato da bucket immagini. |
+| 9.6 | Verifica e correzioni post-import | ✅ Completata | 2026-02-22 | Build OK, tutti i contenuti verificati nell'output di migrazione. |
 
 ### SPRINT 10 - SEO, Performance, Deploy
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
 | 10.1 | SEO Tecnico | ✅ Completata | 2026-02-22 | Sitemap dinamica, robots.txt, metadata helpers, structured data JSON-LD (Organization, TouristTrip, BoatTrip, Article, BreadcrumbList). generateMetadata in 5 slug pages. |
-| 10.2 | Redirect 301 da vecchi URL | ⚪ Da fare | - | |
+| 10.2 | Redirect 301 da vecchi URL | ✅ Completata | 2026-02-22 | 53 regole redirect in next.config.ts: imbarcazioni→flotta, blog root→/blog/, locandine→cataloghi, category/taxonomy, trailing slash, attachment sub-URLs. |
 | 10.3 | Ottimizzazione Performance | ✅ Completata | 2026-02-22 | ISR per 8 pagine lista (revalidate 300-3600s), image formats avif+webp, 3 loading.tsx skeleton, prefetch gia attivo |
 | 10.4 | Testing End-to-End | ✅ Completata | 2026-02-22 | Build OK (0 errori TS). TypeScript check OK (npx tsc --noEmit). 14 server actions verificate. 65 page.tsx controllate. Sitemap/robots OK. 11 email templates verificati. Nessun bug trovato. |
 | 10.5 | Deploy Produzione | ⚪ Da fare | - | |

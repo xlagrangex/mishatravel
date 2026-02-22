@@ -267,11 +267,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 0-8+11 completati. Sprint 9 all'80% (dati importati, manca immagini). Sprint 10 quasi completo.
-- **Ultima azione**: Sprint 9 - Migrazione WordPress completata. Script `migrate-wp.ts` creato e eseguito: 31 destinazioni, 9 navi, 34 tour, 28 crociere, 5 blog importati in Supabase con tutte le sotto-tabelle (itinerario, hotel, partenze, supplementi, cabine, gallery, ecc). Credenziali FTP Hostinger salvate.
-- **Prossimo step**: Task 9.5 (migrazione immagini su Supabase Storage), Task 9.6 (verifica post-import), Task 10.2 (redirect 301), Task 10.5 (deploy produzione - serve DNS)
+- **Sprint corrente**: Sprint 0-9+11 tutti completati. Sprint 10 al 90%.
+- **Ultima azione**: Sprint 9 completato al 100%. Migrazione WordPress→Supabase completa: 31 destinazioni, 9 navi, 34 tour, 28 crociere, 5 blog + 913 immagini migrate su Supabase Storage. 53 regole redirect 301 in next.config.ts per preservare SEO.
+- **Prossimo step**: Task 10.5 (deploy produzione su Vercel - serve accesso DNS dominio)
 - **Bloccanti**: Task 10.5 bloccata da accesso DNS dominio.
-- **Progresso totale**: ~99% (78/~80 task completate). Rimangono: migrazione immagini, verifica, redirect 301, deploy.
+- **Progresso totale**: 99% (80/~81 task completate). Solo deploy produzione rimasto.
 
 ---
 
