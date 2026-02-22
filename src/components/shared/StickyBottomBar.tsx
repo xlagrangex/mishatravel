@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { formatPrice } from "@/lib/filters";
 
 interface StickyBottomBarProps {
   price: number;
   label?: string;
-  href?: string;
+  onClick: () => void;
 }
 
-export default function StickyBottomBar({ price, label = "Richiedi Preventivo", href = "/contatti" }: StickyBottomBarProps) {
+export default function StickyBottomBar({ price, label = "Richiedi Preventivo", onClick }: StickyBottomBarProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -33,12 +32,12 @@ export default function StickyBottomBar({ price, label = "Richiedi Preventivo", 
           <span className="text-xl font-bold text-[#C41E2F] ml-1">{formatPrice(price)}</span>
           <span className="text-xs text-gray-500 ml-1">/ pers.</span>
         </div>
-        <Link
-          href={href}
+        <button
+          onClick={onClick}
           className="px-5 py-2.5 bg-[#C41E2F] hover:bg-[#A31825] text-white font-semibold rounded-lg text-sm transition-colors"
         >
           {label}
-        </Link>
+        </button>
       </div>
     </div>
   );

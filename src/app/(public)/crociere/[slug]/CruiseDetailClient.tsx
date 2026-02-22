@@ -411,7 +411,7 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
       )}
 
       {/* Sticky Bottom Bar (mobile) */}
-      {priceNum && <StickyBottomBar price={priceNum} />}
+      {priceNum && <StickyBottomBar price={priceNum} onClick={() => openConfigurator()} />}
 
       {/* CruiseConfigurator Dialog (controlled) */}
       <CruiseConfigurator

@@ -91,7 +91,8 @@ async function deduplicateGallery(cfg: GalleryTable): Promise<number> {
     if (remaining) {
       const byParent = new Map<string, string[]>();
       for (const r of remaining) {
-        const pid = r[cfg.parentCol];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pid = (r as any)[cfg.parentCol] as string;
         const existing = byParent.get(pid);
         if (existing) {
           existing.push(r.id);

@@ -409,7 +409,7 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
       )}
 
       {/* Sticky Bottom Bar (mobile) */}
-      {priceNum && <StickyBottomBar price={priceNum} />}
+      {priceNum && <StickyBottomBar price={priceNum} onClick={() => openConfigurator()} />}
 
       {/* TourConfigurator Dialog (controlled) */}
       <TourConfigurator
