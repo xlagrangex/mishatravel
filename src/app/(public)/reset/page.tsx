@@ -178,7 +178,7 @@ function RequestResetView() {
 }
 
 // --------------------------------------------------------------------------
-// Update Password View
+// Update Password View (shown after token verification)
 // --------------------------------------------------------------------------
 
 function UpdatePasswordView() {
@@ -331,21 +331,112 @@ function UpdatePasswordView() {
 
 function ResetPasswordInner() {
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode");
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
+
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   useEffect(() => {
-    // When the user arrives from the password reset email, Supabase sets the
-    // session automatically via the URL hash. We detect update mode from the
-    // query parameter we set in redirectTo.
-    setIsUpdateMode(mode === "update");
-  }, [mode]);
+    // When the user arrives from the email link, verify the token_hash
+    // to establish a recovery session, then show the password update form.
+    if (!tokenHash || type !== "recovery") return;
 
+    let cancelled = false;
+
+    async function verifyToken() {
+      setVerifying(true);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash!,
+          type: "recovery",
+        });
+
+        if (cancelled) return;
+
+        if (error) {
+          console.error("[Password Reset] verifyOtp error:", error.message);
+          setVerifyError(
+            "Il link di recupero non è valido o è scaduto. Richiedi un nuovo link."
+          );
+        } else {
+          setVerified(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setVerifyError("Errore durante la verifica. Riprova più tardi.");
+        }
+      } finally {
+        if (!cancelled) setVerifying(false);
+      }
+    }
+
+    verifyToken();
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenHash, type]);
+
+  // Token verification in progress
+  if (tokenHash && type === "recovery" && verifying) {
+    return (
+      <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8 text-center">
+            <Loader2 className="size-8 animate-spin text-[#C41E2F] mx-auto mb-4" />
+            <p className="text-sm text-gray-600">Verifica in corso...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Token verification failed
+  if (tokenHash && type === "recovery" && verifyError) {
+    return (
+      <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8 text-center">
+            <AlertCircle className="size-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
+              Link non valido
+            </h2>
+            <p className="text-gray-600 text-sm mb-6">{verifyError}</p>
+            <Link href="/reset">
+              <Button
+                className="bg-[#C41E2F] hover:bg-[#A31825] text-white"
+                size="lg"
+              >
+                Richiedi nuovo link
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Token verified: show password update form
+  if (verified) {
+    return (
+      <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+            <UpdatePasswordView />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Default: show request reset form
   return (
     <section className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
-          {isUpdateMode ? <UpdatePasswordView /> : <RequestResetView />}
+          <RequestResetView />
         </div>
       </div>
     </section>

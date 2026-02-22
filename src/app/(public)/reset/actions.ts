@@ -21,9 +21,6 @@ export async function requestPasswordReset(
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: {
-        redirectTo: `${SITE_URL}/reset?mode=update`,
-      },
     });
 
     if (error) {
@@ -32,16 +29,21 @@ export async function requestPasswordReset(
       return { success: true };
     }
 
-    if (!data?.properties?.action_link) {
-      console.error("[Password Reset] No action_link returned");
+    const tokenHash = data?.properties?.hashed_token;
+    if (!tokenHash) {
+      console.error("[Password Reset] No hashed_token returned");
       return { success: true };
     }
+
+    // Build a direct link to our site with token_hash as query param.
+    // The client will use verifyOtp to exchange the token for a session.
+    const resetLink = `${SITE_URL}/reset?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
 
     // Send branded email via Brevo
     const emailSent = await sendTransactionalEmail(
       { email, name: email },
       "Recupero password - MishaTravel",
-      passwordResetEmail(data.properties.action_link)
+      passwordResetEmail(resetLink)
     );
 
     if (!emailSent) {
