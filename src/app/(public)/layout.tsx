@@ -26,12 +26,31 @@ export default async function PublicLayout({
     displayName = agency?.business_name ?? undefined;
   }
 
-  // Group destinations by macro_area for the mega menu
-  const destinationsByArea: Record<string, { name: string; slug: string }[]> = {};
+  // Group destinations by macro_area for the mega menu (ordered)
+  const AREA_ORDER = [
+    "Europa",
+    "Medio Oriente",
+    "Asia",
+    "Asia Centrale",
+    "Africa",
+    "America Latina",
+    "Percorsi Fluviali",
+  ];
+  const groupedRaw: Record<string, { name: string; slug: string }[]> = {};
   for (const dest of destinations) {
     const area = dest.macro_area ?? "Altro";
-    if (!destinationsByArea[area]) destinationsByArea[area] = [];
-    destinationsByArea[area].push({ name: dest.name, slug: dest.slug });
+    if (!groupedRaw[area]) groupedRaw[area] = [];
+    groupedRaw[area].push({ name: dest.name, slug: dest.slug });
+  }
+  const destinationsByArea: Record<string, { name: string; slug: string }[]> = {};
+  for (const area of AREA_ORDER) {
+    if (groupedRaw[area]?.length) destinationsByArea[area] = groupedRaw[area];
+  }
+  // Add any remaining areas not in the predefined order
+  for (const area of Object.keys(groupedRaw)) {
+    if (!destinationsByArea[area] && groupedRaw[area].length) {
+      destinationsByArea[area] = groupedRaw[area];
+    }
   }
 
   return (

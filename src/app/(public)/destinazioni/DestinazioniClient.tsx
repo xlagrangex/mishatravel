@@ -9,12 +9,12 @@ import type { Destination } from "@/lib/types";
 // Areas not listed here get a fallback icon and no description.
 const AREA_CONFIG: Record<string, { icon: string; description: string }> = {
   "Europa": { icon: "\u{1F3DB}", description: "Capitali imperiali, borghi medievali e sapori mediterranei nel cuore del Vecchio Continente." },
-  "America Latina": { icon: "\u{1F30E}", description: "Dalle Ande alla Patagonia, un continente di contrasti e meraviglie naturali." },
-  "Asia": { icon: "\u{1F3EF}", description: "Templi millenari, steppe infinite e culture che affascinano da sempre." },
-  "Russia": { icon: "\u{1F3EF}", description: "Dalla Transiberiana alle cupole dorate, un viaggio senza confini." },
-  "Africa": { icon: "\u{1F30D}", description: "Safari, deserti e tradizioni ancestrali nel continente piu selvaggio." },
-  "I nostri fiumi": { icon: "\u{1F6A2}", description: "Crociere lungo i grandi fiumi d'Europa tra castelli, vigneti e citta storiche." },
   "Medio Oriente": { icon: "\u{1F54C}", description: "Crocevia di civilta millenarie, dalla Turchia alla Giordania." },
+  "Asia": { icon: "\u{1F3EF}", description: "Templi millenari, culture millenarie e paesaggi che tolgono il fiato." },
+  "Asia Centrale": { icon: "\u{1F3EF}", description: "Dalla Transiberiana alla Via della Seta, un viaggio tra steppe, cupole dorate e culture senza confini." },
+  "Africa": { icon: "\u{1F30D}", description: "Safari, deserti e tradizioni ancestrali nel continente piu selvaggio." },
+  "America Latina": { icon: "\u{1F30E}", description: "Dalle Ande alla Patagonia, un continente di contrasti e meraviglie naturali." },
+  "Percorsi Fluviali": { icon: "\u{1F6A2}", description: "Crociere lungo i grandi fiumi d'Europa tra castelli, vigneti e citta storiche." },
   "Altro": { icon: "\u{2708}\u{FE0F}", description: "Altre destinazioni selezionate per te." },
 };
 const FALLBACK_ICON = "\u{1F30F}";

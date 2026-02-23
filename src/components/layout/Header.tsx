@@ -84,37 +84,48 @@ export default function Header({ destinationsByArea }: Props) {
                 {/* Mega Menu Dropdown */}
                 {megaMenuOpen && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 w-[820px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50">
-                    <div className="p-6">
-                      <div
-                        className="grid gap-6"
-                        style={{
-                          gridTemplateColumns: `repeat(${Math.min(macroAreas.length, 5)}, minmax(0, 1fr))`,
-                        }}
-                      >
-                        {macroAreas.map((area) => (
-                          <div key={area}>
-                            <h4 className="font-semibold text-[#C41E2F] text-xs uppercase tracking-wider mb-3 font-[family-name:var(--font-poppins)]">
+                    <div className="px-6 pt-5 pb-4" style={{ columns: Math.min(macroAreas.length, 4), columnGap: "1.5rem" }}>
+                      {macroAreas.map((area) => {
+                        const isFluviali = area === "Percorsi Fluviali";
+                        return (
+                          <div key={area} className="break-inside-avoid mb-4">
+                            <h4
+                              className={cn(
+                                "font-semibold text-xs uppercase tracking-wider mb-1.5 font-[family-name:var(--font-poppins)]",
+                                isFluviali ? "text-[#1B6FA8]" : "text-[#C41E2F]"
+                              )}
+                            >
                               {area}
                             </h4>
-                            <ul className="space-y-1">
+                            <ul className="space-y-0.5">
                               {destinationsByArea[area].map((dest) => (
                                 <li key={dest.slug}>
                                   <Link
                                     href={`/destinazioni/${dest.slug}`}
-                                    className="group/link flex items-center gap-1.5 text-sm text-gray-600 hover:text-[#C41E2F] transition-colors py-0.5"
+                                    className={cn(
+                                      "group/link flex items-center gap-1.5 text-sm text-gray-600 transition-colors py-0.5",
+                                      isFluviali
+                                        ? "hover:text-[#1B6FA8]"
+                                        : "hover:text-[#C41E2F]"
+                                    )}
                                   >
-                                    <ChevronRight className="size-3 opacity-0 -ml-4 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-200 text-[#C41E2F]" />
+                                    <ChevronRight
+                                      className={cn(
+                                        "size-3 opacity-0 -ml-4 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-200",
+                                        isFluviali ? "text-[#1B6FA8]" : "text-[#C41E2F]"
+                                      )}
+                                    />
                                     {dest.name}
                                   </Link>
                                 </li>
                               ))}
                             </ul>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
                     {/* Footer with CTA */}
-                    <div className="bg-gray-50 px-6 py-3.5 flex items-center justify-between border-t border-gray-100">
+                    <div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-100">
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <MapPin className="size-4 text-[#C41E2F]" />
                         <span>{Object.values(destinationsByArea).flat().length} destinazioni disponibili</span>
@@ -182,25 +193,38 @@ export default function Header({ destinationsByArea }: Props) {
                     </button>
                     {mobileDestOpen && (
                       <div className="bg-gray-50 py-2">
-                        {macroAreas.map((area) => (
-                          <div key={area} className="px-4 py-2">
-                            <p className="text-xs font-semibold text-[#C41E2F] uppercase tracking-wider mb-1">
-                              {area}
-                            </p>
-                            <div className="flex flex-wrap gap-x-3 gap-y-1">
-                              {destinationsByArea[area].map((dest) => (
-                                <SheetClose asChild key={dest.slug}>
-                                  <Link
-                                    href={`/destinazioni/${dest.slug}`}
-                                    className="text-sm text-gray-600 hover:text-[#C41E2F] transition-colors"
-                                  >
-                                    {dest.name}
-                                  </Link>
-                                </SheetClose>
-                              ))}
+                        {macroAreas.map((area) => {
+                          const isFluviali = area === "Percorsi Fluviali";
+                          return (
+                            <div key={area} className="px-4 py-2">
+                              <p
+                                className={cn(
+                                  "text-xs font-semibold uppercase tracking-wider mb-1",
+                                  isFluviali ? "text-[#1B6FA8]" : "text-[#C41E2F]"
+                                )}
+                              >
+                                {area}
+                              </p>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                {destinationsByArea[area].map((dest) => (
+                                  <SheetClose asChild key={dest.slug}>
+                                    <Link
+                                      href={`/destinazioni/${dest.slug}`}
+                                      className={cn(
+                                        "text-sm text-gray-600 transition-colors",
+                                        isFluviali
+                                          ? "hover:text-[#1B6FA8]"
+                                          : "hover:text-[#C41E2F]"
+                                      )}
+                                    >
+                                      {dest.name}
+                                    </Link>
+                                  </SheetClose>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                         <div className="px-4 pt-2 pb-1">
                           <SheetClose asChild>
                             <Link

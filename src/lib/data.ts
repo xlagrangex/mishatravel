@@ -8,9 +8,11 @@
 
 export type MacroArea =
   | "Europa"
-  | "America Latina"
-  | "Asia/Russia"
+  | "Medio Oriente"
+  | "Asia"
+  | "Asia Centrale"
   | "Africa"
+  | "America Latina"
   | "Percorsi Fluviali";
 
 export interface Destination {
@@ -168,10 +170,11 @@ export const destinations: Destination[] = [
     description:
       "Cracovia, Varsavia e le miniere di sale: scopri il fascino dell'Europa centro-orientale.",
   },
+  // Medio Oriente
   {
     slug: "turchia",
     name: "Turchia",
-    macroArea: "Europa",
+    macroArea: "Medio Oriente",
     image: "/images/destinazioni/turchia.jpg",
     description:
       "Un crocevia di civiltà tra Cappadocia, Istanbul e le coste dell'Egeo, dove Oriente e Occidente si incontrano.",
@@ -227,11 +230,21 @@ export const destinations: Destination[] = [
       "Buenos Aires, i ghiacciai della Patagonia e le cascate dell'Iguazù: un viaggio indimenticabile.",
   },
 
-  // Asia/Russia
+  // Medio Oriente (continued)
+  {
+    slug: "giordania",
+    name: "Giordania",
+    macroArea: "Medio Oriente",
+    image: "/images/destinazioni/giordania.jpg",
+    description:
+      "Petra, il Wadi Rum e il Mar Morto: un viaggio nel cuore della storia e della natura.",
+  },
+
+  // Asia
   {
     slug: "india",
     name: "India",
-    macroArea: "Asia/Russia",
+    macroArea: "Asia",
     image: "/images/destinazioni/india.jpg",
     description:
       "Il Triangolo d'Oro, il Rajasthan e i templi millenari: un viaggio che cambia la vita.",
@@ -239,39 +252,15 @@ export const destinations: Destination[] = [
   {
     slug: "nepal",
     name: "Nepal",
-    macroArea: "Asia/Russia",
+    macroArea: "Asia",
     image: "/images/destinazioni/nepal.jpg",
     description:
       "Kathmandu, l'Himalaya e i monasteri buddhisti: spiritualità e avventura nel tetto del mondo.",
   },
   {
-    slug: "georgia",
-    name: "Georgia",
-    macroArea: "Asia/Russia",
-    image: "/images/destinazioni/georgia.jpg",
-    description:
-      "Tbilisi, le chiese rupestri e il Caucaso: un tesoro nascosto tra Europa e Asia.",
-  },
-  {
-    slug: "kirghizistan",
-    name: "Kirghizistan",
-    macroArea: "Asia/Russia",
-    image: "/images/destinazioni/kirghizistan.jpg",
-    description:
-      "Laghi alpini, yurte e steppe infinite: l'avventura nomade nel cuore dell'Asia Centrale.",
-  },
-  {
-    slug: "mongolia",
-    name: "Mongolia",
-    macroArea: "Asia/Russia",
-    image: "/images/destinazioni/mongolia.jpg",
-    description:
-      "Il deserto del Gobi, le steppe infinite e la cultura nomade: un viaggio nel tempo.",
-  },
-  {
     slug: "filippine",
     name: "Filippine",
-    macroArea: "Asia/Russia",
+    macroArea: "Asia",
     image: "/images/destinazioni/filippine.jpg",
     description:
       "Spiagge paradisiache, risaie a terrazza e una natura marina straordinaria.",
@@ -279,47 +268,65 @@ export const destinations: Destination[] = [
   {
     slug: "giappone",
     name: "Giappone",
-    macroArea: "Asia/Russia",
+    macroArea: "Asia",
     image: "/images/destinazioni/giappone.jpg",
     description:
       "Tokyo, Kyoto e il Monte Fuji: tradizione e modernità nel Paese del Sol Levante.",
   },
-  {
-    slug: "armenia",
-    name: "Armenia",
-    macroArea: "Asia/Russia",
-    image: "/images/destinazioni/armenia.jpg",
-    description:
-      "Monasteri millenari, il Monte Ararat e una cultura antichissima nel cuore del Caucaso.",
-  },
-  {
-    slug: "giordania",
-    name: "Giordania",
-    macroArea: "Asia/Russia",
-    image: "/images/destinazioni/giordania.jpg",
-    description:
-      "Petra, il Wadi Rum e il Mar Morto: un viaggio nel cuore della storia e della natura.",
-  },
-  {
-    slug: "azerbaijan",
-    name: "Azerbaijan",
-    macroArea: "Asia/Russia",
-    image: "/images/destinazioni/azerbaijan.jpg",
-    description:
-      "Baku, la Terra del Fuoco e il Caucaso orientale: un paese sorprendente tra antico e moderno.",
-  },
+
+  // Asia Centrale
   {
     slug: "russia",
     name: "Russia",
-    macroArea: "Asia/Russia",
+    macroArea: "Asia Centrale",
     image: "/images/destinazioni/russia.jpg",
     description:
       "Mosca, San Pietroburgo e la Transiberiana: un viaggio attraverso il paese più grande del mondo.",
   },
   {
+    slug: "georgia",
+    name: "Georgia",
+    macroArea: "Asia Centrale",
+    image: "/images/destinazioni/georgia.jpg",
+    description:
+      "Tbilisi, le chiese rupestri e il Caucaso: un tesoro nascosto tra Europa e Asia.",
+  },
+  {
+    slug: "armenia",
+    name: "Armenia",
+    macroArea: "Asia Centrale",
+    image: "/images/destinazioni/armenia.jpg",
+    description:
+      "Monasteri millenari, il Monte Ararat e una cultura antichissima nel cuore del Caucaso.",
+  },
+  {
+    slug: "azerbaijan",
+    name: "Azerbaijan",
+    macroArea: "Asia Centrale",
+    image: "/images/destinazioni/azerbaijan.jpg",
+    description:
+      "Baku, la Terra del Fuoco e il Caucaso orientale: un paese sorprendente tra antico e moderno.",
+  },
+  {
+    slug: "kirghizistan",
+    name: "Kirghizistan",
+    macroArea: "Asia Centrale",
+    image: "/images/destinazioni/kirghizistan.jpg",
+    description:
+      "Laghi alpini, yurte e steppe infinite: l'avventura nomade nel cuore dell'Asia Centrale.",
+  },
+  {
+    slug: "mongolia",
+    name: "Mongolia",
+    macroArea: "Asia Centrale",
+    image: "/images/destinazioni/mongolia.jpg",
+    description:
+      "Il deserto del Gobi, le steppe infinite e la cultura nomade: un viaggio nel tempo.",
+  },
+  {
     slug: "uzbekistan",
     name: "Uzbekistan",
-    macroArea: "Asia/Russia",
+    macroArea: "Asia Centrale",
     image: "/images/destinazioni/uzbekistan.jpg",
     description:
       "Samarcanda, Bukhara e Khiva: le meraviglie della Via della Seta nel cuore dell'Asia Centrale.",
@@ -1654,7 +1661,30 @@ export const navigationItems: NavItem[] = [
         { label: "Spagna", href: "/destinazioni/spagna" },
         { label: "Portogallo", href: "/destinazioni/portogallo" },
         { label: "Polonia", href: "/destinazioni/polonia" },
+      ],
+      "Medio Oriente": [
         { label: "Turchia", href: "/destinazioni/turchia" },
+        { label: "Giordania", href: "/destinazioni/giordania" },
+      ],
+      Asia: [
+        { label: "India", href: "/destinazioni/india" },
+        { label: "Nepal", href: "/destinazioni/nepal" },
+        { label: "Filippine", href: "/destinazioni/filippine" },
+        { label: "Giappone", href: "/destinazioni/giappone" },
+      ],
+      "Asia Centrale": [
+        { label: "Russia", href: "/destinazioni/russia" },
+        { label: "Georgia", href: "/destinazioni/georgia" },
+        { label: "Armenia", href: "/destinazioni/armenia" },
+        { label: "Azerbaijan", href: "/destinazioni/azerbaijan" },
+        { label: "Kirghizistan", href: "/destinazioni/kirghizistan" },
+        { label: "Mongolia", href: "/destinazioni/mongolia" },
+        { label: "Uzbekistan", href: "/destinazioni/uzbekistan" },
+      ],
+      Africa: [
+        { label: "Tunisia", href: "/destinazioni/tunisia" },
+        { label: "Egitto", href: "/destinazioni/egitto" },
+        { label: "Marocco", href: "/destinazioni/marocco" },
       ],
       "America Latina": [
         { label: "Bolivia", href: "/destinazioni/bolivia" },
@@ -1663,25 +1693,6 @@ export const navigationItems: NavItem[] = [
         { label: "Brasile", href: "/destinazioni/brasile" },
         { label: "Cile", href: "/destinazioni/cile" },
         { label: "Argentina", href: "/destinazioni/argentina" },
-      ],
-      "Asia/Russia": [
-        { label: "India", href: "/destinazioni/india" },
-        { label: "Nepal", href: "/destinazioni/nepal" },
-        { label: "Georgia", href: "/destinazioni/georgia" },
-        { label: "Kirghizistan", href: "/destinazioni/kirghizistan" },
-        { label: "Mongolia", href: "/destinazioni/mongolia" },
-        { label: "Filippine", href: "/destinazioni/filippine" },
-        { label: "Giappone", href: "/destinazioni/giappone" },
-        { label: "Armenia", href: "/destinazioni/armenia" },
-        { label: "Giordania", href: "/destinazioni/giordania" },
-        { label: "Azerbaijan", href: "/destinazioni/azerbaijan" },
-        { label: "Russia", href: "/destinazioni/russia" },
-        { label: "Uzbekistan", href: "/destinazioni/uzbekistan" },
-      ],
-      Africa: [
-        { label: "Tunisia", href: "/destinazioni/tunisia" },
-        { label: "Egitto", href: "/destinazioni/egitto" },
-        { label: "Marocco", href: "/destinazioni/marocco" },
       ],
       "Percorsi Fluviali": [
         { label: "Senna", href: "/destinazioni/senna" },

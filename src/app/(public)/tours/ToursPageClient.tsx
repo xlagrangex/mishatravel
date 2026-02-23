@@ -25,7 +25,7 @@ import {
 } from "@/lib/filters";
 import type { TourListItemEnriched } from "@/lib/supabase/queries/tours";
 
-const MACRO_AREAS = ["Europa", "America Latina", "Asia/Russia", "Africa"] as const;
+const MACRO_AREAS = ["Europa", "Medio Oriente", "Asia", "Asia Centrale", "Africa", "America Latina"] as const;
 
 interface ToursPageClientProps {
   tours: TourListItemEnriched[];

@@ -67,10 +67,12 @@ function generateSlug(text: string): string {
 
 const MACRO_AREAS = [
   "Europa",
-  "Asia",
-  "America Latina",
-  "Africa",
   "Medio Oriente",
+  "Asia",
+  "Asia Centrale",
+  "Africa",
+  "America Latina",
+  "Percorsi Fluviali",
   "Oceania",
 ] as const;
 
