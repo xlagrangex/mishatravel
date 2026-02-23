@@ -45,11 +45,7 @@ CREATE POLICY "media_folders_public_read"
 CREATE POLICY "media_folders_admin_write"
   ON media_folders FOR ALL
   USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE user_profiles.id = auth.uid()
-        AND user_profiles.role IN ('superadmin', 'admin', 'editor')
-    )
+    get_user_role(auth.uid()) = ANY (ARRAY['super_admin'::user_role, 'admin'::user_role, 'operator'::user_role])
   );
 
 -- Seed default folders matching storage bucket names
