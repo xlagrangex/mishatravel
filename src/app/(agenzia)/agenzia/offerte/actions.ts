@@ -53,9 +53,9 @@ async function getQuoteEmailContext(requestId: string) {
 
 const participantSchema = z.object({
   full_name: z.string().min(1, "Nome completo obbligatorio"),
+  age: z.coerce.number().int().min(0).max(120).nullable().optional(),
   document_type: z.string().nullable().optional(),
   document_number: z.string().nullable().optional(),
-  is_child: z.boolean().default(false),
 });
 
 export type ParticipantInput = z.infer<typeof participantSchema>;
@@ -122,14 +122,15 @@ export async function acceptOfferWithParticipants(
       return result.data;
     });
 
-    // 5. Insert participants
+    // 5. Insert participants (is_child computed from age: < 18 = child)
     if (validatedParticipants.length > 0) {
       const rows = validatedParticipants.map((p, i) => ({
         request_id: requestId,
         full_name: p.full_name.trim(),
+        age: p.age ?? null,
+        is_child: p.age != null ? p.age < 18 : false,
         document_type: p.document_type?.trim() || null,
         document_number: p.document_number?.trim() || null,
-        is_child: p.is_child,
         sort_order: i,
       }));
 
@@ -160,8 +161,8 @@ export async function acceptOfferWithParticipants(
 
     // 7. Timeline entry
     const participantCount = validatedParticipants.length;
-    const adultCount = validatedParticipants.filter((p) => !p.is_child).length;
-    const childCount = validatedParticipants.filter((p) => p.is_child).length;
+    const childCount = validatedParticipants.filter((p) => p.age != null && p.age < 18).length;
+    const adultCount = participantCount - childCount;
 
     await admin.from("quote_timeline").insert({
       request_id: requestId,

@@ -134,20 +134,12 @@ function OfferCard({ offer }: { offer: OfferListItem }) {
 
   const buildInitialParticipants = (): ParticipantInput[] => {
     const list: ParticipantInput[] = [];
-    for (let i = 0; i < adultsCount; i++) {
+    for (let i = 0; i < adultsCount + childrenCount; i++) {
       list.push({
         full_name: "",
+        age: null,
         document_type: null,
         document_number: null,
-        is_child: false,
-      });
-    }
-    for (let i = 0; i < childrenCount; i++) {
-      list.push({
-        full_name: "",
-        document_type: null,
-        document_number: null,
-        is_child: true,
       });
     }
     return list;
@@ -456,84 +448,110 @@ function OfferCard({ offer }: { offer: OfferListItem }) {
                     <>
                       {/* Step 2: Participant form */}
                       <div className="space-y-4">
-                        {participants.map((p, idx) => (
-                          <div
-                            key={idx}
-                            className="rounded-lg border p-3 space-y-3"
-                          >
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-semibold">
-                                Partecipante {idx + 1}
-                                {p.is_child && (
-                                  <Badge
-                                    variant="outline"
-                                    className="ml-2 text-xs border-amber-200 bg-amber-50 text-amber-700"
+                        {participants.map((p, idx) => {
+                          const isChild = p.age != null && Number(p.age) < 18;
+                          return (
+                            <div
+                              key={idx}
+                              className="rounded-lg border p-3 space-y-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-semibold">
+                                  Partecipante {idx + 1}
+                                  {p.age != null && Number(p.age) > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      className={`ml-2 text-xs ${
+                                        isChild
+                                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                                          : "border-green-200 bg-green-50 text-green-700"
+                                      }`}
+                                    >
+                                      {isChild ? "Bambino" : "Adulto"}
+                                    </Badge>
+                                  )}
+                                </p>
+                              </div>
+                              <div className="grid grid-cols-[1fr_80px] gap-2">
+                                <div>
+                                  <Label className="text-xs">
+                                    Nome e cognome *
+                                  </Label>
+                                  <Input
+                                    placeholder="Es. Mario Rossi"
+                                    value={p.full_name}
+                                    onChange={(e) =>
+                                      updateParticipant(
+                                        idx,
+                                        "full_name",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Eta *</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="120"
+                                    placeholder="Es. 35"
+                                    value={p.age ?? ""}
+                                    onChange={(e) =>
+                                      updateParticipant(
+                                        idx,
+                                        "age",
+                                        e.target.value ? Number(e.target.value) as any : null as any
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <Label className="text-xs">
+                                    Tipo documento
+                                  </Label>
+                                  <select
+                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                                    value={p.document_type ?? ""}
+                                    onChange={(e) =>
+                                      updateParticipant(
+                                        idx,
+                                        "document_type",
+                                        e.target.value || null as any
+                                      )
+                                    }
                                   >
-                                    bambino
-                                  </Badge>
-                                )}
-                              </p>
-                            </div>
-                            <div>
-                              <Label className="text-xs">
-                                Nome e cognome *
-                              </Label>
-                              <Input
-                                placeholder="Es. Mario Rossi"
-                                value={p.full_name}
-                                onChange={(e) =>
-                                  updateParticipant(
-                                    idx,
-                                    "full_name",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <Label className="text-xs">
-                                  Tipo documento
-                                </Label>
-                                <select
-                                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                  value={p.document_type ?? ""}
-                                  onChange={(e) =>
-                                    updateParticipant(
-                                      idx,
-                                      "document_type",
-                                      e.target.value || null as any
-                                    )
-                                  }
-                                >
-                                  <option value="">Seleziona...</option>
-                                  <option value="Passaporto">
-                                    Passaporto
-                                  </option>
-                                  <option value="Carta d'identita">
-                                    Carta d&apos;identita
-                                  </option>
-                                </select>
-                              </div>
-                              <div>
-                                <Label className="text-xs">
-                                  N. documento
-                                </Label>
-                                <Input
-                                  placeholder="Es. AA1234567"
-                                  value={p.document_number ?? ""}
-                                  onChange={(e) =>
-                                    updateParticipant(
-                                      idx,
-                                      "document_number",
-                                      e.target.value || null as any
-                                    )
-                                  }
-                                />
+                                    <option value="">Seleziona...</option>
+                                    <option value="Passaporto">
+                                      Passaporto
+                                    </option>
+                                    <option value="Carta d'identita">
+                                      Carta d&apos;identita
+                                    </option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <Label className="text-xs">
+                                    N. documento
+                                  </Label>
+                                  <Input
+                                    placeholder="Es. AA1234567"
+                                    value={p.document_number ?? ""}
+                                    onChange={(e) =>
+                                      updateParticipant(
+                                        idx,
+                                        "document_number",
+                                        e.target.value || null as any
+                                      )
+                                    }
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {error && (

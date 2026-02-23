@@ -526,9 +526,10 @@ export interface QuoteParticipant {
   id: string;
   request_id: string;
   full_name: string;
+  age: number | null;
+  is_child: boolean;
   document_type: string | null;
   document_number: string | null;
-  is_child: boolean;
   sort_order: number;
   created_at: string;
 }
