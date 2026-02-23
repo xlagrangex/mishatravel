@@ -112,11 +112,11 @@ export default function LatestAdditions({
                       )}
                       <div className="mt-auto pt-2">
                         {item.prezzo_su_richiesta ? (
-                          <p className="text-sm font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
+                          <p className="text-base font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
                         ) : price > 0 ? (
                           <p className="text-sm text-gray-400">
                             da{" "}
-                            <span className="font-bold text-[#C41E2F] text-lg">
+                            <span className="font-bold text-[#C41E2F] text-xl">
                               &euro;{price.toLocaleString("it-IT")}
                             </span>
                           </p>

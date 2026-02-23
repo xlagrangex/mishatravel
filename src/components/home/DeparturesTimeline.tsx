@@ -155,14 +155,18 @@ export default function DeparturesTimeline({ departures, tours, cruises }: Props
                       </div>
 
                       {/* Price */}
-                      {dep.price != null && dep.price > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-100 flex items-baseline gap-1.5">
-                          <span className="text-xs text-gray-400">da</span>
-                          <span className="font-bold text-[#C41E2F] text-lg leading-none">
-                            &euro;{dep.price.toLocaleString("it-IT")}
-                          </span>
-                        </div>
-                      )}
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        {dep.prezzoSuRichiesta ? (
+                          <span className="font-semibold text-[#C41E2F] text-base">Prezzo su richiesta</span>
+                        ) : dep.price != null && dep.price > 0 ? (
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-sm text-gray-400">da</span>
+                            <span className="font-bold text-[#C41E2F] text-xl leading-none">
+                              &euro;{dep.price.toLocaleString("it-IT")}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 </Link>

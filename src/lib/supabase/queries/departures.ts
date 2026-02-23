@@ -12,6 +12,7 @@ export type UnifiedDeparture = {
   destination_name: string | null
   date: string            // ISO date string (YYYY-MM-DD)
   price: number | null
+  prezzoSuRichiesta: boolean
   duration: string | null // durata_notti from parent
   basePath: string        // /tours or /crociere
 }
@@ -42,6 +43,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         title,
         slug,
         durata_notti,
+        prezzo_su_richiesta,
         destination:destinations(name)
       )
     `
@@ -65,6 +67,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         title,
         slug,
         durata_notti,
+        prezzo_su_richiesta,
         destination:destinations(name)
       )
     `
@@ -76,30 +79,38 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
   }
 
   // Map tour departures to unified shape
-  const tourItems: UnifiedDeparture[] = (tourDeps ?? []).map((row: any) => ({
-    id: row.id,
-    type: 'tour' as const,
-    title: row.tour.title,
-    slug: row.tour.slug,
-    destination_name: row.tour.destination?.name ?? null,
-    date: row.data_partenza ?? '',
-    price: row.prezzo_3_stelle != null ? Number(row.prezzo_3_stelle) : null,
-    duration: row.tour.durata_notti ?? null,
-    basePath: '/tours',
-  }))
+  const tourItems: UnifiedDeparture[] = (tourDeps ?? []).map((row: any) => {
+    const psr = !!row.tour.prezzo_su_richiesta
+    return {
+      id: row.id,
+      type: 'tour' as const,
+      title: row.tour.title,
+      slug: row.tour.slug,
+      destination_name: row.tour.destination?.name ?? null,
+      date: row.data_partenza ?? '',
+      price: psr ? null : (row.prezzo_3_stelle != null ? Number(row.prezzo_3_stelle) : null),
+      prezzoSuRichiesta: psr,
+      duration: row.tour.durata_notti ?? null,
+      basePath: '/tours',
+    }
+  })
 
   // Map cruise departures to unified shape
-  const cruiseItems: UnifiedDeparture[] = (cruiseDeps ?? []).map((row: any) => ({
-    id: row.id,
-    type: 'crociera' as const,
-    title: row.cruise.title,
-    slug: row.cruise.slug,
-    destination_name: row.cruise.destination?.name ?? null,
-    date: row.data_partenza ?? '',
-    price: row.prezzo_main_deck != null ? Number(row.prezzo_main_deck) : null,
-    duration: row.cruise.durata_notti ?? null,
-    basePath: '/crociere',
-  }))
+  const cruiseItems: UnifiedDeparture[] = (cruiseDeps ?? []).map((row: any) => {
+    const psr = !!row.cruise.prezzo_su_richiesta
+    return {
+      id: row.id,
+      type: 'crociera' as const,
+      title: row.cruise.title,
+      slug: row.cruise.slug,
+      destination_name: row.cruise.destination?.name ?? null,
+      date: row.data_partenza ?? '',
+      price: psr ? null : (row.prezzo_main_deck != null ? Number(row.prezzo_main_deck) : null),
+      prezzoSuRichiesta: psr,
+      duration: row.cruise.durata_notti ?? null,
+      basePath: '/crociere',
+    }
+  })
 
   // Merge and sort by date ascending
   const all = [...tourItems, ...cruiseItems]

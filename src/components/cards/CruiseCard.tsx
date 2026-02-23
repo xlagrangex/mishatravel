@@ -86,11 +86,11 @@ export default function CruiseCard({
           {/* Price */}
           <div className="mt-auto pt-3">
             {prezzoSuRichiesta ? (
-              <p className="text-[15px] font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
+              <p className="text-base font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
             ) : formattedPrice ? (
               <p className="text-sm text-gray-400">
                 da{" "}
-                <span className="font-bold text-[#C41E2F] text-xl">
+                <span className="font-bold text-[#C41E2F] text-2xl">
                   {formattedPrice}
                 </span>
               </p>
