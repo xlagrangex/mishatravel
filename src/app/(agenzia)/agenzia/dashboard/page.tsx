@@ -162,7 +162,7 @@ export default async function AgenziaDashboard() {
               Richieste Recenti
             </CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/agenzia/richieste" className="text-sm">
+              <Link href="/agenzia/preventivi" className="text-sm">
                 Vedi tutte
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>

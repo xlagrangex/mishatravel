@@ -153,25 +153,19 @@ export async function getQuoteById(id: string): Promise<QuoteDetail | null> {
     return null
   }
 
-  // Fetch participants and documents separately (tables may not exist yet before migration)
-  let participants: any[] = []
-  let documents: any[] = []
+  // Fetch participants and documents with admin client (bypasses RLS)
+  // Ownership is already verified by the main query filtering on agency_id
+  const admin = createAdminClient()
 
-  try {
-    const { data: p } = await supabase
-      .from('quote_participants')
-      .select('*')
-      .eq('request_id', id)
-    participants = p ?? []
-  } catch { /* table may not exist yet */ }
+  const { data: participants } = await admin
+    .from('quote_participants')
+    .select('*')
+    .eq('request_id', id)
 
-  try {
-    const { data: d } = await supabase
-      .from('quote_documents')
-      .select('*')
-      .eq('request_id', id)
-    documents = d ?? []
-  } catch { /* table may not exist yet */ }
+  const { data: documents } = await admin
+    .from('quote_documents')
+    .select('*')
+    .eq('request_id', id)
 
   // Sort timeline by created_at descending
   const sortedTimeline = (data.timeline ?? []).sort(
@@ -181,8 +175,8 @@ export async function getQuoteById(id: string): Promise<QuoteDetail | null> {
 
   return {
     ...data,
-    participants,
-    documents,
+    participants: participants ?? [],
+    documents: documents ?? [],
     timeline: sortedTimeline,
   } as QuoteDetail
 }

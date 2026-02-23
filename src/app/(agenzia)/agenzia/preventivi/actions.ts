@@ -61,7 +61,7 @@ const participantSchema = z.object({
 export type ParticipantInput = z.infer<typeof participantSchema>;
 
 // ---------------------------------------------------------------------------
-// acceptOfferWithParticipants — new workflow
+// acceptOfferWithParticipants
 // ---------------------------------------------------------------------------
 
 export async function acceptOfferWithParticipants(
@@ -70,7 +70,6 @@ export async function acceptOfferWithParticipants(
   participants: ParticipantInput[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // 1. Authenticate the user
     const supabase = await createClient();
     const {
       data: { user },
@@ -80,7 +79,6 @@ export async function acceptOfferWithParticipants(
       return { success: false, error: "Non autenticato." };
     }
 
-    // 2. Retrieve agency
     const { data: agency } = await supabase
       .from("agencies")
       .select("id")
@@ -93,7 +91,6 @@ export async function acceptOfferWithParticipants(
 
     const admin = createAdminClient();
 
-    // 3. Verify the request belongs to this agency and has the correct status
     const { data: request } = await admin
       .from("quote_requests")
       .select("id, agency_id, status")
@@ -111,7 +108,6 @@ export async function acceptOfferWithParticipants(
       };
     }
 
-    // 4. Validate participants
     const validatedParticipants = participants.map((p, i) => {
       const result = participantSchema.safeParse(p);
       if (!result.success) {
@@ -122,7 +118,6 @@ export async function acceptOfferWithParticipants(
       return result.data;
     });
 
-    // 5. Insert participants (is_child computed from age: < 18 = child)
     if (validatedParticipants.length > 0) {
       const rows = validatedParticipants.map((p, i) => ({
         request_id: requestId,
@@ -146,7 +141,6 @@ export async function acceptOfferWithParticipants(
       }
     }
 
-    // 6. Update status to 'accepted'
     const { error: updateError } = await admin
       .from("quote_requests")
       .update({ status: "accepted" })
@@ -159,7 +153,6 @@ export async function acceptOfferWithParticipants(
       };
     }
 
-    // 7. Timeline entry
     const participantCount = validatedParticipants.length;
     const childCount = validatedParticipants.filter((p) => p.age != null && p.age < 18).length;
     const adultCount = participantCount - childCount;
@@ -171,7 +164,6 @@ export async function acceptOfferWithParticipants(
       actor: "agency",
     });
 
-    // 8. Emails
     try {
       const ctx = await getQuoteEmailContext(requestId);
       if (ctx) {
@@ -202,38 +194,8 @@ export async function acceptOfferWithParticipants(
 }
 
 // ---------------------------------------------------------------------------
-// acceptOfferAction — legacy wrapper (kept for backward compatibility)
+// declineOfferAction
 // ---------------------------------------------------------------------------
-
-export async function acceptOfferAction(
-  offerId: string,
-  requestId: string
-): Promise<{ success: boolean; error?: string }> {
-  const result = await acceptOffer(offerId, requestId);
-
-  if (result.success) {
-    try {
-      const ctx = await getQuoteEmailContext(requestId);
-      if (ctx) {
-        if (ctx.agencyEmail) {
-          await sendTransactionalEmail(
-            { email: ctx.agencyEmail, name: ctx.agencyName },
-            "Offerta accettata - MishaTravel",
-            offerAcceptedConfirmationEmail(ctx.agencyName, ctx.productName)
-          );
-        }
-        await sendAdminNotification(
-          `Offerta accettata da ${ctx.agencyName}`,
-          adminOfferAcceptedEmail(ctx.agencyName, ctx.productName, requestId)
-        );
-      }
-    } catch (emailErr) {
-      console.error("Error sending offer accepted emails:", emailErr);
-    }
-  }
-
-  return result;
-}
 
 export async function declineOfferAction(
   offerId: string,
@@ -243,7 +205,6 @@ export async function declineOfferAction(
   const result = await declineOffer(offerId, requestId, motivation);
 
   if (result.success) {
-    // --- Email: notification to admin ---
     try {
       const ctx = await getQuoteEmailContext(requestId);
       if (ctx) {

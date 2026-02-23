@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   FileText,
-  Gift,
   FileSpreadsheet,
   UserCircle,
   ChevronLeft,
@@ -19,8 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 const navItems = [
   { label: "Dashboard", href: "/agenzia/dashboard", icon: LayoutDashboard },
-  { label: "Le Mie Richieste", href: "/agenzia/richieste", icon: FileText },
-  { label: "Offerte Ricevute", href: "/agenzia/offerte", icon: Gift },
+  { label: "I Miei Preventivi", href: "/agenzia/preventivi", icon: FileText },
   { label: "Estratto Conto", href: "/agenzia/estratto-conto", icon: FileSpreadsheet },
   { label: "Profilo", href: "/agenzia/profilo", icon: UserCircle },
 ];

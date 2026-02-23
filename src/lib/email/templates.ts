@@ -300,7 +300,7 @@ export function quoteRequestSubmittedEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Il nostro team esaminer&agrave; la tua richiesta e ti invieremo un&rsquo;offerta il prima possibile.
     </p>
-    ${ctaButton("Vedi le tue richieste", `${SITE_URL}/agenzia/richieste`)}
+    ${ctaButton("Vedi le tue richieste", `${SITE_URL}/agenzia/preventivi`)}
   `);
 }
 
@@ -338,7 +338,7 @@ export function newOfferReceivedEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Accedi alla tua area riservata per visualizzare i dettagli completi e accettare o rifiutare l&rsquo;offerta.
     </p>
-    ${ctaButton("Vedi l'offerta", `${SITE_URL}/agenzia/offerte`)}
+    ${ctaButton("Vedi l'offerta", `${SITE_URL}/agenzia/preventivi`)}
   `);
 }
 
@@ -367,7 +367,7 @@ export function offerAcceptedConfirmationEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       A breve riceverai il contratto e le coordinate bancarie per effettuare il pagamento. Controlla la tua area riservata per aggiornamenti.
     </p>
-    ${ctaButton("Vedi le tue richieste", `${SITE_URL}/agenzia/richieste`)}
+    ${ctaButton("Vedi le tue richieste", `${SITE_URL}/agenzia/preventivi`)}
   `);
 }
 
@@ -406,7 +406,7 @@ export function paymentDetailsSentEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Una volta effettuato il pagamento, il nostro team provveder&agrave; a confermare la prenotazione.
     </p>
-    ${ctaButton("Vedi dettagli", `${SITE_URL}/agenzia/richieste`)}
+    ${ctaButton("Vedi dettagli", `${SITE_URL}/agenzia/preventivi`)}
   `);
 }
 
@@ -481,7 +481,7 @@ export function contractSentEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Accedi alla tua area riservata per scaricare il contratto completo e procedere con il pagamento.
     </p>
-    ${ctaButton("Vedi dettagli", `${SITE_URL}/agenzia/richieste`)}
+    ${ctaButton("Vedi dettagli", `${SITE_URL}/agenzia/preventivi`)}
   `);
 }
 
@@ -536,7 +536,7 @@ export function offerRevokedEmail(
       Riceverai una nuova proposta aggiornata a breve.
       Per qualsiasi domanda, non esitare a contattarci.
     </p>
-    ${ctaButton("Accedi alla tua area riservata", SITE_URL + "/agenzia/offerte")}
+    ${ctaButton("Accedi alla tua area riservata", SITE_URL + "/agenzia/preventivi")}
   `);
 }
 
@@ -570,7 +570,7 @@ export function reminderEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Accedi alla tua area riservata per verificare lo stato e procedere.
     </p>
-    ${ctaButton("Vai alla tua area", `${SITE_URL}/agenzia/richieste`)}
+    ${ctaButton("Vai alla tua area", `${SITE_URL}/agenzia/preventivi`)}
   `);
 }
 
@@ -595,7 +595,7 @@ export function documentUploadedToAgencyEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Accedi alla tua area riservata per scaricare il documento.
     </p>
-    ${ctaButton("Vedi i tuoi documenti", `${SITE_URL}/agenzia/richieste`)}
+    ${ctaButton("Vedi i tuoi documenti", `${SITE_URL}/agenzia/preventivi`)}
   `);
 }
 
