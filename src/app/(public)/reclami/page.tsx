@@ -1,7 +1,5 @@
 import PageHero from "@/components/layout/PageHero";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import ReclamiForm from "./ReclamiForm";
 
 export const metadata = {
   title: "Reclami | Misha Travel",
@@ -108,73 +106,7 @@ export default function ReclamiPage() {
           </div>
 
           {/* Form */}
-          <div className="bg-gray-50 rounded-lg p-8 border border-gray-100">
-            <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-6 text-center">
-              Modulo Reclami Online
-            </h2>
-            <form className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Nome e Cognome *</label>
-                  <Input placeholder="Nome e Cognome del viaggiatore" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Email *</label>
-                  <Input type="email" placeholder="email@esempio.com" required />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Telefono</label>
-                  <Input type="tel" placeholder="+39 ..." />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">N. Pratica / Prenotazione *</label>
-                  <Input placeholder="Es. MT-2025-001234" required />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Destinazione *</label>
-                  <Input placeholder="Es. Giordania" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Date del viaggio *</label>
-                  <Input placeholder="Es. 10/03/2025 - 17/03/2025" required />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Agenzia di viaggio (se applicabile)</label>
-                <Input placeholder="Nome dell'agenzia" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Descrizione del reclamo *</label>
-                <Textarea
-                  placeholder="Descrivi in dettaglio il disservizio riscontrato..."
-                  rows={6}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Richiesta</label>
-                <Textarea
-                  placeholder="Indica la soluzione che desideri (rimborso, risarcimento, ecc.)"
-                  rows={3}
-                />
-              </div>
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="privacy-reclami" className="mt-1" required />
-                <label htmlFor="privacy-reclami" className="text-sm text-gray-600">
-                  Dichiaro che le informazioni fornite sono veritiere e accetto il trattamento dei dati
-                  personali ai sensi della{" "}
-                  <a href="/privacy-policy" className="text-[#C41E2F] underline">Privacy Policy</a>. *
-                </label>
-              </div>
-              <Button type="submit" className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
-                Invia Reclamo
-              </Button>
-            </form>
-          </div>
+          <ReclamiForm />
         </div>
       </section>
     </>

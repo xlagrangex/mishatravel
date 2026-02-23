@@ -50,6 +50,7 @@ const step3Schema = z
     password: z.string().min(8, "La password deve avere almeno 8 caratteri"),
     conferma_password: z.string().min(1, "Conferma la password"),
     accetta_termini: z.boolean(),
+    newsletter_consent: z.boolean().optional(),
   })
   .refine((data) => data.password === data.conferma_password, {
     message: "Le password non coincidono",
@@ -67,6 +68,7 @@ const fullSchema = step1Schema.merge(step2Schema).and(
       password: z.string().min(8),
       conferma_password: z.string().min(1),
       accetta_termini: z.boolean(),
+      newsletter_consent: z.boolean().optional(),
     })
     .refine((d) => d.password === d.conferma_password, {
       message: "Le password non coincidono",
@@ -192,6 +194,7 @@ export default function RegistrazionePage() {
       password: "",
       conferma_password: "",
       accetta_termini: false,
+      newsletter_consent: false,
     },
   });
 
@@ -257,6 +260,7 @@ export default function RegistrazionePage() {
         phone: step2Data.telefono || null,
         email: step2Data.email,
         website: step2Data.sito_web || null,
+        newsletter_consent: data.newsletter_consent ?? false,
       });
 
       if (result.error) {
@@ -611,6 +615,20 @@ export default function RegistrazionePage() {
                     {form3.formState.errors.accetta_termini.message}
                   </p>
                 )}
+
+                <div className="flex items-start gap-3 pt-1">
+                  <Checkbox
+                    checked={form3.watch("newsletter_consent")}
+                    onCheckedChange={(checked) =>
+                      form3.setValue("newsletter_consent", checked === true)
+                    }
+                    className="mt-0.5"
+                  />
+                  <label className="text-sm text-gray-600 leading-relaxed">
+                    Desidero ricevere la newsletter e comunicazioni commerciali
+                    da Misha Travel.
+                  </label>
+                </div>
 
                 <div className="flex justify-between pt-4">
                   <Button

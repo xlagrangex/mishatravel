@@ -17,6 +17,7 @@ export interface AgencyData {
   phone: string | null;
   email: string;
   website: string | null;
+  newsletter_consent?: boolean;
 }
 
 export async function createAgencyRecord(
@@ -41,6 +42,7 @@ export async function createAgencyRecord(
       phone: data.phone,
       email: data.email,
       website: data.website,
+      newsletter_consent: data.newsletter_consent ?? false,
       status: "pending",
     });
 

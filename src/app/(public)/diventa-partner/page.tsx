@@ -1,9 +1,7 @@
 import PageHero from "@/components/layout/PageHero";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { Handshake, TrendingUp, BookOpen, HeadphonesIcon, Users, Award, CheckCircle } from "lucide-react";
+import { Handshake, TrendingUp, BookOpen, HeadphonesIcon, Users, Award } from "lucide-react";
+import PartnerForm from "./PartnerForm";
 
 const vantaggi = [
   { icon: TrendingUp, title: "Commissioni Competitive", desc: "Le migliori commissioni del mercato su tutti i nostri prodotti, con bonus al raggiungimento degli obiettivi." },
@@ -138,47 +136,7 @@ export default function DiventaPartnerPage() {
             <p className="text-gray-600 text-center mb-6 text-sm">
               Sei interessato a conoscere meglio le nostre proposte di partnership? Siamo a tua disposizione per un incontro senza impegno.
             </p>
-            <form className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Nome e Cognome *</label>
-                  <Input placeholder="Nome e Cognome" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Agenzia *</label>
-                  <Input placeholder="Nome dell'agenzia" required />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Citt&agrave; *</label>
-                  <Input placeholder="Città" required />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Telefono *</label>
-                  <Input type="tel" placeholder="+39 ..." required />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Email *</label>
-                <Input type="email" placeholder="email@agenzia.com" required />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Messaggio</label>
-                <Textarea placeholder="Raccontaci della tua agenzia..." rows={4} />
-              </div>
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="privacy-partner" className="mt-1" required />
-                <label htmlFor="privacy-partner" className="text-sm text-gray-600">
-                  Accetto il trattamento dei dati personali secondo la{" "}
-                  <a href="/privacy-policy" className="text-[#C41E2F] underline">Privacy Policy</a>. *
-                </label>
-              </div>
-              <Button type="submit" className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white" size="lg">
-                <CheckCircle className="size-4 mr-2" />
-                Richiedi un Incontro
-              </Button>
-            </form>
+            <PartnerForm />
           </div>
         </div>
       </section>

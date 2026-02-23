@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { Search, Users, Eye, CheckCircle, XCircle, Trash2, Plus } from "lucide-react";
+import { Search, Users, Eye, CheckCircle, XCircle, Trash2, Plus, Mail, MailX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -58,14 +58,28 @@ const statusConfig: Record<
 export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [newsletterFilter, setNewsletterFilter] = useState<"all" | "subscribed" | "unsubscribed">("all");
   const [isPending, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
+
+  const newsletterCount = useMemo(
+    () => agencies.filter((a) => a.newsletter_consent).length,
+    [agencies]
+  );
 
   const filtered = useMemo(() => {
     let result = agencies;
 
     if (statusFilter !== "all") {
       result = result.filter((a) => a.status === statusFilter);
+    }
+
+    if (newsletterFilter !== "all") {
+      result = result.filter((a) =>
+        newsletterFilter === "subscribed"
+          ? a.newsletter_consent === true
+          : a.newsletter_consent === false
+      );
     }
 
     if (searchQuery.trim()) {
@@ -80,7 +94,7 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
     }
 
     return result;
-  }, [agencies, searchQuery, statusFilter]);
+  }, [agencies, searchQuery, statusFilter, newsletterFilter]);
 
   const handleStatusChange = (id: string, newStatus: "active" | "blocked") => {
     const action = newStatus === "active" ? "approvare" : "bloccare";
@@ -137,7 +151,7 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
             <div className="rounded-lg bg-muted p-3 text-muted-foreground">
@@ -182,6 +196,17 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="rounded-lg bg-blue-100 p-3 text-blue-600">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{newsletterCount}</p>
+              <p className="text-sm text-muted-foreground">Iscritte Newsletter</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -206,6 +231,16 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
             <SelectItem value="blocked">Bloccata</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={newsletterFilter} onValueChange={(v) => setNewsletterFilter(v as "all" | "subscribed" | "unsubscribed")}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Newsletter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti</SelectItem>
+            <SelectItem value="subscribed">Iscritte</SelectItem>
+            <SelectItem value="unsubscribed">Non iscritte</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Table */}
@@ -216,7 +251,7 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
             Nessuna agenzia trovata
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {searchQuery || statusFilter !== "all"
+            {searchQuery || statusFilter !== "all" || newsletterFilter !== "all"
               ? "Prova a modificare i filtri."
               : "Non ci sono ancora agenzie registrate."}
           </p>
@@ -231,6 +266,7 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
                 <TableHead>Citta</TableHead>
                 <TableHead>Provincia</TableHead>
                 <TableHead>Stato</TableHead>
+                <TableHead>Newsletter</TableHead>
                 <TableHead>Data Registrazione</TableHead>
                 <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
@@ -267,6 +303,13 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
                       >
                         {sc.label}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {agency.newsletter_consent ? (
+                        <Mail className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <MailX className="h-4 w-4 text-muted-foreground/40" />
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(agency.created_at)}
