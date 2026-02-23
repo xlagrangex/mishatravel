@@ -147,11 +147,31 @@ export async function middleware(request: NextRequest) {
     // Check if the agency account is active
     const { data: agencyData } = await supabase
       .from('agencies')
-      .select('status')
+      .select('id, status, created_at')
       .eq('user_id', user.id)
       .single()
 
     if (agencyData && agencyData.status !== 'active') {
+      // 7-day document deadline check for pending agencies
+      if (agencyData.status === 'pending') {
+        const createdAt = new Date(agencyData.created_at)
+        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+        if (Date.now() - createdAt.getTime() > sevenDaysMs) {
+          // Check if visura camerale was uploaded
+          const { count } = await supabase
+            .from('agency_documents')
+            .select('*', { count: 'exact', head: true })
+            .eq('agency_id', agencyData.id)
+            .eq('document_type', 'visura_camerale')
+
+          if (!count || count === 0) {
+            const expiredUrl = request.nextUrl.clone()
+            expiredUrl.pathname = '/account-scaduto'
+            return NextResponse.redirect(expiredUrl)
+          }
+        }
+      }
+
       // Agency is pending or blocked - redirect to waiting page
       const waitUrl = request.nextUrl.clone()
       waitUrl.pathname = '/account-in-attesa'

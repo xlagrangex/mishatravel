@@ -29,8 +29,8 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { Agency, QuoteRequest } from "@/lib/types";
-import { updateAgencyStatus, deleteAgency } from "../actions";
+import type { Agency, AgencyDocument, QuoteRequest } from "@/lib/types";
+import { updateAgencyStatus, deleteAgency, verifyAgencyDocument } from "../actions";
 
 interface AgencyDetailProps {
   agency: Agency;
@@ -38,6 +38,7 @@ interface AgencyDetailProps {
     tour_title?: string;
     cruise_title?: string;
   })[];
+  documents?: AgencyDocument[];
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -69,6 +70,7 @@ const quoteStatusConfig: Record<string, { label: string; className: string }> = 
 export default function AgencyDetail({
   agency,
   quoteRequests,
+  documents = [],
 }: AgencyDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -233,6 +235,65 @@ export default function AgencyDetail({
 
       {/* Quote Requests History */}
       <Card>
+        {/* Documents Section */}
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="h-5 w-5" />
+            Documenti
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {documents.length === 0 ? (
+            <div className="py-6 text-center">
+              <p className="text-sm text-muted-foreground">Nessun documento caricato.</p>
+              {agency.status === "pending" && (
+                <p className="text-xs text-yellow-600 mt-2">
+                  Scadenza upload: {new Date(new Date(agency.created_at).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("it-IT")}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {documents.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">{doc.file_name ?? "Visura Camerale"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Caricato il {new Date(doc.uploaded_at).toLocaleDateString("it-IT")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={doc.verified ? "default" : "outline"}>
+                      {doc.verified ? "Verificato" : "Da verificare"}
+                    </Badge>
+                    {!doc.verified && (
+                      <Button
+                        size="sm"
+                        disabled={isPending}
+                        onClick={() => {
+                          startTransition(async () => {
+                            await verifyAgencyDocument(doc.id, agency.user_id);
+                            router.refresh();
+                          });
+                        }}
+                      >
+                        Verifica
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                        Scarica
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+
+        <Separator />
+
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileText className="h-5 w-5" />

@@ -396,6 +396,19 @@ export interface Agency {
   updated_at: string;
 }
 
+export interface AgencyDocument {
+  id: string;
+  agency_id: string;
+  document_type: string;
+  file_url: string;
+  file_name: string | null;
+  uploaded_at: string;
+  verified: boolean;
+  verified_at: string | null;
+  verified_by: string | null;
+  notes: string | null;
+}
+
 export type AccountStatementStato = 'Bozza' | 'Inviato via Mail';
 
 export interface AccountStatement {

@@ -18,7 +18,9 @@ import {
   getRecentQuoteRequests,
   getRecentNotifications,
 } from "@/lib/supabase/queries/agency-dashboard";
+import { getAgencyDocuments } from "@/lib/supabase/queries/agency-documents";
 import type { QuoteRequestStatus } from "@/lib/types";
+import DocumentUploadBanner from "./DocumentUploadBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -68,11 +70,18 @@ export default async function AgenziaDashboard() {
   if (!agency) redirect("/?error=no_agency");
 
   // Fetch dashboard data in parallel
-  const [statusCounts, recentRequests, recentNotifications] = await Promise.all([
+  const [statusCounts, recentRequests, recentNotifications, documents] = await Promise.all([
     getQuoteRequestCountsByStatus(agency.id),
     getRecentQuoteRequests(agency.id, 5),
     getRecentNotifications(user.id, 5),
+    getAgencyDocuments(agency.id),
   ]);
+
+  // Document upload deadline check
+  const hasVisura = documents.some((d) => d.document_type === "visura_camerale");
+  const createdAt = new Date(agency.created_at);
+  const deadlineMs = createdAt.getTime() + 7 * 24 * 60 * 60 * 1000;
+  const daysRemaining = Math.max(0, Math.ceil((deadlineMs - Date.now()) / (1000 * 60 * 60 * 24)));
 
   // Derive counter values
   const pendingCount = (statusCounts["sent"] ?? 0) + (statusCounts["in_review"] ?? 0);
@@ -114,6 +123,11 @@ export default async function AgenziaDashboard() {
           Panoramica della tua area riservata
         </p>
       </div>
+
+      {/* Document upload banner (visible until visura is uploaded) */}
+      {!hasVisura && (
+        <DocumentUploadBanner agencyId={agency.id} daysRemaining={daysRemaining} />
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

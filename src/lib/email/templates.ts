@@ -133,6 +133,64 @@ export function agencyApprovedEmail(agencyName: string): string {
 }
 
 /**
+ * Email sent when an admin creates an agency account directly.
+ */
+export function agencyCreatedByAdminEmail(agencyName: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Il tuo account MishaTravel</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Il tuo account su MishaTravel &egrave; stato creato dal nostro team ed &egrave; gi&agrave; attivo.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Puoi accedere all&rsquo;area riservata con le credenziali che ti sono state comunicate.
+    </p>
+    ${ctaButton("Accedi alla tua area", `${SITE_URL}/login`)}
+    <p style="color:#64748b;font-size:13px;margin-top:24px;">
+      Per qualsiasi domanda, non esitare a contattarci.
+    </p>
+  `);
+}
+
+/**
+ * Email sent to admin when an agency uploads a document.
+ */
+export function adminDocumentUploadedEmail(agencyName: string, agencyId: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Documento caricato</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      L&rsquo;agenzia <strong>${agencyName}</strong> ha caricato la visura camerale.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Verificala nel pannello admin.
+    </p>
+    ${ctaButton("Verifica documento", `${SITE_URL}/admin/agenzie/${agencyId}`)}
+  `);
+}
+
+/**
+ * Email sent when an agency account expires due to missing documents.
+ */
+export function accountExpiredEmail(agencyName: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Account eliminato</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Il tuo account su MishaTravel &egrave; stato eliminato perch&eacute; la visura camerale
+      non &egrave; stata caricata entro il termine di 7 giorni dalla registrazione.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Puoi registrarti nuovamente in qualsiasi momento.
+    </p>
+    ${ctaButton("Registrati di nuovo", `${SITE_URL}/registrazione`)}
+  `);
+}
+
+/**
  * Password reset email with branded template.
  */
 export function passwordResetEmail(resetLink: string): string {

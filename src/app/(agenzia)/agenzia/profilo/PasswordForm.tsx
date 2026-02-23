@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Lock, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { changePassword } from "./actions";
 
@@ -74,9 +74,8 @@ export function PasswordForm({ email }: { email: string | null }) {
 
       <div className="space-y-2">
         <Label htmlFor="password">Nuova Password</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           {...register("password")}
           aria-invalid={!!errors.password}
         />
@@ -89,9 +88,8 @@ export function PasswordForm({ email }: { email: string | null }) {
 
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Conferma Password</Label>
-        <Input
+        <PasswordInput
           id="confirmPassword"
-          type="password"
           {...register("confirmPassword")}
           aria-invalid={!!errors.confirmPassword}
         />

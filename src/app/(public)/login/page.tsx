@@ -10,6 +10,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Lock, Mail, Loader2, AlertCircle } from "lucide-react";
 
@@ -187,8 +188,7 @@ function LoginForm() {
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-                    <Input
-                      type="password"
+                    <PasswordInput
                       placeholder="La tua password"
                       className="pl-10"
                       {...register("password")}

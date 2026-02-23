@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { Search, Users, Eye, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Search, Users, Eye, CheckCircle, XCircle, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -119,13 +119,21 @@ export default function AgenzieTable({ agencies, stats }: AgenzieTableProps) {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-secondary">
-          Agenzie
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Gestione agenzie partner. Approvazione, blocco, storico richieste.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-secondary">
+            Agenzie
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Gestione agenzie partner. Approvazione, blocco, storico richieste.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/admin/agenzie/nuovo">
+            <Plus className="h-4 w-4 mr-1" />
+            Crea Agenzia
+          </Link>
+        </Button>
       </div>
 
       {/* Stats Cards */}

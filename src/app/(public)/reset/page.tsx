@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { requestPasswordReset } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Mail,
   Lock,
@@ -269,8 +270,7 @@ function UpdatePasswordView() {
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="Minimo 8 caratteri"
               className="pl-10"
               {...register("password")}
@@ -290,8 +290,7 @@ function UpdatePasswordView() {
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="Ripeti la password"
               className="pl-10"
               {...register("conferma_password")}

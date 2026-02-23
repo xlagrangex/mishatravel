@@ -10,6 +10,7 @@ import { createAgencyRecord } from "./actions";
 import PageHero from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Building2,
@@ -549,8 +550,7 @@ export default function RegistrazionePage() {
                   <label className="text-sm font-medium text-gray-700 mb-1 block">
                     Password *
                   </label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Minimo 8 caratteri"
                     {...form3.register("password")}
                     aria-invalid={!!form3.formState.errors.password}
@@ -566,8 +566,7 @@ export default function RegistrazionePage() {
                   <label className="text-sm font-medium text-gray-700 mb-1 block">
                     Conferma Password *
                   </label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Ripeti la password"
                     {...form3.register("conferma_password")}
                     aria-invalid={!!form3.formState.errors.conferma_password}
