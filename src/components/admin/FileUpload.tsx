@@ -30,6 +30,8 @@ export interface FileUploadProps {
   accept?: string;
   /** Label shown in the file display after upload (e.g. "PDF document"). */
   fileTypeLabel?: string;
+  /** Optional folder prefix prepended to the file path (e.g. an agency ID). */
+  pathPrefix?: string;
   /** Additional wrapper class names. */
   className?: string;
   /** Disable interactions. */
@@ -67,6 +69,7 @@ export default function FileUpload({
   maxSizeBytes = DEFAULT_MAX_SIZE,
   accept = DEFAULT_ACCEPT,
   fileTypeLabel = "PDF",
+  pathPrefix,
   className,
   disabled = false,
 }: FileUploadProps) {
@@ -87,7 +90,8 @@ export default function FileUpload({
     const sanitized = file.name
       .replace(/[^a-zA-Z0-9._-]/g, "_")
       .replace(/_+/g, "_");
-    const filePath = `${Date.now()}_${sanitized}`;
+    const fileName = `${Date.now()}_${sanitized}`;
+    const filePath = pathPrefix ? `${pathPrefix}/${fileName}` : fileName;
 
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -103,7 +107,7 @@ export default function FileUpload({
       .getPublicUrl(data.path);
 
     return urlData.publicUrl;
-  }, [bucket]);
+  }, [bucket, pathPrefix]);
 
   const processFile = useCallback(
     async (file: File) => {
