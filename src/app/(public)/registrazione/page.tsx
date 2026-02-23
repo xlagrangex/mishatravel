@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/client";
-import { createAgencyRecord } from "./actions";
+import { registerAgency } from "./actions";
 import PageHero from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -215,57 +214,31 @@ export default function RegistrazionePage() {
     setError(null);
 
     try {
-      const supabase = createClient();
-
-      // 1. Sign up with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: step2Data.email,
-        password: data.password,
-        options: {
-          data: {
-            business_name: step1Data.ragione_sociale,
-            contact_name: step2Data.nome_referente,
-            phone: step2Data.telefono,
-          },
+      // Everything is handled server-side to avoid Supabase default emails
+      const result = await registerAgency(
+        {
+          business_name: step1Data.ragione_sociale,
+          vat_number: step1Data.partita_iva || null,
+          fiscal_code: step1Data.codice_fiscale || null,
+          license_number: step1Data.licenza || null,
+          address: step1Data.indirizzo || null,
+          city: step1Data.citta || null,
+          zip_code: step1Data.cap || null,
+          province: step1Data.provincia || null,
+          contact_name: step2Data.nome_referente || null,
+          phone: step2Data.telefono || null,
+          email: step2Data.email,
+          website: step2Data.sito_web || null,
+          newsletter_consent: data.newsletter_consent ?? false,
+          password: data.password,
         },
-      });
+        window.location.origin
+      );
 
-      if (authError) {
-        if (authError.message.includes("already registered")) {
-          setError("Esiste già un account con questo indirizzo email.");
-        } else {
-          setError(authError.message);
-        }
+      if (!result.success) {
+        setError(result.error ?? "Errore durante la registrazione. Riprova.");
         setIsLoading(false);
         return;
-      }
-
-      if (!authData.user) {
-        setError("Errore durante la registrazione. Riprova.");
-        setIsLoading(false);
-        return;
-      }
-
-      // 2. Create agency record and user role via server action
-      const result = await createAgencyRecord(authData.user.id, {
-        business_name: step1Data.ragione_sociale,
-        vat_number: step1Data.partita_iva || null,
-        fiscal_code: step1Data.codice_fiscale || null,
-        license_number: step1Data.licenza || null,
-        address: step1Data.indirizzo || null,
-        city: step1Data.citta || null,
-        zip_code: step1Data.cap || null,
-        province: step1Data.provincia || null,
-        contact_name: step2Data.nome_referente || null,
-        phone: step2Data.telefono || null,
-        email: step2Data.email,
-        website: step2Data.sito_web || null,
-        newsletter_consent: data.newsletter_consent ?? false,
-      });
-
-      if (result.error) {
-        // Auth user was created but agency record failed - still show partial success
-        console.error("Agency record error:", result.error);
       }
 
       setSuccess(true);

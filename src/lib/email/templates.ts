@@ -85,6 +85,32 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mishatravel.com";
 // ---------------------------------------------------------------------------
 
 /**
+ * Email confirmation for new signups (replaces Supabase default email).
+ */
+export function signupConfirmationEmail(agencyName: string, confirmLink: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Conferma il tuo account</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Grazie per esserti registrato su MishaTravel. Per completare la registrazione,
+      conferma il tuo indirizzo email cliccando il pulsante qui sotto:
+    </p>
+    ${ctaButton("Conferma Email", confirmLink)}
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Il link scadr&agrave; tra 24 ore. Dopo la conferma, il nostro team verificher&agrave;
+      i tuoi dati e approver&agrave; il tuo account.
+    </p>
+    <p style="color:#64748b;font-size:13px;margin-top:24px;">
+      Se non hai effettuato tu questa registrazione, puoi ignorare questa email.<br/>
+      Se il pulsante non funziona, copia e incolla questo link nel tuo browser:<br/>
+      <a href="${confirmLink}" style="color:#C41E2F;word-break:break-all;">${confirmLink}</a>
+    </p>
+  `);
+}
+
+/**
  * Welcome email sent to the agency after successful registration.
  */
 export function welcomeAgencyEmail(agencyName: string): string {
