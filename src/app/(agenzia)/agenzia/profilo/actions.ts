@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { revalidatePath } from "next/cache";
 
 // ---------------------------------------------------------------------------
 // Update agency profile
@@ -98,5 +100,113 @@ export async function changePassword(
   } catch (err) {
     console.error("Unexpected error in changePassword:", err);
     return { success: false, error: "Errore imprevisto." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Save agency document
+// ---------------------------------------------------------------------------
+
+export async function saveAgencyDocument(
+  agencyId: string,
+  fileUrl: string,
+  fileName: string
+): Promise<{ error: string | null }> {
+  try {
+    // Verify the requesting user owns this agency
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Non autenticato." };
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id, user_id")
+      .eq("id", agencyId)
+      .single();
+
+    if (!agency || agency.user_id !== user.id) {
+      return { error: "Non autorizzato." };
+    }
+
+    // Use admin client to insert (bypasses RLS)
+    const admin = createAdminClient();
+
+    const { error } = await admin.from("agency_documents").insert({
+      agency_id: agencyId,
+      document_type: "visura_camerale",
+      file_url: fileUrl,
+      file_name: fileName,
+    });
+
+    if (error) {
+      console.error("Error saving agency document:", error);
+      return { error: error.message };
+    }
+
+    revalidatePath("/agenzia/profilo");
+    return { error: null };
+  } catch (err) {
+    console.error("Unexpected error in saveAgencyDocument:", err);
+    return { error: "Errore imprevisto." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Delete agency document
+// ---------------------------------------------------------------------------
+
+export async function deleteAgencyDocument(
+  documentId: string
+): Promise<{ error: string | null }> {
+  try {
+    // Verify the requesting user owns the document's agency
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Non autenticato." };
+
+    // Use admin client to check & delete (bypasses RLS)
+    const admin = createAdminClient();
+
+    // Fetch the document to check ownership
+    const { data: doc } = await admin
+      .from("agency_documents")
+      .select("id, agency_id")
+      .eq("id", documentId)
+      .single();
+
+    if (!doc) return { error: "Documento non trovato." };
+
+    // Verify user owns the agency
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id, user_id")
+      .eq("id", doc.agency_id)
+      .single();
+
+    if (!agency || agency.user_id !== user.id) {
+      return { error: "Non autorizzato." };
+    }
+
+    const { error } = await admin
+      .from("agency_documents")
+      .delete()
+      .eq("id", documentId);
+
+    if (error) {
+      console.error("Error deleting agency document:", error);
+      return { error: error.message };
+    }
+
+    revalidatePath("/agenzia/profilo");
+    return { error: null };
+  } catch (err) {
+    console.error("Unexpected error in deleteAgencyDocument:", err);
+    return { error: "Errore imprevisto." };
   }
 }
