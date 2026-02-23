@@ -123,9 +123,7 @@ function OfferCard({ offer }: { offer: OfferListItem }) {
       ? offer.request.tour?.title
       : offer.request.cruise?.title;
 
-  const canAct =
-    offer.request.status === "offered" ||
-    offer.request.status === "offer_sent";
+  const canAct = offer.request.status === "offer_sent";
 
   const isExpired =
     offer.offer_expiry && new Date(offer.offer_expiry) < new Date();

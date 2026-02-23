@@ -104,7 +104,7 @@ export async function acceptOfferWithParticipants(
       return { success: false, error: "Richiesta non trovata." };
     }
 
-    if (request.status !== "offered" && request.status !== "offer_sent") {
+    if (request.status !== "offer_sent") {
       return {
         success: false,
         error: "Lo stato della richiesta non permette questa azione.",

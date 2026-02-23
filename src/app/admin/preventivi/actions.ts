@@ -91,17 +91,14 @@ async function addTimelineEntry(
 const updateStatusSchema = z.object({
   request_id: z.string().uuid(),
   status: z.enum([
-    'requested',
-    'offered',
-    'accepted',
-    'confirmed',
-    'declined',
-    'rejected',
-    // Legacy values kept for compatibility
     'sent',
     'in_review',
     'offer_sent',
+    'accepted',
+    'declined',
     'payment_sent',
+    'confirmed',
+    'rejected',
   ]),
   details: z.string().nullable().optional(),
 })
@@ -235,10 +232,10 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
         console.error('Error sending new offer email:', emailErr)
       }
 
-      // Update status to 'offered' regardless (the offer exists in DB)
+      // Update status to 'offer_sent' regardless (the offer exists in DB)
       const { error: statusError } = await supabase
         .from('quote_requests')
-        .update({ status: 'offered' })
+        .update({ status: 'offer_sent' })
         .eq('id', request_id)
 
       if (statusError) {
