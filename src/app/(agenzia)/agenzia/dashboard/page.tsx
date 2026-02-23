@@ -21,6 +21,7 @@ import {
 import { getAgencyDocuments } from "@/lib/supabase/queries/agency-documents";
 import type { QuoteRequestStatus } from "@/lib/types";
 import DocumentUploadBanner from "./DocumentUploadBanner";
+import DocumentStatusCard from "./DocumentStatusCard";
 
 export const dynamic = "force-dynamic";
 
@@ -81,7 +82,8 @@ export default async function AgenziaDashboard() {
   ]);
 
   // Document upload deadline check
-  const hasVisura = documents.some((d) => d.document_type === "visura_camerale");
+  const visuraDoc = documents.find((d) => d.document_type === "visura_camerale");
+  const hasVisura = !!visuraDoc;
   const createdAt = new Date(agency.created_at);
   const deadlineMs = createdAt.getTime() + 7 * 24 * 60 * 60 * 1000;
   const daysRemaining = Math.max(0, Math.ceil((deadlineMs - Date.now()) / (1000 * 60 * 60 * 24)));
@@ -127,9 +129,11 @@ export default async function AgenziaDashboard() {
         </p>
       </div>
 
-      {/* Document upload banner (visible until visura is uploaded) */}
-      {!hasVisura && (
+      {/* Document: upload banner OR status card */}
+      {!hasVisura ? (
         <DocumentUploadBanner agencyId={agency.id} daysRemaining={daysRemaining} />
+      ) : (
+        <DocumentStatusCard agencyId={agency.id} document={visuraDoc} />
       )}
 
       {/* Stats Grid */}
