@@ -416,6 +416,7 @@ const confirmContractSchema = z.object({
   contract_file_url: z.string().min(1, 'URL contratto obbligatorio'),
   iban: z.string().min(1, 'IBAN obbligatorio'),
   send_email: z.boolean().default(true),
+  notes: z.string().nullable().default(null),
 })
 
 export type ConfirmContractInput = z.infer<typeof confirmContractSchema>
@@ -433,7 +434,7 @@ export async function confirmWithContract(
     }
   }
 
-  const { request_id, offer_id, contract_file_url, iban } =
+  const { request_id, offer_id, contract_file_url, iban, notes } =
     parsed.data
   const supabase = createAdminClient()
 
@@ -480,7 +481,7 @@ export async function confirmWithContract(
       supabase,
       request_id,
       'Contratto e IBAN inviati',
-      `IBAN: ${iban.trim()}${emailSent ? ' - Email inviata' : ' - Attenzione: invio email fallito'}`
+      `IBAN: ${iban.trim()}${notes ? ` - Note: ${notes}` : ''}${emailSent ? ' - Email inviata' : ' - Attenzione: invio email fallito'}`
     )
 
     revalidatePath('/admin/preventivi')

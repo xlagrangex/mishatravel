@@ -606,6 +606,7 @@ function ConfirmContractDialog({
 
     const form = new FormData(e.currentTarget)
     const iban = form.get('iban') as string
+    const notes = (form.get('contract_notes') as string)?.trim() || null
 
     startTransition(async () => {
       const result = await confirmWithContract({
@@ -614,6 +615,7 @@ function ConfirmContractDialog({
         contract_file_url: contractUrl,
         iban,
         send_email: true,
+        notes,
       })
       if (result.success) {
         setOpen(false)
@@ -645,9 +647,9 @@ function ConfirmContractDialog({
           <div>
             <Label>Contratto PDF *</Label>
             {contractFileName ? (
-              <div className="mt-1 flex items-center gap-2 rounded-md border bg-green-50 px-3 py-2 text-sm">
-                <FileText className="h-4 w-4 text-green-600" />
-                <span className="flex-1 truncate">{contractFileName}</span>
+              <div className="mt-1 flex items-center gap-2 rounded-md border bg-green-50 px-3 py-2 text-sm min-w-0 overflow-hidden">
+                <FileText className="h-4 w-4 text-green-600 shrink-0" />
+                <span className="flex-1 truncate min-w-0">{contractFileName}</span>
                 <Button
                   type="button"
                   variant="ghost"
@@ -688,6 +690,16 @@ function ConfirmContractDialog({
               name="iban"
               required
               placeholder="IT60 X054 2811 1010 0000 0123 456"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="contract_notes">Note (facoltative)</Label>
+            <Textarea
+              id="contract_notes"
+              name="contract_notes"
+              rows={3}
+              placeholder="Note aggiuntive per l'agenzia..."
             />
           </div>
 
