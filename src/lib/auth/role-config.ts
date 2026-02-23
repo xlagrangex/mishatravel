@@ -12,6 +12,7 @@ export const SECTION_MAP: Record<string, OperatorSection> = {
   'destinazioni': 'destinations',
   'agenzie': 'agencies',
   'preventivi': 'quotes',
+  'messaggi': 'messages',
   'blog': 'blog',
   'cataloghi': 'catalogs',
   'media': 'media',

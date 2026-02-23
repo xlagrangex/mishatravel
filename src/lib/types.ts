@@ -415,6 +415,7 @@ export interface Agency {
   website: string | null;
   latitude: number | null;
   longitude: number | null;
+  newsletter_consent: boolean;
   status: AgencyStatus;
   created_at: string;
   updated_at: string;
@@ -601,6 +602,7 @@ export type OperatorSection =
   | 'destinations'
   | 'agencies'
   | 'quotes'
+  | 'messages'
   | 'blog'
   | 'catalogs'
   | 'media'
@@ -620,6 +622,21 @@ export interface UserActivityLog {
   action: string;
   details: string | null;
   ip_address: string | null;
+  created_at: string;
+}
+
+// -----------------------------------------------------------------------------
+// Contact Submissions
+// -----------------------------------------------------------------------------
+
+export type ContactFormType = 'contatti' | 'diventa_partner' | 'reclami';
+
+export interface ContactSubmission {
+  id: string;
+  form_type: ContactFormType;
+  data: Record<string, string>;
+  newsletter_consent: boolean;
+  read: boolean;
   created_at: string;
 }
 

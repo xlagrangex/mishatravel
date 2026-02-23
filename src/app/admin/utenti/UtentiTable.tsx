@@ -88,6 +88,7 @@ const sectionLabels: Record<OperatorSection, string> = {
   destinations: "Destinazioni",
   agencies: "Agenzie",
   quotes: "Preventivi",
+  messages: "Messaggi",
   blog: "Blog",
   catalogs: "Cataloghi",
   media: "Media",
