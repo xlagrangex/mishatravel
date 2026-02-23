@@ -1,93 +1,101 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Handshake, Globe, Ship } from "lucide-react";
 import SectionReveal from "./SectionReveal";
 
 export default function AgencyCTA() {
   return (
-    <section className="relative py-20 bg-[#C41E2F] overflow-hidden">
-      {/* Subtle pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
-      />
-      <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
-        <SectionReveal>
-          <h2 className="text-3xl md:text-4xl font-bold text-white font-[family-name:var(--font-poppins)] mb-4">
-            Offri ai tuoi clienti il viaggio della loro vita
-          </h2>
-          <p className="text-xl text-white/90 font-semibold mb-8 font-[family-name:var(--font-poppins)]">
-            Al resto pensiamo noi
-          </p>
-          <p className="text-white/80 leading-relaxed mb-4 max-w-2xl mx-auto">
-            Misha Travel &egrave; il partner ideale per le agenzie di viaggio
-            che vogliono proporre tour e crociere fluviali progettati con cura,
-            garantiti e personalizzabili.
-          </p>
-          <p className="text-white/80 leading-relaxed mb-12 max-w-2xl mx-auto">
-            Dalle esperienze culturali alle rotte fluviali esclusive, ti
-            forniamo itinerari pronti da vendere, assistenza continua e materiali
-            per la promozione.
-          </p>
-        </SectionReveal>
+    <section className="relative py-20 md:py-24 bg-slate-50 overflow-hidden">
+      {/* World map watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <Image
+          src="/images/agency-cta/world-map.png"
+          alt=""
+          width={1280}
+          height={640}
+          className="opacity-30 object-contain max-w-full max-h-full"
+          aria-hidden="true"
+        />
+      </div>
 
-        {/* Feature cards */}
-        <SectionReveal delay={0.2}>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12 max-w-3xl mx-auto">
-            <Link
-              href="/tours"
-              className="group p-6 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all duration-300"
-            >
-              <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Globe className="size-7 text-[#C41E2F]" />
-              </div>
-              <span className="block text-sm font-semibold text-white">
-                I nostri Tour
-              </span>
-              <span className="block text-xs text-white/60 mt-1">
-                Viaggi culturali e itinerari
-              </span>
-            </Link>
-            <Link
-              href="/crociere"
-              className="group p-6 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all duration-300"
-            >
-              <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Ship className="size-7 text-[#C41E2F]" />
-              </div>
-              <span className="block text-sm font-semibold text-white">
-                Crociere Fluviali
-              </span>
-              <span className="block text-xs text-white/60 mt-1">
-                Rotte esclusive in Europa
-              </span>
-            </Link>
-            <Link
-              href="/diventa-partner"
-              className="group p-6 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all duration-300"
-            >
-              <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Handshake className="size-7 text-[#C41E2F]" />
-              </div>
-              <span className="block text-sm font-semibold text-white">
-                Diventa Partner
-              </span>
-              <span className="block text-xs text-white/60 mt-1">
-                Entra nella nostra rete
-              </span>
-            </Link>
+      <div className="container mx-auto px-4 relative z-10">
+        <SectionReveal>
+          <h2 className="text-3xl md:text-[2.4rem] font-semibold text-center text-slate-800 font-[family-name:var(--font-poppins)] leading-[1.3] mb-6 max-w-4xl mx-auto">
+            Offri ai tuoi clienti il viaggio della loro vita,
+            <br />
+            Al resto pensiamo noi
+          </h2>
+
+          <div className="max-w-[80%] mx-auto text-center space-y-4 mb-12">
+            <p className="text-lg text-slate-500 leading-relaxed font-[family-name:var(--font-poppins)]">
+              Misha Travel &egrave; il partner ideale per le agenzie di viaggio
+              che vogliono proporre tour e crociere fluviali progettati con cura,
+              garantiti e personalizzabili.
+            </p>
+            <p className="text-lg text-slate-500 leading-relaxed font-[family-name:var(--font-poppins)]">
+              Dalle esperienze culturali alle rotte fluviali esclusive, ti
+              forniamo itinerari pronti da vendere, assistenza continua e
+              materiali per la promozione.
+            </p>
           </div>
         </SectionReveal>
 
-        <SectionReveal delay={0.3}>
-          <Link
-            href="/diventa-partner"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white text-[#C41E2F] font-semibold hover:bg-white/90 transition-colors text-lg"
-          >
-            Diventa Partner
-          </Link>
+        {/* Two cards */}
+        <SectionReveal delay={0.15}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-5 max-w-4xl mx-auto">
+            {/* Card: Tour */}
+            <Link
+              href="/tours"
+              className="group relative w-full sm:w-[380px] min-h-[136px] rounded-lg overflow-hidden transition-all duration-400 hover:shadow-xl"
+            >
+              <Image
+                src="/images/agency-cta/bg-tours.png"
+                alt="I nostri tour"
+                fill
+                className="object-cover object-left transition-transform duration-500 group-hover:scale-105"
+                sizes="380px"
+              />
+              <div className="relative flex items-center justify-center gap-4 p-8 h-full">
+                <Image
+                  src="/images/agency-cta/icon-tour.gif"
+                  alt=""
+                  width={70}
+                  height={70}
+                  className="shrink-0"
+                  unoptimized
+                />
+                <h3 className="text-2xl font-semibold text-white font-[family-name:var(--font-poppins)]">
+                  I nostri tour
+                </h3>
+              </div>
+            </Link>
+
+            {/* Card: Crociere */}
+            <Link
+              href="/crociere"
+              className="group relative w-full sm:w-[380px] min-h-[136px] rounded-lg overflow-hidden transition-all duration-400 hover:shadow-xl"
+            >
+              <Image
+                src="/images/agency-cta/bg-cruises.png"
+                alt="Crociere Fluviali"
+                fill
+                className="object-cover object-left transition-transform duration-500 group-hover:scale-105"
+                sizes="380px"
+              />
+              <div className="relative flex items-center justify-center gap-4 p-8 h-full">
+                <Image
+                  src="/images/agency-cta/icon-cruise.gif"
+                  alt=""
+                  width={70}
+                  height={70}
+                  className="shrink-0"
+                  unoptimized
+                />
+                <h3 className="text-2xl font-semibold text-white font-[family-name:var(--font-poppins)]">
+                  Crociere Fluviali
+                </h3>
+              </div>
+            </Link>
+          </div>
         </SectionReveal>
       </div>
     </section>

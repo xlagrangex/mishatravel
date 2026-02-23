@@ -67,17 +67,25 @@ function MapController({
 
   useEffect(() => {
     if (!didFitRef.current && locations.length > 0) {
-      const bounds = L.latLngBounds(locations.map((l) => l.coords));
-      map.fitBounds(bounds, { padding: [40, 40] });
+      const valid = locations.filter(
+        (l) => Number.isFinite(l.coords[0]) && Number.isFinite(l.coords[1])
+      );
+      if (valid.length > 0) {
+        const bounds = L.latLngBounds(valid.map((l) => l.coords));
+        map.fitBounds(bounds, { padding: [40, 40] });
+      }
       didFitRef.current = true;
     }
   }, [map, locations]);
 
   useEffect(() => {
     if (activeIndex !== null && locations[activeIndex]) {
-      map.flyTo(locations[activeIndex].coords, Math.max(map.getZoom(), 8), {
-        duration: 0.8,
-      });
+      const [lat, lng] = locations[activeIndex].coords;
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        map.flyTo([lat, lng], Math.max(map.getZoom(), 8), {
+          duration: 0.8,
+        });
+      }
     }
   }, [activeIndex, map, locations]);
 
@@ -89,9 +97,14 @@ function MapController({
 // ---------------------------------------------------------------------------
 
 export default function ItineraryMap({ locations, activeIndex }: ItineraryMapProps) {
-  const polylinePositions = useMemo(
-    () => locations.map((loc) => loc.coords),
+  const validLocations = useMemo(
+    () => locations.filter((l) => Number.isFinite(l.coords[0]) && Number.isFinite(l.coords[1])),
     [locations]
+  );
+
+  const polylinePositions = useMemo(
+    () => validLocations.map((loc) => loc.coords),
+    [validLocations]
   );
 
   return (
@@ -103,7 +116,7 @@ export default function ItineraryMap({ locations, activeIndex }: ItineraryMapPro
         }
       `}</style>
       <MapContainer
-        center={locations[0]?.coords ?? [45.46, 9.19]}
+        center={validLocations[0]?.coords ?? [45.46, 9.19]}
         zoom={6}
         style={{ height: "100%", width: "100%" }}
         className="rounded-lg z-0"
@@ -113,7 +126,7 @@ export default function ItineraryMap({ locations, activeIndex }: ItineraryMapPro
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {locations.map((loc, i) => (
+        {validLocations.map((loc, i) => (
           <Marker
             key={`${loc.nome}-${i}`}
             position={loc.coords}
@@ -130,7 +143,7 @@ export default function ItineraryMap({ locations, activeIndex }: ItineraryMapPro
             pathOptions={{ color: "#C41E2F", weight: 3, opacity: 0.7, dashArray: "8 4" }}
           />
         )}
-        <MapController locations={locations} activeIndex={activeIndex} />
+        <MapController locations={validLocations} activeIndex={activeIndex} />
       </MapContainer>
     </>
   );
