@@ -1747,7 +1747,7 @@ export const footerContactColumns: FooterColumn[] = [
       "Piazza Grimaldi 1-3",
       "16124 Genova",
       "Tel: +39 010 8994000",
-      "agenzia@mishatravel.com",
+      "booking@mishatravel.com",
     ],
   },
   {
@@ -1756,7 +1756,7 @@ export const footerContactColumns: FooterColumn[] = [
       "Piazza Grimaldi 1-3",
       "16124 Genova",
       "Tel: +39 010 8994000",
-      "booking@mishatravel.com",
+      "agenzia@mishatravel.com",
     ],
   },
   {
