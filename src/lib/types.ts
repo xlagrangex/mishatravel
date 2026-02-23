@@ -380,6 +380,14 @@ export interface MediaItem {
   width: number | null;
   height: number | null;
   folder: string | null;
+  bucket: string | null;
+  alt_text: string | null;
+  created_at: string;
+}
+
+export interface MediaFolder {
+  id: string;
+  name: string;
   created_at: string;
 }
 

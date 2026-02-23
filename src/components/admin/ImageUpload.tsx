@@ -12,7 +12,10 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  FolderOpen,
 } from "lucide-react";
+import MediaPicker from "@/components/admin/MediaPicker";
+import { registerMediaAction } from "@/app/admin/media/actions";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -116,6 +119,7 @@ export default function ImageUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState<UploadingFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Drag-reorder state
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -157,6 +161,18 @@ export default function ImageUpload({
       const { data: urlData } = supabase.storage
         .from(bucket)
         .getPublicUrl(data.path);
+
+      // Register in media DB for library browsing
+      registerMediaAction({
+        filename: filePath,
+        url: urlData.publicUrl,
+        file_size: file.size,
+        mime_type: file.type,
+        bucket,
+        folder: bucket,
+      }).catch(() => {
+        // Non-blocking: if DB insert fails, the upload still succeeds
+      });
 
       return urlData.publicUrl;
     },
@@ -368,6 +384,22 @@ export default function ImageUpload({
   }, []);
 
   // -----------------------------------------------------------------------
+  // Media Picker selection
+  // -----------------------------------------------------------------------
+
+  const handlePickerSelect = useCallback(
+    (urls: string[]) => {
+      if (multiple) {
+        const remaining = maxFiles - value.length;
+        onUpload([...value, ...urls.slice(0, remaining)]);
+      } else {
+        onUpload(urls.slice(0, 1));
+      }
+    },
+    [value, onUpload, multiple, maxFiles],
+  );
+
+  // -----------------------------------------------------------------------
   // Derived state
   // -----------------------------------------------------------------------
 
@@ -572,22 +604,47 @@ export default function ImageUpload({
           </div>
 
           {!isUploading && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={disabled}
-              onClick={(e) => {
-                e.stopPropagation();
-                inputRef.current?.click();
-              }}
-            >
-              <Upload className="size-4" />
-              Choose {multiple ? "Images" : "Image"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={disabled}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  inputRef.current?.click();
+                }}
+              >
+                <Upload className="size-4" />
+                Carica {multiple ? "Immagini" : "Immagine"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={disabled}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPickerOpen(true);
+                }}
+              >
+                <FolderOpen className="size-4" />
+                Sfoglia Libreria
+              </Button>
+            </div>
           )}
         </div>
       )}
+
+      {/* Media Picker Dialog */}
+      <MediaPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onSelect={handlePickerSelect}
+        multiple={multiple}
+        maxSelect={multiple ? maxFiles - value.length : 1}
+        defaultBucket={bucket}
+      />
     </div>
   );
 }

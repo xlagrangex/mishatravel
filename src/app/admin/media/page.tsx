@@ -1,9 +1,21 @@
-import { getStorageFiles, STORAGE_BUCKETS } from "@/lib/supabase/queries/media";
-import MediaGrid from "./MediaGrid";
+import { getMediaItems, getMediaFolders, getMediaFolderCounts } from "@/lib/supabase/queries/media";
+import MediaLibrary from "./MediaLibrary";
 
 export const dynamic = "force-dynamic";
 
 export default async function MediaPage() {
-  const items = await getStorageFiles();
-  return <MediaGrid items={items} buckets={[...STORAGE_BUCKETS]} />;
+  const [mediaResult, folders, folderCounts] = await Promise.all([
+    getMediaItems({ page: 1, pageSize: 50 }),
+    getMediaFolders(),
+    getMediaFolderCounts(),
+  ]);
+
+  return (
+    <MediaLibrary
+      initialItems={mediaResult.items}
+      initialTotal={mediaResult.total}
+      initialFolders={folders}
+      initialCounts={folderCounts}
+    />
+  );
 }
