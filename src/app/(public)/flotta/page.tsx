@@ -14,7 +14,7 @@ export default async function FlottaPage() {
       <PageHero
         title="La Nostra Flotta"
         subtitle="Navi eleganti per crociere indimenticabili"
-        backgroundImage="https://images.unsplash.com/photo-1548574505-5e239809ee19?w=1600&h=600&fit=crop"
+        backgroundImage="https://images.unsplash.com/photo-1541343672885-9be56236302a?w=1600&h=600&fit=crop"
         breadcrumbs={[{ label: "Flotta", href: "/flotta" }]}
       />
 

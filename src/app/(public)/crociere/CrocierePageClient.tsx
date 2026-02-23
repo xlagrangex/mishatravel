@@ -332,7 +332,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
       {/* Hero */}
       <section className="relative min-h-[420px] md:min-h-[480px] flex items-end">
         <Image
-          src="https://images.unsplash.com/photo-1548574505-5e239809ee19?w=1600&h=800&fit=crop"
+          src="https://images.unsplash.com/photo-1676037073075-914d753b3afb?w=1600&h=800&fit=crop"
           alt="Crociera fluviale"
           fill
           className="object-cover"
