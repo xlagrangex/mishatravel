@@ -27,7 +27,7 @@ export default function AgencyCTA() {
           <p className="text-lg md:text-xl text-center text-[#C41E2F] font-semibold font-[family-name:var(--font-poppins)] mb-3">
             Al resto pensiamo noi
           </p>
-          <div className="section-divider mb-16" />
+          <div className="section-divider mb-20" />
         </SectionReveal>
 
         <SectionReveal delay={0.1}>

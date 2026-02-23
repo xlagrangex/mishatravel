@@ -57,7 +57,7 @@ export default function DeparturesTimeline({ departures, tours, cruises }: Props
           <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
             Prossime partenze
           </h2>
-          <div className="section-divider mb-16" />
+          <div className="section-divider mb-20" />
         </SectionReveal>
 
         <div className="relative group">

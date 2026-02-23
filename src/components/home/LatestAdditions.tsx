@@ -47,7 +47,7 @@ export default function LatestAdditions({
               Ultimi viaggi aggiunti
             </h2>
           </div>
-          <div className="section-divider mb-16" />
+          <div className="section-divider mb-20" />
         </SectionReveal>
 
         <SectionReveal delay={0.1}>

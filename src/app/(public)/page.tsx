@@ -56,7 +56,7 @@ export default async function HomePage() {
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
               I nostri Tour
             </h2>
-            <div className="section-divider mb-16" />
+            <div className="section-divider mb-20" />
           </SectionReveal>
           {featuredTours.length > 0 ? (
             <SectionReveal delay={0.15}>
@@ -96,7 +96,7 @@ export default async function HomePage() {
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
               Crociere Fluviali
             </h2>
-            <div className="section-divider mb-16" />
+            <div className="section-divider mb-20" />
           </SectionReveal>
           {featuredCruises.length > 0 ? (
             <SectionReveal delay={0.15}>
