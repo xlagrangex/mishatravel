@@ -48,7 +48,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import type { QuoteDetailData } from '@/lib/supabase/queries/admin-quotes'
+import type { QuoteDetailData, BankingPreset } from '@/lib/supabase/queries/admin-quotes'
 import {
   createOffer,
   confirmWithContract,
@@ -554,10 +554,12 @@ function RevokeOfferButton({
 function ConfirmContractDialog({
   requestId,
   offerId,
+  bankingPresets,
   onSuccess,
 }: {
   requestId: string
   offerId: string
+  bankingPresets: BankingPreset[]
   onSuccess: () => void
 }) {
   const [open, setOpen] = useState(false)
@@ -566,6 +568,23 @@ function ConfirmContractDialog({
   const [uploading, setUploading] = useState(false)
   const [contractUrl, setContractUrl] = useState<string | null>(null)
   const [contractFileName, setContractFileName] = useState<string | null>(null)
+
+  // Banking fields (controlled for preset auto-fill)
+  const [iban, setIban] = useState('')
+  const [destinatario, setDestinatario] = useState('')
+  const [causale, setCausale] = useState('')
+  const [banca, setBanca] = useState('')
+
+  const handlePresetSelect = (value: string) => {
+    if (!value) return
+    const idx = Number(value)
+    const preset = bankingPresets[idx]
+    if (!preset) return
+    setIban(preset.iban)
+    setDestinatario(preset.destinatario ?? '')
+    setCausale(preset.causale ?? '')
+    setBanca(preset.banca ?? '')
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -605,7 +624,6 @@ function ConfirmContractDialog({
     }
 
     const form = new FormData(e.currentTarget)
-    const iban = form.get('iban') as string
     const notes = (form.get('contract_notes') as string)?.trim() || null
 
     startTransition(async () => {
@@ -613,7 +631,10 @@ function ConfirmContractDialog({
         request_id: requestId,
         offer_id: offerId,
         contract_file_url: contractUrl,
-        iban,
+        iban: iban.trim(),
+        destinatario: destinatario.trim() || null,
+        causale: causale.trim() || null,
+        banca: banca.trim() || null,
         send_email: true,
         notes,
       })
@@ -631,29 +652,30 @@ function ConfirmContractDialog({
       <DialogTrigger asChild>
         <Button className="bg-emerald-600 hover:bg-emerald-700">
           <FileText className="h-4 w-4" />
-          Invia Contratto + IBAN
+          Invia Contratto + Dati Bonifico
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg overflow-hidden">
         <DialogHeader>
           <DialogTitle>Invia Contratto e Dati Pagamento</DialogTitle>
           <DialogDescription>
-            Carica il contratto PDF e inserisci l&apos;IBAN. La prenotazione
-            verra confermata.
+            Carica il contratto PDF e inserisci i dati per il bonifico.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-hidden">
+          {/* Contract PDF upload */}
+          <div className="overflow-hidden">
             <Label>Contratto PDF *</Label>
             {contractFileName ? (
-              <div className="mt-1 flex items-center gap-2 rounded-md border bg-green-50 px-3 py-2 text-sm min-w-0 overflow-hidden">
+              <div className="mt-1 flex items-center gap-2 rounded-md border bg-green-50 px-3 py-2 text-sm overflow-hidden max-w-full">
                 <FileText className="h-4 w-4 text-green-600 shrink-0" />
-                <span className="flex-1 truncate min-w-0">{contractFileName}</span>
+                <span className="truncate block flex-1" style={{ maxWidth: 'calc(100% - 60px)' }}>{contractFileName}</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
+                  className="shrink-0"
                   onClick={() => {
                     setContractUrl(null)
                     setContractFileName(null)
@@ -683,6 +705,29 @@ function ConfirmContractDialog({
             )}
           </div>
 
+          {/* Preset selector */}
+          {bankingPresets.length > 0 && (
+            <div>
+              <Label htmlFor="preset">Dati preimpostati</Label>
+              <select
+                id="preset"
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                defaultValue=""
+                onChange={(e) => handlePresetSelect(e.target.value)}
+              >
+                <option value="">-- Seleziona dati salvati --</option>
+                {bankingPresets.map((p, idx) => (
+                  <option key={idx} value={idx}>
+                    {p.iban}{p.destinatario ? ` - ${p.destinatario}` : ''}{p.banca ? ` (${p.banca})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <Separator />
+
+          {/* Banking fields */}
           <div>
             <Label htmlFor="iban">IBAN *</Label>
             <Input
@@ -690,7 +735,43 @@ function ConfirmContractDialog({
               name="iban"
               required
               placeholder="IT60 X054 2811 1010 0000 0123 456"
+              value={iban}
+              onChange={(e) => setIban(e.target.value)}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="destinatario">Destinatario</Label>
+            <Input
+              id="destinatario"
+              name="destinatario"
+              placeholder="MishaTravel S.r.l."
+              value={destinatario}
+              onChange={(e) => setDestinatario(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="banca">Banca</Label>
+              <Input
+                id="banca"
+                name="banca"
+                placeholder="Nome banca"
+                value={banca}
+                onChange={(e) => setBanca(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="causale">Causale</Label>
+              <Input
+                id="causale"
+                name="causale"
+                placeholder="Causale bonifico"
+                value={causale}
+                onChange={(e) => setCausale(e.target.value)}
+              />
+            </div>
           </div>
 
           <div>
@@ -698,7 +779,7 @@ function ConfirmContractDialog({
             <Textarea
               id="contract_notes"
               name="contract_notes"
-              rows={3}
+              rows={2}
               placeholder="Note aggiuntive per l'agenzia..."
             />
           </div>
@@ -1154,9 +1235,10 @@ function SendReminderDialog({
 
 interface QuoteDetailClientProps {
   quote: QuoteDetailData
+  bankingPresets: BankingPreset[]
 }
 
-export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
+export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetailClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
@@ -1249,6 +1331,7 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
             <ConfirmContractDialog
               requestId={quote.id}
               offerId={latestOffer.id}
+              bankingPresets={bankingPresets}
               onSuccess={handleRefresh}
             />
           )}
@@ -1518,11 +1601,11 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
                           </p>
                         </div>
                       )}
-                      {/* Contract + IBAN (shown after confirmation) */}
+                      {/* Contract + banking details (shown after confirmation) */}
                       {offer.contract_file_url && (
                         <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3">
                           <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-emerald-600" />
+                            <FileText className="h-4 w-4 text-emerald-600 shrink-0" />
                             <span className="text-sm font-medium text-emerald-800">
                               Contratto caricato
                             </span>
@@ -1530,17 +1613,26 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
                               href={offer.contract_file_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="ml-auto text-xs text-emerald-600 hover:underline"
+                              className="ml-auto text-xs text-emerald-600 hover:underline shrink-0"
                             >
                               <Download className="inline h-3 w-3 mr-1" />
                               Scarica
                             </a>
                           </div>
-                          {offer.iban && (
-                            <p className="mt-1 text-xs text-emerald-700">
-                              IBAN: <span className="font-mono font-semibold">{offer.iban}</span>
-                            </p>
-                          )}
+                          <div className="mt-2 space-y-0.5 text-xs text-emerald-700">
+                            {offer.iban && (
+                              <p>IBAN: <span className="font-mono font-semibold">{offer.iban}</span></p>
+                            )}
+                            {offer.destinatario && (
+                              <p>Destinatario: <span className="font-semibold">{offer.destinatario}</span></p>
+                            )}
+                            {offer.banca && (
+                              <p>Banca: {offer.banca}</p>
+                            )}
+                            {offer.causale && (
+                              <p>Causale: <span className="font-semibold">{offer.causale}</span></p>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

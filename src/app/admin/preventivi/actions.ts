@@ -415,6 +415,9 @@ const confirmContractSchema = z.object({
   offer_id: z.string().uuid(),
   contract_file_url: z.string().min(1, 'URL contratto obbligatorio'),
   iban: z.string().min(1, 'IBAN obbligatorio'),
+  destinatario: z.string().nullable().default(null),
+  causale: z.string().nullable().default(null),
+  banca: z.string().nullable().default(null),
   send_email: z.boolean().default(true),
   notes: z.string().nullable().default(null),
 })
@@ -434,17 +437,21 @@ export async function confirmWithContract(
     }
   }
 
-  const { request_id, offer_id, contract_file_url, iban, notes } =
+  const { request_id, offer_id, contract_file_url, iban, destinatario, causale, banca, notes } =
     parsed.data
   const supabase = createAdminClient()
 
   try {
-    // Update the offer with contract file and IBAN
+    // Update the offer with contract file and banking details
     const { error: offerError } = await supabase
       .from('quote_offers')
       .update({
         contract_file_url,
         iban: iban.trim(),
+        destinatario: destinatario?.trim() || null,
+        causale: causale?.trim() || null,
+        banca: banca?.trim() || null,
+        notes: notes?.trim() || null,
       })
       .eq('id', offer_id)
 
@@ -460,7 +467,12 @@ export async function confirmWithContract(
         emailSent = await sendTransactionalEmail(
           { email: ctx.agencyEmail, name: ctx.agencyName },
           'Contratto e dati di pagamento - MishaTravel',
-          contractSentEmail(ctx.agencyName, ctx.productName, iban.trim())
+          contractSentEmail(ctx.agencyName, ctx.productName, iban.trim(), {
+            destinatario: destinatario?.trim() || null,
+            causale: causale?.trim() || null,
+            banca: banca?.trim() || null,
+            notes: notes?.trim() || null,
+          })
         )
       }
     } catch (emailErr) {
@@ -477,11 +489,17 @@ export async function confirmWithContract(
       return { success: false, error: statusError.message }
     }
 
+    const detailParts = [`IBAN: ${iban.trim()}`]
+    if (destinatario) detailParts.push(`Destinatario: ${destinatario.trim()}`)
+    if (causale) detailParts.push(`Causale: ${causale.trim()}`)
+    if (notes) detailParts.push(`Note: ${notes.trim()}`)
+    detailParts.push(emailSent ? 'Email inviata' : 'Attenzione: invio email fallito')
+
     await addTimelineEntry(
       supabase,
       request_id,
-      'Contratto e IBAN inviati',
-      `IBAN: ${iban.trim()}${notes ? ` - Note: ${notes}` : ''}${emailSent ? ' - Email inviata' : ' - Attenzione: invio email fallito'}`
+      'Contratto e dati bancari inviati',
+      detailParts.join(' - ')
     )
 
     revalidatePath('/admin/preventivi')

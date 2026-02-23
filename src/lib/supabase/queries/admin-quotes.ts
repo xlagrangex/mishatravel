@@ -84,6 +84,10 @@ export type QuoteDetailData = {
     offer_expiry: string | null
     contract_file_url: string | null
     iban: string | null
+    destinatario: string | null
+    causale: string | null
+    banca: string | null
+    notes: string | null
     created_at: string
   }[]
   payments: {
@@ -328,6 +332,52 @@ export async function getQuoteDetail(
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     ),
   }
+}
+
+// ---------------------------------------------------------------------------
+// Banking presets (from previously used offers)
+// ---------------------------------------------------------------------------
+
+export type BankingPreset = {
+  iban: string
+  destinatario: string | null
+  causale: string | null
+  banca: string | null
+}
+
+/**
+ * Fetch distinct banking detail combinations previously used in offers.
+ */
+export async function getBankingPresets(): Promise<BankingPreset[]> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('quote_offers')
+    .select('iban, destinatario, causale, banca')
+    .not('iban', 'is', null)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Failed to fetch banking presets:', error.message)
+    return []
+  }
+
+  // Deduplicate by IBAN
+  const seen = new Set<string>()
+  const presets: BankingPreset[] = []
+  for (const row of data ?? []) {
+    if (!row.iban) continue
+    const key = row.iban.trim().toUpperCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    presets.push({
+      iban: row.iban,
+      destinatario: row.destinatario ?? null,
+      causale: row.causale ?? null,
+      banca: row.banca ?? null,
+    })
+  }
+  return presets
 }
 
 /**

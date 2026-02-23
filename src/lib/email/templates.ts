@@ -411,13 +411,58 @@ export function paymentDetailsSentEmail(
 }
 
 /**
- * Contract + IBAN sent by admin to the agency after acceptance.
+ * Contract + banking details sent by admin to the agency after acceptance.
  */
 export function contractSentEmail(
   agencyName: string,
   productName: string,
-  iban: string
+  iban: string,
+  extra?: {
+    destinatario?: string | null
+    causale?: string | null
+    banca?: string | null
+    notes?: string | null
+  }
 ): string {
+  const rows = [
+    `<tr>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;width:140px;">IBAN</td>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">${iban}</td>
+    </tr>`,
+  ];
+  if (extra?.destinatario) {
+    rows.push(`<tr>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Destinatario</td>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">${extra.destinatario}</td>
+    </tr>`);
+  }
+  if (extra?.banca) {
+    rows.push(`<tr>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Banca</td>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;">${extra.banca}</td>
+    </tr>`);
+  }
+  if (extra?.causale) {
+    rows.push(`<tr>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Causale</td>
+      <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">${extra.causale}</td>
+    </tr>`);
+  }
+  // Remove border-bottom from last row
+  const lastRow = rows[rows.length - 1];
+  rows[rows.length - 1] = lastRow.replace(/border-bottom:1px solid #e2e8f0;/g, '');
+
+  const notesBlock = extra?.notes
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;">
+      <tr>
+        <td style="background-color:#f8fafc;border-radius:6px;padding:16px;border-left:4px solid #e2e8f0;">
+          <p style="margin:0;font-size:13px;color:#64748b;">Note</p>
+          <p style="margin:8px 0 0;font-size:14px;color:#334155;line-height:1.6;">${extra.notes.replace(/\n/g, "<br/>")}</p>
+        </td>
+      </tr>
+    </table>`
+    : "";
+
   return baseTemplate(`
     <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Contratto e dati di pagamento</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
@@ -426,12 +471,13 @@ export function contractSentEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Il contratto per <strong>&ldquo;${productName}&rdquo;</strong> &egrave; pronto. In allegato trovi il documento contrattuale.
     </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Di seguito i dati per effettuare il bonifico:
+    </p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;border:1px solid #e2e8f0;border-radius:6px;">
-      <tr>
-        <td style="padding:12px 16px;font-size:13px;color:#64748b;width:140px;">IBAN</td>
-        <td style="padding:12px 16px;font-size:14px;color:#333333;font-weight:600;">${iban}</td>
-      </tr>
+      ${rows.join("\n")}
     </table>
+    ${notesBlock}
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Accedi alla tua area riservata per scaricare il contratto completo e procedere con il pagamento.
     </p>

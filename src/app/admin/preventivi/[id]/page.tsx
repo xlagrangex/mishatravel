@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getQuoteDetail } from '@/lib/supabase/queries/admin-quotes'
+import { getQuoteDetail, getBankingPresets } from '@/lib/supabase/queries/admin-quotes'
 import QuoteDetailClient from './QuoteDetailClient'
 
 export const dynamic = "force-dynamic";
@@ -10,11 +10,14 @@ interface Props {
 
 export default async function QuoteDetailPage({ params }: Props) {
   const { id } = await params
-  const quote = await getQuoteDetail(id)
+  const [quote, bankingPresets] = await Promise.all([
+    getQuoteDetail(id),
+    getBankingPresets(),
+  ])
 
   if (!quote) {
     notFound()
   }
 
-  return <QuoteDetailClient quote={quote} />
+  return <QuoteDetailClient quote={quote} bankingPresets={bankingPresets} />
 }
