@@ -4,22 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./ProfileForm";
 import { PasswordForm } from "./PasswordForm";
-import { DocumentsCard } from "./DocumentsCard";
-import type { Agency, AgencyDocument } from "@/lib/types";
+import type { Agency } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 async function getAgencyProfile(): Promise<{
   agency: Agency | null;
   email: string | null;
-  documents: AgencyDocument[];
 }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { agency: null, email: null, documents: [] };
+  if (!user) return { agency: null, email: null };
 
   const { data: agency } = await supabase
     .from("agencies")
@@ -27,23 +25,16 @@ async function getAgencyProfile(): Promise<{
     .eq("user_id", user.id)
     .single();
 
-  if (!agency) return { agency: null, email: user.email ?? null, documents: [] };
-
-  const { data: documents } = await supabase
-    .from("agency_documents")
-    .select("*")
-    .eq("agency_id", agency.id)
-    .order("uploaded_at", { ascending: false });
+  if (!agency) return { agency: null, email: user.email ?? null };
 
   return {
     agency: agency as Agency,
     email: user.email ?? null,
-    documents: (documents ?? []) as AgencyDocument[],
   };
 }
 
 export default async function ProfiloPage() {
-  const { agency, email, documents } = await getAgencyProfile();
+  const { agency, email } = await getAgencyProfile();
 
   if (!agency) {
     redirect("/login");
@@ -76,7 +67,7 @@ export default async function ProfiloPage() {
           </Card>
         </div>
 
-        {/* Password change + Documents */}
+        {/* Password change */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -86,8 +77,6 @@ export default async function ProfiloPage() {
               <PasswordForm email={email} />
             </CardContent>
           </Card>
-
-          <DocumentsCard agencyId={agency.id} documents={documents} />
         </div>
       </div>
     </div>

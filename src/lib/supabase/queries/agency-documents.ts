@@ -37,3 +37,37 @@ export async function getAgencyDocumentsAdmin(agencyId: string): Promise<AgencyD
 
   return (data ?? []) as AgencyDocument[]
 }
+
+/** Pending document for admin dashboard widget. */
+export interface PendingDocument {
+  id: string
+  agency_id: string
+  business_name: string
+  file_name: string | null
+  file_url: string
+  uploaded_at: string
+}
+
+/** Get all unverified documents with agency info — admin dashboard widget. */
+export async function getPendingDocuments(): Promise<PendingDocument[]> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('agency_documents')
+    .select('id, agency_id, file_name, file_url, uploaded_at, agencies!inner(business_name)')
+    .eq('verified', false)
+    .order('uploaded_at', { ascending: false })
+
+  if (!data) return []
+
+  return data.map((row: Record<string, unknown>) => {
+    const agencies = row.agencies as { business_name: string } | null
+    return {
+      id: row.id as string,
+      agency_id: row.agency_id as string,
+      business_name: agencies?.business_name ?? 'N/D',
+      file_name: row.file_name as string | null,
+      file_url: row.file_url as string,
+      uploaded_at: row.uploaded_at as string,
+    }
+  })
+}

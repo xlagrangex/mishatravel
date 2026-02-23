@@ -97,7 +97,7 @@ export default function DocumentUploadBanner({
           <div className="max-w-md">
             <FileUpload
               onUpload={handleUpload}
-              bucket="agencies"
+              bucket="agency-documents"
               accept="application/pdf"
               maxSizeBytes={10 * 1024 * 1024}
               fileTypeLabel="Visura Camerale (PDF)"

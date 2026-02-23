@@ -197,6 +197,28 @@ export function adminDocumentUploadedEmail(agencyName: string, agencyId: string)
 }
 
 /**
+ * Email sent to the agency when admin verifies their visura camerale.
+ */
+export function agencyDocumentVerifiedEmail(agencyName: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Visura camerale verificata</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      La tua visura camerale &egrave; stata <strong style="color:#16a34a;">verificata con successo</strong> dal nostro team.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Il tuo account &egrave; ora completamente attivo. Puoi accedere all&rsquo;area riservata e iniziare a richiedere preventivi per i tuoi clienti.
+    </p>
+    ${ctaButton("Vai alla dashboard", `${SITE_URL}/agenzia/dashboard`)}
+    <p style="color:#64748b;font-size:13px;margin-top:24px;">
+      Per qualsiasi domanda, non esitare a contattarci.
+    </p>
+  `);
+}
+
+/**
  * Email sent when an agency account expires due to missing documents.
  */
 export function accountExpiredEmail(agencyName: string): string {

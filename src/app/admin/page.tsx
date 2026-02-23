@@ -14,8 +14,11 @@ import { Badge } from "@/components/ui/badge";
 import { getPendingAgencies, getAgencyStats } from "@/lib/supabase/queries/admin-agencies";
 import { getQuoteStats, getAllQuotes } from "@/lib/supabase/queries/admin-quotes";
 import { getAllDepartures } from "@/lib/supabase/queries/departures";
+import { getPendingDocuments } from "@/lib/supabase/queries/agency-documents";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUser } from "@/lib/supabase/auth";
 import PendingAgenciesWidget from "./PendingAgenciesWidget";
+import PendingDocumentsWidget from "./PendingDocumentsWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -80,15 +83,17 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default async function AdminDashboard() {
   // Fetch all data in parallel
-  const [pendingAgencies, counts, agencyStats, quoteStats, recentQuotes, allDepartures] =
+  const [pendingAgencies, pendingDocs, counts, agencyStats, quoteStats, recentQuotes, allDepartures, currentUser] =
     await Promise.all([
       getPendingAgencies().catch(() => [] as Awaited<ReturnType<typeof getPendingAgencies>>),
+      getPendingDocuments().catch(() => []),
       getDashboardCounts().catch(() => ({ tours: 0, cruises: 0, ships: 0, destinations: 0 })),
       getAgencyStats().catch(() => ({ total: 0, active: 0, pending: 0, blocked: 0, totalQuotes: 0 })),
       getQuoteStats().catch(() => ({ total: 0, sent: 0, in_review: 0, offer_sent: 0, accepted: 0, declined: 0, payment_sent: 0, confirmed: 0, rejected: 0 }),
       ),
       getAllQuotes().catch(() => []),
       getAllDepartures().catch(() => []),
+      getCurrentUser().catch(() => null),
     ]);
 
   const upcomingCount = getUpcomingDeparturesCount(allDepartures);
@@ -129,6 +134,11 @@ export default async function AdminDashboard() {
       {/* Pending Agencies Widget - only shows if count > 0 */}
       {pendingAgencies.length > 0 && (
         <PendingAgenciesWidget agencies={pendingAgencies} />
+      )}
+
+      {/* Pending Documents Widget - only shows if count > 0 */}
+      {pendingDocs.length > 0 && currentUser && (
+        <PendingDocumentsWidget documents={pendingDocs} adminUserId={currentUser.id} />
       )}
 
       {/* Stats Grid */}

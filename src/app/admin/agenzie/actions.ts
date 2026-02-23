@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { sendTransactionalEmail } from '@/lib/email/brevo'
-import { agencyApprovedEmail, agencyCreatedByAdminEmail } from '@/lib/email/templates'
+import { agencyApprovedEmail, agencyCreatedByAdminEmail, agencyDocumentVerifiedEmail } from '@/lib/email/templates'
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string }
 
@@ -202,6 +202,7 @@ export async function createAgencyFromAdmin(
 
 /**
  * Mark an agency document as verified.
+ * Sends notification + email to the agency.
  */
 export async function verifyAgencyDocument(
   documentId: string,
@@ -220,7 +221,46 @@ export async function verifyAgencyDocument(
 
   if (error) return { success: false, error: error.message }
 
+  // Fetch agency info to send notification + email
+  try {
+    const { data: doc } = await supabase
+      .from('agency_documents')
+      .select('agency_id')
+      .eq('id', documentId)
+      .single()
+
+    if (doc) {
+      const { data: agency } = await supabase
+        .from('agencies')
+        .select('user_id, business_name, email')
+        .eq('id', doc.agency_id)
+        .single()
+
+      if (agency) {
+        // In-app notification
+        await supabase.from('notifications').insert({
+          user_id: agency.user_id,
+          title: 'Visura camerale verificata',
+          message: 'La tua visura camerale è stata verificata con successo. Il tuo account è ora completamente attivo.',
+          link: '/agenzia/dashboard',
+        })
+
+        // Email notification
+        if (agency.email) {
+          await sendTransactionalEmail(
+            { email: agency.email, name: agency.business_name },
+            'Visura camerale verificata - MishaTravel',
+            agencyDocumentVerifiedEmail(agency.business_name)
+          )
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error notifying agency about document verification:', e)
+  }
+
   revalidatePath('/admin/agenzie')
+  revalidatePath('/admin')
   return { success: true }
 }
 
