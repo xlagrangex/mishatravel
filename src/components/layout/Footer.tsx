@@ -24,15 +24,15 @@ function FooterLinkList({
 }) {
   return (
     <div>
-      <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-5 font-[family-name:var(--font-poppins)]">
+      <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4 font-[family-name:var(--font-poppins)]">
         {title}
       </h4>
-      <ul className="space-y-3">
+      <ul className="space-y-2.5">
         {links.map((link) => (
           <li key={link.href + link.label}>
             <Link
               href={link.href}
-              className="text-[15px] text-white/80 hover:text-white transition-colors"
+              className="text-[15px] text-white/75 hover:text-white transition-colors"
             >
               {link.label}
             </Link>
@@ -47,27 +47,81 @@ export default function Footer() {
   return (
     <footer>
       {/* ============================
-          Top Section: Contact columns
+          Main Section: Logo + Links + Contacts
          ============================ */}
-      <div className="bg-[#C41E2F] text-white">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="bg-[#A31825] text-white">
+        <div className="container mx-auto px-4 py-16 lg:py-20">
+          {/* Top area: Logo left + Links 2×2 right */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+            {/* Logo & company info */}
+            <div className="lg:col-span-4">
+              <Link href="/" className="inline-block mb-5">
+                <Image
+                  src="/images/logo/logo-footer.webp"
+                  alt="Misha Travel"
+                  width={220}
+                  height={70}
+                  className="h-14 w-auto"
+                />
+              </Link>
+              <p className="text-[15px] text-white/65 leading-relaxed max-w-sm">
+                Tour operator italiano specializzato in viaggi culturali, grandi
+                itinerari e crociere fluviali in Europa e nel mondo.
+              </p>
+              {/* Social Icons */}
+              <div className="flex items-center gap-3 mt-6">
+                <a
+                  href="https://www.facebook.com/mishatravel"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <Facebook className="size-5" />
+                </a>
+                <a
+                  href="https://www.instagram.com/mishatravel"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <Instagram className="size-5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Link columns in 2×2 grid */}
+            <div className="lg:col-span-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10">
+                <FooterLinkList title="Link Rapidi" links={footerLinkRapidi} />
+                <FooterLinkList
+                  title="Pagine Legali"
+                  links={footerPagineLegali}
+                />
+                <FooterLinkList title="Info Utili" links={footerInfoUtili} />
+                <FooterLinkList
+                  title="Area Agenzie"
+                  links={footerAreaAgenzie}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-white/15 mt-12 pt-10" />
+
+          {/* Contact row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {footerContacts.map((contact) => (
-              <div
-                key={contact.title}
-                className="border border-white/20 rounded-lg p-5 bg-white/5 hover:bg-white/10 transition-all duration-300"
-              >
-                <h4 className="font-semibold text-lg mb-4 font-[family-name:var(--font-poppins)]">
+              <div key={contact.title}>
+                <h5 className="font-semibold text-sm mb-2 font-[family-name:var(--font-poppins)]">
                   {contact.title}
-                </h4>
-                <div className="space-y-3 text-[15px] text-white/90">
-                  <p className="flex items-start gap-2">
-                    <MapPin className="size-4 mt-0.5 shrink-0" />
-                    <span>{contact.address || "Piazza Grimaldi 1-3, 16124 Genova"}</span>
-                  </p>
+                </h5>
+                <div className="space-y-1.5 text-sm text-white/70">
                   {contact.phones.map((phone) => (
                     <p key={phone} className="flex items-center gap-2">
-                      <Phone className="size-4 shrink-0" />
+                      <Phone className="size-3.5 shrink-0" />
                       <a
                         href={`tel:${phone.replace(/\s/g, "")}`}
                         className="hover:text-white transition-colors"
@@ -78,7 +132,7 @@ export default function Footer() {
                   ))}
                   {contact.emails.map((email) => (
                     <p key={email} className="flex items-center gap-2">
-                      <Mail className="size-4 shrink-0" />
+                      <Mail className="size-3.5 shrink-0" />
                       <a
                         href={`mailto:${email}`}
                         className="hover:text-white transition-colors"
@@ -95,64 +149,15 @@ export default function Footer() {
       </div>
 
       {/* ============================
-          Middle Section: Links grid
+          Bottom Bar: Legal + Credits
          ============================ */}
-      <div className="bg-[#A31825] text-white">
-        <div className="container mx-auto px-4 py-14">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
-            {/* Logo & company info */}
-            <div className="sm:col-span-2 lg:col-span-1">
-              <Link href="/" className="inline-block mb-4">
-                <Image
-                  src="/images/logo/logo-footer.webp"
-                  alt="Misha Travel"
-                  width={180}
-                  height={60}
-                  className="h-12 w-auto"
-                />
-              </Link>
-              <p className="text-sm text-white/70 leading-relaxed">
-                Tour operator italiano specializzato in viaggi culturali, grandi
-                itinerari e crociere fluviali in Europa e nel mondo.
-              </p>
-              {/* Social Icons */}
-              <div className="flex items-center gap-3 mt-4">
-                <a
-                  href="https://www.facebook.com/mishatravel"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  <Facebook className="size-4" />
-                </a>
-                <a
-                  href="https://www.instagram.com/mishatravel"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  <Instagram className="size-4" />
-                </a>
-              </div>
-            </div>
-
-            {/* Link columns */}
-            <FooterLinkList title="Link Rapidi" links={footerLinkRapidi} />
-            <FooterLinkList title="Pagine Legali" links={footerPagineLegali} />
-            <FooterLinkList title="Info Utili" links={footerInfoUtili} />
-            <FooterLinkList title="Area Agenzie" links={footerAreaAgenzie} />
-          </div>
-        </div>
-      </div>
-
-      {/* ============================
-          Bottom Bar: Copyright + Legal
-         ============================ */}
-      <div className="bg-[#8B1520] text-white/70">
+      <div className="bg-[#8B1520] text-white/60">
         <div className="container mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
-          <p>Crucemundo Italia Misha Travel S.r.l. &mdash; Sede Legale: Piazza Grimaldi 1-3-5-7 r, 16124 Genova &mdash; P.Iva 02531300990 &mdash; &copy; {new Date().getFullYear()}</p>
+          <p>
+            Crucemundo Italia Misha Travel S.r.l. &mdash; Sede Legale: Piazza
+            Grimaldi 1-3-5-7 r, 16124 Genova &mdash; P.Iva 02531300990 &mdash;
+            &copy; {new Date().getFullYear()}
+          </p>
           <p>
             Sito realizzato da{" "}
             <a
