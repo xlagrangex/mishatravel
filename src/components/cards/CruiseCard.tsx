@@ -42,7 +42,8 @@ export default function CruiseCard({
             alt={title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            quality={60}
+            sizes="(max-width: 640px) 95vw, (max-width: 1024px) 45vw, 30vw"
           />
           <div className="absolute top-3 left-3">
             <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#C41E2F] text-white">
@@ -57,22 +58,22 @@ export default function CruiseCard({
             {title}
           </h3>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500 mb-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-500 mb-3">
             {river && (
-              <span className="flex items-center gap-1">
-                <MapPin className="size-3 text-[#C41E2F]" />
+              <span className="flex items-center gap-1.5">
+                <MapPin className="size-3.5 text-[#C41E2F]" />
                 {river}
               </span>
             )}
             {duration && (
-              <span className="flex items-center gap-1">
-                <Clock className="size-3 text-[#C41E2F]" />
-                Durata: {duration}
+              <span className="flex items-center gap-1.5">
+                <Clock className="size-3.5 text-[#C41E2F]" />
+                {duration}
               </span>
             )}
             {ship && (
-              <span className="flex items-center gap-1">
-                <Ship className="size-3 text-gray-400" />
+              <span className="flex items-center gap-1.5">
+                <Ship className="size-3.5 text-gray-400" />
                 {ship}
               </span>
             )}

@@ -92,16 +92,16 @@ export default function LatestAdditions({
                       <h3 className="font-semibold text-[#1B2D4F] text-sm mb-2 line-clamp-2 group-hover:text-[#C41E2F] transition-colors leading-snug">
                         {item.title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mb-3">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 mb-3">
                         {item.destination_name && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="size-3" />
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="size-3.5 text-[#C41E2F]" />
                             {item.destination_name}
                           </span>
                         )}
                         {item.durata_notti && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="size-3" />
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="size-3.5 text-[#C41E2F]" />
                             {item.durata_notti}
                           </span>
                         )}
