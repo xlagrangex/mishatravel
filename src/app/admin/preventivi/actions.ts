@@ -561,6 +561,31 @@ export async function uploadQuoteDocument(
       `${file_name} (${document_type})`
     )
 
+    // If it's an estratto conto, also create a record in account_statements
+    // so it appears in /admin/estratti-conto and /agenzia/estratto-conto
+    if (document_type === 'estratto_conto') {
+      try {
+        const { data: request } = await supabase
+          .from('quote_requests')
+          .select('agency_id')
+          .eq('id', request_id)
+          .single()
+
+        if (request?.agency_id) {
+          await supabase.from('account_statements').insert({
+            agency_id: request.agency_id,
+            title: file_name,
+            file_url,
+            data: new Date().toISOString().split('T')[0],
+            stato: 'Bozza',
+          })
+          revalidatePath('/admin/estratti-conto')
+        }
+      } catch (stmtErr) {
+        console.error('Error creating account statement:', stmtErr)
+      }
+    }
+
     // Send email notification to agency
     try {
       const ctx = await getQuoteEmailContext(supabase, request_id)
@@ -597,6 +622,13 @@ export async function deleteQuoteDocument(
   const supabase = createAdminClient()
 
   try {
+    // Fetch the document first to check if it's an estratto_conto
+    const { data: docData } = await supabase
+      .from('quote_documents')
+      .select('file_url, document_type')
+      .eq('id', documentId)
+      .single()
+
     const { error } = await supabase
       .from('quote_documents')
       .delete()
@@ -604,6 +636,19 @@ export async function deleteQuoteDocument(
 
     if (error) {
       return { success: false, error: error.message }
+    }
+
+    // Also delete the matching account_statement if it was an estratto_conto
+    if (docData?.document_type === 'estratto_conto' && docData.file_url) {
+      try {
+        await supabase
+          .from('account_statements')
+          .delete()
+          .eq('file_url', docData.file_url)
+        revalidatePath('/admin/estratti-conto')
+      } catch {
+        // Non-blocking: if the account_statement wasn't found, that's ok
+      }
     }
 
     revalidatePath('/admin/preventivi')
