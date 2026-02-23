@@ -60,7 +60,7 @@ export default function GuidaAgenziePage() {
 
       {/* Intro */}
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <p className="text-lg text-gray-600 leading-relaxed text-center">
             mishatravel.com &egrave; la piattaforma B2B dedicata alle agenzie di viaggio.
             Qui trovi tour, crociere fluviali e pacchetti esclusivi pensati per essere venduti
@@ -72,7 +72,7 @@ export default function GuidaAgenziePage() {
 
       {/* Panoramica navigazione */}
       <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="text-center mb-10">
             <Monitor className="size-10 text-[#C41E2F] mx-auto mb-3" />
             <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)]">
@@ -105,7 +105,7 @@ export default function GuidaAgenziePage() {
 
       {/* Processo di registrazione */}
       <section className="py-16 bg-white">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="flex items-center gap-3 mb-2">
             <UserPlus className="size-8 text-[#C41E2F]" />
             <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)]">
@@ -168,7 +168,7 @@ export default function GuidaAgenziePage() {
 
       {/* Accesso e Area Riservata */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="flex items-center gap-3 mb-2">
             <LogIn className="size-8 text-[#C41E2F]" />
             <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)]">
@@ -222,7 +222,7 @@ export default function GuidaAgenziePage() {
 
       {/* Flusso di navigazione */}
       <section className="py-16 bg-white">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] text-center mb-3">
             Come Navigare tra le Sezioni
           </h2>
@@ -295,7 +295,7 @@ export default function GuidaAgenziePage() {
 
       {/* Supporto e sicurezza */}
       <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg p-8 border border-gray-100">
               <Headphones className="size-8 text-[#C41E2F] mb-4" />

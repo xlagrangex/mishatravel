@@ -9,7 +9,7 @@ export default function PrivacyPolicyPage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-2xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="prose prose-lg max-w-none text-gray-600">
             <p className="text-sm text-gray-400 mb-8">Ultimo aggiornamento: 1 giugno 2025</p>
 

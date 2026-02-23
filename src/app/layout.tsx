@@ -3,6 +3,7 @@ import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import { generateBaseMetadata } from "@/lib/seo/metadata";
 import { organizationSchema } from "@/lib/seo/structured-data";
+import DevTools from "@/components/DevTools";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -41,7 +42,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${inter.variable} antialiased`}
       >
-        {/* react-scan disabled - was redirecting to port 3002 */}
+        <DevTools />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

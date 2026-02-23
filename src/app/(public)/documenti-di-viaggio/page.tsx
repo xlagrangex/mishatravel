@@ -37,7 +37,7 @@ export default function DocumentiDiViaggioPage() {
       </section>
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
 
           {/* Viaggiatori Italiani */}
           <div id="italiani" className="mb-16">

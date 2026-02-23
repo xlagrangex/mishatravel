@@ -286,7 +286,7 @@ export default function RegistrazionePage() {
           breadcrumbs={[{ label: "Registrazione", href: "/registrazione" }]}
         />
         <section className="py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-lg text-center">
+          <div className="container mx-auto px-4 max-w-[1000px] text-center">
             <div className="bg-green-50 rounded-xl border border-green-200 p-8">
               <CheckCircle2 className="size-16 text-green-500 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
@@ -326,7 +326,7 @@ export default function RegistrazionePage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="bg-gray-50 rounded-lg p-8 border border-gray-100">
             <StepIndicator current={currentStep} />
 

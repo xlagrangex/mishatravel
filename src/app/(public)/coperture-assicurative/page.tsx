@@ -10,7 +10,7 @@ export default function CopertureAssicurativePage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-2xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="prose prose-lg max-w-none text-gray-600">
             <p className="mb-8 leading-relaxed text-lg">
               Viaggiare in sicurezza e una priorita per Misha Travel. Tutti i nostri pacchetti

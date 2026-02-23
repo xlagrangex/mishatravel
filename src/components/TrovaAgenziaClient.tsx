@@ -152,7 +152,7 @@ export default function TrovaAgenziaClient({ agencies }: TrovaAgenziaClientProps
       </div>
 
       {/* Search + Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 max-w-3xl mx-auto">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 max-w-[1000px] mx-auto">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
           <input
@@ -189,7 +189,7 @@ export default function TrovaAgenziaClient({ agencies }: TrovaAgenziaClientProps
 
       {/* Active filters */}
       {(search || selectedRegion) && (
-        <div className="flex items-center gap-2 mb-4 max-w-3xl mx-auto">
+        <div className="flex items-center gap-2 mb-4 max-w-[1000px] mx-auto">
           <span className="text-sm text-gray-500">
             {filtered.length} {filtered.length === 1 ? "risultato" : "risultati"}
           </span>

@@ -19,7 +19,7 @@ export default function ContattiPage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-[1000px]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Info */}
             <div>
