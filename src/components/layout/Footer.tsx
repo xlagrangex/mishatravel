@@ -24,17 +24,17 @@ function FooterLinkList({
 }) {
   return (
     <div>
-      <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-4 font-[family-name:var(--font-poppins)]">
+      <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-5 font-[family-name:var(--font-poppins)]">
         {title}
       </h4>
-      <ul className="space-y-2.5">
+      <ul className="space-y-3">
         {links.map((link) => (
           <li key={link.href + link.label}>
             <Link
               href={link.href}
-              className="group inline-flex items-center gap-1.5 text-[15px] text-white/70 hover:text-white transition-all duration-300"
+              className="group inline-flex items-center gap-1.5 text-base text-white/90 hover:text-white transition-all duration-300"
             >
-              <span className="inline-block w-0 group-hover:w-2 h-px bg-white/80 transition-all duration-300" />
+              <span className="inline-block w-0 group-hover:w-2.5 h-px bg-white transition-all duration-300" />
               {link.label}
             </Link>
           </li>
@@ -68,7 +68,7 @@ export default function Footer() {
                   className="h-20 w-auto transition-all duration-500 group-hover:brightness-110 group-hover:scale-[1.02]"
                 />
               </Link>
-              <p className="text-base text-white/60 leading-relaxed max-w-sm">
+              <p className="text-base text-white/80 leading-relaxed max-w-sm">
                 Tour operator italiano specializzato in viaggi culturali, grandi
                 itinerari e crociere fluviali in Europa e nel mondo.
               </p>
@@ -113,22 +113,22 @@ export default function Footer() {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-white/15 mt-14 pt-10" />
+          <div className="border-t border-white/20 mt-14 pt-10" />
 
           {/* Contact row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {footerContacts.map((contact) => (
               <div
                 key={contact.title}
                 className="group/card rounded-lg p-4 -m-4 hover:bg-white/5 transition-all duration-300"
               >
-                <h5 className="font-semibold text-sm mb-2.5 font-[family-name:var(--font-poppins)] group-hover/card:translate-x-0.5 transition-transform duration-300">
+                <h5 className="font-semibold text-base text-white mb-3 font-[family-name:var(--font-poppins)] group-hover/card:translate-x-0.5 transition-transform duration-300">
                   {contact.title}
                 </h5>
-                <div className="space-y-1.5 text-sm text-white/65">
+                <div className="space-y-2 text-[15px] text-white/85">
                   {contact.phones.map((phone) => (
-                    <p key={phone} className="flex items-center gap-2">
-                      <Phone className="size-3.5 shrink-0" />
+                    <p key={phone} className="flex items-center gap-2.5">
+                      <Phone className="size-4 shrink-0 text-white/60" />
                       <a
                         href={`tel:${phone.replace(/\s/g, "")}`}
                         className="hover:text-white transition-colors duration-300"
@@ -138,8 +138,8 @@ export default function Footer() {
                     </p>
                   ))}
                   {contact.emails.map((email) => (
-                    <p key={email} className="flex items-center gap-2">
-                      <Mail className="size-3.5 shrink-0" />
+                    <p key={email} className="flex items-center gap-2.5">
+                      <Mail className="size-4 shrink-0 text-white/60" />
                       <a
                         href={`mailto:${email}`}
                         className="hover:text-white transition-colors duration-300"
@@ -158,8 +158,8 @@ export default function Footer() {
       {/* ============================
           Bottom Bar: Legal + Credits
          ============================ */}
-      <div className="bg-[#8B1520] text-white/55">
-        <div className="container mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+      <div className="bg-[#8B1520] text-white/75">
+        <div className="container mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
           <p>
             Crucemundo Italia Misha Travel S.r.l. &mdash; Sede Legale: Piazza
             Grimaldi 1-3-5-7 r, 16124 Genova &mdash; P.Iva 02531300990 &mdash;
