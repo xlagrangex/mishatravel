@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save } from "lucide-react";
+import { Save, X, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -17,6 +16,116 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { saveSettings } from "@/app/admin/impostazioni/actions";
+
+// ---------------------------------------------------------------------------
+// Email Tags Input
+// ---------------------------------------------------------------------------
+
+function EmailTagsInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const emails = value
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const addEmail = useCallback(
+    (raw: string) => {
+      const email = raw.trim();
+      if (!email) return;
+      // Basic email check
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      if (emails.includes(email)) return;
+      const next = [...emails, email].join(", ");
+      onChange(next);
+      setInputValue("");
+    },
+    [emails, onChange]
+  );
+
+  const removeEmail = useCallback(
+    (index: number) => {
+      const next = emails.filter((_, i) => i !== index).join(", ");
+      onChange(next || "");
+    },
+    [emails, onChange]
+  );
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addEmail(inputValue);
+    }
+    if (e.key === "Backspace" && !inputValue && emails.length > 0) {
+      removeEmail(emails.length - 1);
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text");
+    const parts = pasted.split(/[,;\s]+/).filter(Boolean);
+    let current = emails;
+    for (const part of parts) {
+      const email = part.trim();
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !current.includes(email)) {
+        current = [...current, email];
+      }
+    }
+    onChange(current.join(", "));
+    setInputValue("");
+  }
+
+  return (
+    <div
+      className="flex flex-wrap items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-text min-h-[2.5rem]"
+      onClick={() => inputRef.current?.focus()}
+    >
+      {emails.map((email, i) => (
+        <span
+          key={`${email}-${i}`}
+          className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-sm text-primary"
+        >
+          {email}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              removeEmail(i);
+            }}
+            className="rounded-full p-0.5 hover:bg-primary/20 transition-colors"
+            aria-label={`Rimuovi ${email}`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+      <input
+        ref={inputRef}
+        type="email"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        onBlur={() => {
+          if (inputValue.trim()) addEmail(inputValue);
+        }}
+        placeholder={emails.length === 0 ? "Inserisci email e premi Invio" : ""}
+        className="flex-1 min-w-[160px] bg-transparent outline-none placeholder:text-muted-foreground"
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Settings Form
+// ---------------------------------------------------------------------------
 
 const settingsSchema = z.object({
   admin_notification_emails: z
@@ -39,6 +148,8 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -53,6 +164,7 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
     },
   });
 
+  const adminEmails = watch("admin_notification_emails");
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -64,12 +176,29 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
       setServerError(result.error);
     } else {
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      setTimeout(() => setSuccess(false), 4000);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Success banner */}
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 flex items-center gap-3">
+          <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+          <p className="text-sm font-medium text-green-800">
+            Modifiche effettuate correttamente.
+          </p>
+        </div>
+      )}
+
+      {/* Error banner */}
+      {serverError && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {serverError}
+        </div>
+      )}
+
       {/* Email Settings */}
       <Card>
         <CardHeader>
@@ -81,21 +210,18 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admin_notification_emails">
-              Email notifiche admin{" "}
-              <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="admin_notification_emails"
-              placeholder="info@mishatravel.com"
-              rows={2}
-              {...register("admin_notification_emails")}
-              aria-invalid={!!errors.admin_notification_emails}
+            <Label>Email notifiche admin</Label>
+            <EmailTagsInput
+              value={adminEmails}
+              onChange={(val) =>
+                setValue("admin_notification_emails", val, {
+                  shouldValidate: true,
+                })
+              }
             />
             <p className="text-xs text-muted-foreground">
               Indirizzi email che ricevono le notifiche admin (nuove agenzie,
-              documenti caricati, ecc.). Separa pi&ugrave; indirizzi con una
-              virgola.
+              documenti caricati, ecc.). Digita un&apos;email e premi Invio.
             </p>
             {errors.admin_notification_emails && (
               <p className="text-xs text-destructive">
@@ -106,10 +232,7 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="sender_email">
-                Email mittente{" "}
-                <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="sender_email">Email mittente</Label>
               <Input
                 id="sender_email"
                 type="email"
@@ -128,10 +251,7 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sender_name">
-                Nome mittente{" "}
-                <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="sender_name">Nome mittente</Label>
               <Input
                 id="sender_name"
                 placeholder="MishaTravel"
@@ -187,20 +307,8 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
         </CardContent>
       </Card>
 
-      {/* Messages */}
-      {serverError && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {serverError}
-        </div>
-      )}
-      {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          Impostazioni salvate con successo.
-        </div>
-      )}
-
       {/* Submit */}
-      <div className="flex items-center gap-3 border-t pt-6">
+      <div className="flex items-center gap-3">
         <Button type="submit" disabled={isSubmitting}>
           <Save className="mr-2 h-4 w-4" />
           {isSubmitting ? "Salvataggio..." : "Salva Impostazioni"}
