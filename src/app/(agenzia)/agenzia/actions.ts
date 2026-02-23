@@ -120,7 +120,7 @@ export async function createQuoteRequest(
         notes: validated.notes ?? null,
         preview_price: validated.preview_price ?? null,
         preview_price_label: validated.preview_price_label ?? null,
-        status: "requested",
+        status: "sent",
       })
       .select("id")
       .single();
