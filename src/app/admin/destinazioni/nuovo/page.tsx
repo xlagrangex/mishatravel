@@ -1,6 +1,11 @@
 import DestinationForm from "@/components/admin/forms/DestinationForm";
+import { getDistinctMacroAreas } from "@/lib/supabase/queries/destinations";
 
-export default function NuovaDestinazionePage() {
+export const dynamic = "force-dynamic";
+
+export default async function NuovaDestinazionePage() {
+  const macroAreas = await getDistinctMacroAreas();
+
   return (
     <div className="space-y-6">
       <div>
@@ -12,7 +17,7 @@ export default function NuovaDestinazionePage() {
         </p>
       </div>
 
-      <DestinationForm />
+      <DestinationForm macroAreas={macroAreas} />
     </div>
   );
 }

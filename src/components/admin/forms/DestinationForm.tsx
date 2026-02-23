@@ -12,17 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { Destination } from "@/lib/types";
 import { saveDestination } from "@/app/admin/destinazioni/actions";
 import MapPicker from "@/components/admin/MapPicker";
 import ImageUpload from "@/components/admin/ImageUpload";
+import { CreatableSelect } from "@/components/ui/creatable-select";
+import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -62,29 +57,15 @@ function generateSlug(text: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Geographic area options
-// ---------------------------------------------------------------------------
-
-const MACRO_AREAS = [
-  "Europa",
-  "Medio Oriente",
-  "Asia",
-  "Asia Centrale",
-  "Africa",
-  "America Latina",
-  "Percorsi Fluviali",
-  "Oceania",
-] as const;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 interface DestinationFormProps {
   initialData?: Destination;
+  macroAreas?: string[];
 }
 
-export default function DestinationForm({ initialData }: DestinationFormProps) {
+export default function DestinationForm({ initialData, macroAreas = [] }: DestinationFormProps) {
   const {
     register,
     control,
@@ -126,11 +107,15 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
       });
       if (!result.success) {
         setServerError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Destinazione salvata con successo");
         router.push("/admin/destinazioni");
       }
     } catch {
-      setServerError("Errore imprevisto durante il salvataggio.");
+      const msg = "Errore imprevisto durante il salvataggio.";
+      setServerError(msg);
+      toast.error(msg);
     }
   };
 
@@ -193,21 +178,12 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
                   name="macro_area"
                   control={control}
                   render={({ field }) => (
-                    <Select
-                      value={field.value || undefined}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger id="macro_area" className="w-full">
-                        <SelectValue placeholder="Seleziona area geografica" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MACRO_AREAS.map((area) => (
-                          <SelectItem key={area} value={area}>
-                            {area}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CreatableSelect
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      options={macroAreas}
+                      placeholder="Seleziona o crea area geografica"
+                    />
                   )}
                 />
               </div>

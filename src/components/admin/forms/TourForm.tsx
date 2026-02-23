@@ -20,6 +20,7 @@ import FileUpload from "@/components/admin/FileUpload";
 import LocationSearchPopover from "@/components/admin/LocationSearchPopover";
 import type { LocationSearchResult } from "@/components/admin/LocationSearchPopover";
 
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Autocomplete } from "@/components/ui/autocomplete";
@@ -42,6 +43,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import DestinationSelect from "@/components/admin/DestinationSelect";
 
 import type { PensioneType, TourWithRelations } from "@/lib/types";
 
@@ -149,7 +151,7 @@ function slugify(text: string): string {
 
 interface TourFormProps {
   initialData?: TourWithRelations;
-  destinations?: { id: string; name: string; slug: string; coordinate: string | null }[];
+  destinations?: { id: string; name: string; slug: string; coordinate: string | null; macro_area: string | null }[];
   localities?: string[];
 }
 
@@ -316,11 +318,15 @@ export default function TourForm({ initialData, destinations = [], localities = 
       });
       if (!result.success) {
         setServerError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Tour salvato con successo");
         router.push("/admin/tours");
       }
     } catch {
-      setServerError("Errore imprevisto durante il salvataggio.");
+      const msg = "Errore imprevisto durante il salvataggio.";
+      setServerError(msg);
+      toast.error(msg);
     }
   };
 
@@ -439,23 +445,11 @@ export default function TourForm({ initialData, destinations = [], localities = 
                   control={control}
                   name="destination_id"
                   render={({ field }) => (
-                    <Select
-                      value={field.value || ""}
-                      onValueChange={(val) =>
-                        field.onChange(val === "" ? null : val)
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleziona destinazione" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {destinations.map((dest) => (
-                          <SelectItem key={dest.id} value={dest.id}>
-                            {dest.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <DestinationSelect
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      destinations={destinations}
+                    />
                   )}
                 />
               </div>

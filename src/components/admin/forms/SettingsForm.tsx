@@ -4,7 +4,8 @@ import { useState, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, X, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -166,32 +167,20 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
 
   const adminEmails = watch("admin_notification_emails");
   const [serverError, setServerError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const onSubmit = async (data: SettingsFormValues) => {
     setServerError(null);
-    setSuccess(false);
     const result = await saveSettings(data);
     if (!result.success) {
       setServerError(result.error);
+      toast.error(result.error);
     } else {
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 4000);
+      toast.success("Impostazioni salvate con successo");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Success banner */}
-      {success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-          <p className="text-sm font-medium text-green-800">
-            Modifiche effettuate correttamente.
-          </p>
-        </div>
-      )}
-
       {/* Error banner */}
       {serverError && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">

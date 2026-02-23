@@ -30,15 +30,29 @@ export async function getDestinationById(id: string): Promise<Destination | null
   return data
 }
 
-export async function getDestinationOptions(): Promise<{ id: string; name: string; slug: string; coordinate: string | null }[]> {
+export async function getDestinationOptions(): Promise<{ id: string; name: string; slug: string; coordinate: string | null; macro_area: string | null }[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('destinations')
-    .select('id, name, slug, coordinate')
+    .select('id, name, slug, coordinate, macro_area')
+    .order('macro_area', { ascending: true })
     .order('name', { ascending: true })
 
   if (error) throw new Error(`Errore caricamento destinazioni: ${error.message}`)
   return data ?? []
+}
+
+export async function getDistinctMacroAreas(): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('destinations')
+    .select('macro_area')
+    .not('macro_area', 'is', null)
+    .order('macro_area', { ascending: true })
+
+  if (error) throw new Error(`Errore caricamento macro aree: ${error.message}`)
+  const unique = [...new Set((data ?? []).map((d) => d.macro_area).filter(Boolean))] as string[]
+  return unique
 }
 
 // ---------------------------------------------------------------------------

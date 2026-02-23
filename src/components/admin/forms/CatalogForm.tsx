@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import type { Catalog } from "@/lib/types";
 import { saveCatalog } from "@/app/admin/cataloghi/actions";
 import ImageUpload from "@/components/admin/ImageUpload";
@@ -75,11 +76,15 @@ export default function CatalogForm({ initialData }: CatalogFormProps) {
       });
       if (!result.success) {
         setServerError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Catalogo salvato con successo");
         router.push("/admin/cataloghi");
       }
     } catch {
-      setServerError("Errore imprevisto durante il salvataggio.");
+      const msg = "Errore imprevisto durante il salvataggio.";
+      setServerError(msg);
+      toast.error(msg);
     }
   };
 

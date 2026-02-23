@@ -23,6 +23,7 @@ import FileUpload from "@/components/admin/FileUpload";
 import LocationSearchPopover from "@/components/admin/LocationSearchPopover";
 import type { LocationSearchResult } from "@/components/admin/LocationSearchPopover";
 
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Autocomplete } from "@/components/ui/autocomplete";
@@ -45,6 +46,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import DestinationSelect from "@/components/admin/DestinationSelect";
 
 import type {
   PensioneType,
@@ -182,7 +184,7 @@ function groupCabinsByDeck(
 interface CruiseFormProps {
   initialData?: CruiseWithRelations;
   ships?: { id: string; name: string }[];
-  destinations?: { id: string; name: string; slug: string; coordinate: string | null }[];
+  destinations?: { id: string; name: string; slug: string; coordinate: string | null; macro_area: string | null }[];
   localities?: string[];
 }
 
@@ -418,11 +420,15 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
       });
       if (!result.success) {
         setServerError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Crociera salvata con successo");
         router.push("/admin/crociere");
       }
     } catch {
-      setServerError("Errore imprevisto durante il salvataggio.");
+      const msg = "Errore imprevisto durante il salvataggio.";
+      setServerError(msg);
+      toast.error(msg);
     }
   };
 
@@ -567,23 +573,11 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                   control={control}
                   name="destination_id"
                   render={({ field }) => (
-                    <Select
-                      value={field.value || ""}
-                      onValueChange={(val) =>
-                        field.onChange(val === "" ? null : val)
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleziona destinazione" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {destinations.map((dest) => (
-                          <SelectItem key={dest.id} value={dest.id}>
-                            {dest.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <DestinationSelect
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      destinations={destinations}
+                    />
                   )}
                 />
               </div>

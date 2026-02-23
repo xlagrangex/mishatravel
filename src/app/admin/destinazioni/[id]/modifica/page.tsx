@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import DestinationForm from "@/components/admin/forms/DestinationForm";
-import { getDestinationById } from "@/lib/supabase/queries/destinations";
+import { getDestinationById, getDistinctMacroAreas } from "@/lib/supabase/queries/destinations";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,10 @@ export default async function ModificaDestinazionePage({
   params,
 }: ModificaDestinazionePageProps) {
   const { id } = await params;
-  const destination = await getDestinationById(id);
+  const [destination, macroAreas] = await Promise.all([
+    getDestinationById(id),
+    getDistinctMacroAreas(),
+  ]);
 
   if (!destination) notFound();
 
@@ -27,7 +30,7 @@ export default async function ModificaDestinazionePage({
         </p>
       </div>
 
-      <DestinationForm initialData={destination} />
+      <DestinationForm initialData={destination} macroAreas={macroAreas} />
     </div>
   );
 }

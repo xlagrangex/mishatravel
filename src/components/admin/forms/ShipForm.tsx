@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { saveShip } from "@/app/admin/flotta/actions";
 import {
   Plus,
@@ -254,11 +255,15 @@ export default function ShipForm({ initialData }: ShipFormProps) {
       });
       if (!result.success) {
         setServerError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Nave salvata con successo");
         router.push("/admin/flotta");
       }
     } catch {
-      setServerError("Errore imprevisto durante il salvataggio.");
+      const msg = "Errore imprevisto durante il salvataggio.";
+      setServerError(msg);
+      toast.error(msg);
     }
   };
 

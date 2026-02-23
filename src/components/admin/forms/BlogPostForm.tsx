@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import type { BlogPost, BlogCategory } from "@/lib/types";
 import { saveBlogPost } from "@/app/admin/blog/actions";
 import ImageUpload from "@/components/admin/ImageUpload";
@@ -127,11 +128,15 @@ export default function BlogPostForm({ initialData, categories }: BlogPostFormPr
       });
       if (!result.success) {
         setServerError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Articolo salvato con successo");
         router.push("/admin/blog");
       }
     } catch {
-      setServerError("Errore imprevisto durante il salvataggio.");
+      const msg = "Errore imprevisto durante il salvataggio.";
+      setServerError(msg);
+      toast.error(msg);
     }
   };
 
