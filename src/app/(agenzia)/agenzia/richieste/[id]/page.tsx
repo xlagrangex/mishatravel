@@ -9,6 +9,8 @@ import {
   Clock,
   FileText,
   CreditCard,
+  Download,
+  UserCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,38 +25,17 @@ export const dynamic = "force-dynamic";
 // ---------------------------------------------------------------------------
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  sent: {
-    label: "Inviata",
-    className: "bg-gray-100 text-gray-700 border-gray-200",
-  },
-  in_review: {
-    label: "In revisione",
-    className: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  },
-  offer_sent: {
-    label: "Offerta ricevuta",
-    className: "bg-blue-100 text-blue-800 border-blue-200",
-  },
-  accepted: {
-    label: "Accettata",
-    className: "bg-green-100 text-green-800 border-green-200",
-  },
-  declined: {
-    label: "Rifiutata",
-    className: "bg-red-100 text-red-800 border-red-200",
-  },
-  payment_sent: {
-    label: "Pagamento inviato",
-    className: "bg-purple-100 text-purple-800 border-purple-200",
-  },
-  confirmed: {
-    label: "Confermata",
-    className: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  },
-  rejected: {
-    label: "Respinta",
-    className: "bg-red-100 text-red-800 border-red-200",
-  },
+  requested: { label: "Richiesta inviata", className: "bg-blue-100 text-blue-700 border-blue-200" },
+  offered: { label: "Offerta ricevuta", className: "bg-purple-100 text-purple-800 border-purple-200" },
+  accepted: { label: "Accettata", className: "bg-green-100 text-green-800 border-green-200" },
+  confirmed: { label: "Confermata", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+  declined: { label: "Rifiutata", className: "bg-orange-100 text-orange-800 border-orange-200" },
+  rejected: { label: "Respinta", className: "bg-red-100 text-red-800 border-red-200" },
+  // Legacy
+  sent: { label: "Inviata", className: "bg-gray-100 text-gray-700 border-gray-200" },
+  in_review: { label: "In revisione", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  offer_sent: { label: "Offerta ricevuta", className: "bg-blue-100 text-blue-800 border-blue-200" },
+  payment_sent: { label: "Pagamento inviato", className: "bg-purple-100 text-purple-800 border-purple-200" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -318,6 +299,38 @@ export default async function RichiestaDetailPage({
                     </p>
                   </div>
                 )}
+
+                {/* Contract + IBAN (shown after confirmation) */}
+                {latestOffer.contract_file_url && (
+                  <>
+                    <Separator />
+                    <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+                      <p className="text-sm font-semibold text-emerald-800 mb-2">
+                        Contratto e Dati di Pagamento
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-emerald-600" />
+                        <a
+                          href={latestOffer.contract_file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-emerald-700 hover:underline font-medium"
+                        >
+                          <Download className="inline h-3 w-3 mr-1" />
+                          Scarica Contratto
+                        </a>
+                      </div>
+                      {latestOffer.iban && (
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground">IBAN</p>
+                          <p className="font-mono text-sm font-semibold text-emerald-800">
+                            {latestOffer.iban}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
@@ -380,6 +393,98 @@ export default async function RichiestaDetailPage({
                     <p className="mt-1 text-sm">{latestPayment.reference}</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Participants */}
+          {quote.participants && quote.participants.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <UserCheck className="h-5 w-5" />
+                  Partecipanti
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {quote.participants
+                    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                    .map((p, idx) => (
+                      <div
+                        key={p.id}
+                        className="flex items-start gap-3 rounded-lg border p-3"
+                      >
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {p.full_name}
+                            {p.is_child && (
+                              <Badge
+                                variant="outline"
+                                className="ml-2 text-xs border-amber-200 bg-amber-50 text-amber-700"
+                              >
+                                bambino
+                              </Badge>
+                            )}
+                          </p>
+                          {(p.document_type || p.document_number) && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {p.document_type && <span>{p.document_type}</span>}
+                              {p.document_type && p.document_number && " \u2022 "}
+                              {p.document_number && (
+                                <span className="font-mono">{p.document_number}</span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Documents */}
+          {quote.documents && quote.documents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5" />
+                  Documenti
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {quote.documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">{doc.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {doc.document_type} &middot;{" "}
+                            {new Date(doc.created_at).toLocaleDateString("it-IT")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" asChild>
+                        <a
+                          href={doc.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}

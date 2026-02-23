@@ -43,6 +43,8 @@ export type QuoteDetailData = {
   cabin_type: string | null
   num_cabins: number | null
   notes: string | null
+  preview_price: number | null
+  preview_price_label: string | null
   created_at: string
   updated_at: string
   departure_id: string | null
@@ -80,6 +82,8 @@ export type QuoteDetailData = {
     conditions: string | null
     payment_terms: string | null
     offer_expiry: string | null
+    contract_file_url: string | null
+    iban: string | null
     created_at: string
   }[]
   payments: {
@@ -88,6 +92,23 @@ export type QuoteDetailData = {
     amount: number | null
     reference: string | null
     status: string
+    created_at: string
+  }[]
+  participants: {
+    id: string
+    full_name: string
+    document_type: string | null
+    document_number: string | null
+    is_child: boolean
+    sort_order: number
+    created_at: string
+  }[]
+  documents: {
+    id: string
+    file_url: string
+    file_name: string
+    document_type: string
+    uploaded_by: string | null
     created_at: string
   }[]
   timeline: {
@@ -235,8 +256,10 @@ export async function getQuoteDetail(
       tour:tours(id, title, slug, durata_notti, cover_image_url),
       cruise:cruises(id, title, slug, durata_notti, cover_image_url),
       extras:quote_request_extras(id, extra_name, quantity),
-      offers:quote_offers(id, package_details, total_price, conditions, payment_terms, offer_expiry, created_at),
+      offers:quote_offers(id, package_details, total_price, conditions, payment_terms, offer_expiry, contract_file_url, iban, created_at),
       payments:quote_payments(id, bank_details, amount, reference, status, created_at),
+      participants:quote_participants(id, full_name, document_type, document_number, is_child, sort_order, created_at),
+      documents:quote_documents(id, file_url, file_name, document_type, uploaded_by, created_at),
       timeline:quote_timeline(id, action, details, actor, created_at)
     `
     )
@@ -257,6 +280,8 @@ export async function getQuoteDetail(
     cabin_type: data.cabin_type,
     num_cabins: data.num_cabins,
     notes: data.notes,
+    preview_price: data.preview_price ?? null,
+    preview_price_label: data.preview_price_label ?? null,
     created_at: data.created_at,
     updated_at: data.updated_at,
     departure_id: data.departure_id,
@@ -269,6 +294,13 @@ export async function getQuoteDetail(
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     ),
     payments: (data.payments ?? []).sort(
+      (a: any, b: any) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ),
+    participants: (data.participants ?? []).sort(
+      (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    ),
+    documents: (data.documents ?? []).sort(
       (a: any, b: any) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     ),

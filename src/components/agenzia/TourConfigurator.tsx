@@ -172,6 +172,12 @@ export default function TourConfigurator({
   function handleSubmit() {
     setError(null);
 
+    // Compute preview price for the quote request
+    const previewPrice = indicativePrice ?? null;
+    const previewLabel = previewPrice
+      ? `${formatPrice(previewPrice)} p.p.`
+      : "Prezzo su richiesta";
+
     const payload: TourQuoteInput = {
       request_type: "tour",
       tour_id: tourId,
@@ -181,6 +187,8 @@ export default function TourConfigurator({
       cabin_type: cameraType || null,
       notes: notes || null,
       extras: selectedExtras,
+      preview_price: previewPrice,
+      preview_price_label: previewLabel,
     };
 
     startTransition(async () => {

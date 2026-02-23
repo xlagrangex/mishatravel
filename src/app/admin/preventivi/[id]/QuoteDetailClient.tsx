@@ -378,16 +378,20 @@ function CreateOfferDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="total_price">Prezzo totale (EUR) *</Label>
-            <Input
-              id="total_price"
-              name="total_price"
-              type="number"
-              step="0.01"
-              min="0"
-              required
-              placeholder="1500.00"
-            />
+            <Label htmlFor="total_price">Prezzo totale *</Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+              <Input
+                id="total_price"
+                name="total_price"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                className="pl-7"
+                placeholder="1500.00"
+              />
+            </div>
           </div>
 
           <div>

@@ -49,6 +49,8 @@ export type OfferListItem = {
     id: string
     status: string
     request_type: string
+    participants_adults: number | null
+    participants_children: number | null
     tour: { title: string } | null
     cruise: { title: string } | null
   }
@@ -189,6 +191,8 @@ export async function getAgencyOffers(): Promise<OfferListItem[]> {
         id,
         status,
         request_type,
+        participants_adults,
+        participants_children,
         tour:tours(title),
         cruise:cruises(title)
       )
@@ -216,6 +220,8 @@ export async function getAgencyOffers(): Promise<OfferListItem[]> {
       id: row.request?.id,
       status: row.request?.status,
       request_type: row.request?.request_type,
+      participants_adults: row.request?.participants_adults ?? null,
+      participants_children: row.request?.participants_children ?? null,
       tour: row.request?.tour ?? null,
       cruise: row.request?.cruise ?? null,
     },
