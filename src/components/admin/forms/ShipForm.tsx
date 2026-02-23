@@ -57,6 +57,10 @@ const serviceSchema = z.object({
   testo: z.string().min(1, "Il testo è obbligatorio"),
 });
 
+const deckSchema = z.object({
+  nome: z.string().min(1, "Il nome del ponte è obbligatorio"),
+});
+
 const cabinDetailSchema = z.object({
   titolo: z.string().min(1, "Il titolo è obbligatorio"),
   immagine_url: z.string().nullable(),
@@ -64,6 +68,7 @@ const cabinDetailSchema = z.object({
     .enum(["Singola", "Doppia", "Tripla", "Quadrupla"])
     .nullable(),
   descrizione: z.string().nullable(),
+  deck_index: z.number().int(),
 });
 
 const galleryItemSchema = z.object({
@@ -91,7 +96,8 @@ const shipFormSchema = z.object({
   // Tab 4: Servizi
   services: z.array(serviceSchema),
 
-  // Tab 5: Cabine
+  // Tab 5: Ponti & Cabine
+  decks: z.array(deckSchema),
   cabin_details: z.array(cabinDetailSchema),
 
   // Tab 6: Gallery
@@ -157,12 +163,22 @@ export default function ShipForm({ initialData }: ShipFormProps) {
         services: initialData.services.map((s) => ({
           testo: s.testo,
         })),
-        cabin_details: initialData.cabin_details.map((c) => ({
-          titolo: c.titolo,
-          immagine_url: c.immagine_url,
-          tipologia: c.tipologia,
-          descrizione: c.descrizione,
+        decks: (initialData.decks ?? []).map((d) => ({
+          nome: d.nome,
         })),
+        cabin_details: initialData.cabin_details.map((c) => {
+          // Find the deck index for this cabin's deck_id
+          const deckIdx = c.deck_id
+            ? (initialData.decks ?? []).findIndex((d) => d.id === c.deck_id)
+            : -1;
+          return {
+            titolo: c.titolo,
+            immagine_url: c.immagine_url,
+            tipologia: c.tipologia,
+            descrizione: c.descrizione,
+            deck_index: deckIdx,
+          };
+        }),
         gallery: initialData.gallery.map((g) => ({
           image_url: g.image_url,
           caption: g.caption,
@@ -180,6 +196,7 @@ export default function ShipForm({ initialData }: ShipFormProps) {
         suitable_for: [],
         activities: [],
         services: [],
+        decks: [],
         cabin_details: [],
         gallery: [],
       };
@@ -214,8 +231,12 @@ export default function ShipForm({ initialData }: ShipFormProps) {
   const suitableFor = useFieldArray({ control, name: "suitable_for" });
   const activities = useFieldArray({ control, name: "activities" });
   const services = useFieldArray({ control, name: "services" });
+  const decksArray = useFieldArray({ control, name: "decks" });
   const cabinDetails = useFieldArray({ control, name: "cabin_details" });
   const gallery = useFieldArray({ control, name: "gallery" });
+
+  // Watch decks for the cabin deck selector
+  const watchedDecks = watch("decks");
 
   // ---------------------------------------------------------------------------
   // Submit
@@ -268,7 +289,7 @@ export default function ShipForm({ initialData }: ShipFormProps) {
           <TabsTrigger value="adatta-per">Adatta per</TabsTrigger>
           <TabsTrigger value="attivita">Attivit&agrave;</TabsTrigger>
           <TabsTrigger value="servizi">Servizi</TabsTrigger>
-          <TabsTrigger value="cabine">Cabine</TabsTrigger>
+          <TabsTrigger value="cabine">Ponti &amp; Cabine</TabsTrigger>
           <TabsTrigger value="gallery">Gallery</TabsTrigger>
         </TabsList>
 
@@ -659,9 +680,86 @@ export default function ShipForm({ initialData }: ShipFormProps) {
         </TabsContent>
 
         {/* ================================================================= */}
-        {/* TAB 5: CABINE                                                     */}
+        {/* TAB 5: PONTI & CABINE                                             */}
         {/* ================================================================= */}
         <TabsContent value="cabine">
+          {/* --- Ponti Section --- */}
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Ponti della Nave</CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => decksArray.append({ nome: "" })}
+              >
+                <Plus className="mr-2 size-4" />
+                Aggiungi Ponte
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {decksArray.fields.length === 0 && (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  Nessun ponte definito. Aggiungi i ponti prima di assegnare le cabine.
+                </p>
+              )}
+              {decksArray.fields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="es. Main Deck, Middle Deck, Upper Deck"
+                      {...register(`decks.${index}.nome`)}
+                    />
+                    {errors.decks?.[index]?.nome && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {errors.decks[index].nome.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      disabled={index === 0}
+                      onClick={() =>
+                        moveItem(decksArray, index, index - 1, decksArray.fields.length)
+                      }
+                    >
+                      <ChevronUp className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      disabled={index === decksArray.fields.length - 1}
+                      onClick={() =>
+                        moveItem(decksArray, index, index + 1, decksArray.fields.length)
+                      }
+                    >
+                      <ChevronDown className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-destructive hover:text-destructive"
+                      onClick={() => decksArray.remove(index)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">
+                L&apos;ordine dei ponti va dal pi&ugrave; basso (primo) al pi&ugrave; alto (ultimo).
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* --- Cabine Section --- */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Dettaglio Cabine</CardTitle>
@@ -675,6 +773,7 @@ export default function ShipForm({ initialData }: ShipFormProps) {
                     immagine_url: null,
                     tipologia: null,
                     descrizione: null,
+                    deck_index: -1,
                   })
                 }
               >
@@ -745,7 +844,7 @@ export default function ShipForm({ initialData }: ShipFormProps) {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-3">
                     {/* Titolo */}
                     <div className="space-y-2">
                       <Label>Titolo *</Label>
@@ -781,6 +880,35 @@ export default function ShipForm({ initialData }: ShipFormProps) {
                               <SelectItem value="Doppia">Doppia</SelectItem>
                               <SelectItem value="Tripla">Tripla</SelectItem>
                               <SelectItem value="Quadrupla">Quadrupla</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+
+                    {/* Ponte */}
+                    <div className="space-y-2">
+                      <Label>Ponte</Label>
+                      <Controller
+                        control={control}
+                        name={`cabin_details.${index}.deck_index`}
+                        render={({ field }) => (
+                          <Select
+                            value={String(field.value ?? -1)}
+                            onValueChange={(val) =>
+                              field.onChange(parseInt(val, 10))
+                            }
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Seleziona ponte" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="-1">Nessun ponte</SelectItem>
+                              {watchedDecks.map((d, di) => (
+                                <SelectItem key={di} value={String(di)}>
+                                  {d.nome || `Ponte ${di + 1}`}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         )}

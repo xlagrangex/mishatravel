@@ -40,6 +40,14 @@ const shipSchema = z.object({
     .array(z.object({ testo: z.string().min(1, 'Il testo è obbligatorio') }))
     .default([]),
 
+  decks: z
+    .array(
+      z.object({
+        nome: z.string().min(1, 'Il nome del ponte è obbligatorio'),
+      })
+    )
+    .default([]),
+
   cabin_details: z
     .array(
       z.object({
@@ -50,6 +58,7 @@ const shipSchema = z.object({
           .nullable()
           .default(null),
         descrizione: z.string().nullable().default(null),
+        deck_index: z.number().int().min(-1).default(-1),
       })
     )
     .default([]),
@@ -208,7 +217,27 @@ export async function saveShip(formData: unknown): Promise<ActionResult> {
       data.services.map((s) => ({ testo: s.testo }))
     )
 
-    // Cabin details
+    // Decks — sync first to get new IDs for cabin assignment
+    await syncSubTable(
+      supabase,
+      'ship_decks',
+      shipId,
+      data.decks.map((d) => ({ nome: d.nome }))
+    )
+
+    // Fetch the newly-created deck IDs (ordered by sort_order)
+    const { data: newDecks } = await supabase
+      .from('ship_decks')
+      .select('id, sort_order')
+      .eq('ship_id', shipId)
+      .order('sort_order')
+
+    const deckIdByIndex = new Map<number, string>()
+    for (const d of newDecks ?? []) {
+      deckIdByIndex.set(d.sort_order, d.id)
+    }
+
+    // Cabin details — with deck_id reference
     await syncSubTable(
       supabase,
       'ship_cabin_details',
@@ -218,6 +247,7 @@ export async function saveShip(formData: unknown): Promise<ActionResult> {
         immagine_url: emptyToNull(c.immagine_url),
         tipologia: c.tipologia,
         descrizione: emptyToNull(c.descrizione),
+        deck_id: c.deck_index >= 0 ? (deckIdByIndex.get(c.deck_index) ?? null) : null,
       }))
     )
 

@@ -32,14 +32,17 @@ const STATUS_CONFIG: Record<
   QuoteRequestStatus,
   { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
 > = {
+  requested: { label: "Richiesta", variant: "secondary" },
+  offered: { label: "Offerta inviata", variant: "default" },
+  accepted: { label: "Accettata", variant: "default" },
+  confirmed: { label: "Confermata", variant: "default" },
+  declined: { label: "Rifiutata", variant: "destructive" },
+  rejected: { label: "Respinta", variant: "destructive" },
+  // Legacy statuses
   sent: { label: "Inviata", variant: "secondary" },
   in_review: { label: "In revisione", variant: "outline" },
   offer_sent: { label: "Offerta inviata", variant: "default" },
-  accepted: { label: "Accettata", variant: "default" },
-  declined: { label: "Rifiutata", variant: "destructive" },
   payment_sent: { label: "Pagamento inviato", variant: "outline" },
-  confirmed: { label: "Confermata", variant: "default" },
-  rejected: { label: "Respinta", variant: "destructive" },
 };
 
 function statusBadge(status: QuoteRequestStatus) {

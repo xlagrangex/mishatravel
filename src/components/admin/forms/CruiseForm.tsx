@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { saveCruise } from "@/app/admin/crociere/actions";
+import { saveCruise, getShipCabinsAndDecks } from "@/app/admin/crociere/actions";
 import {
   Plus,
   Trash2,
@@ -15,7 +15,8 @@ import {
   Save,
   ArrowLeft,
   ImagePlus,
-  FileUp,
+  Loader2,
+  Ship,
 } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 import FileUpload from "@/components/admin/FileUpload";
@@ -45,7 +46,12 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-import type { PensioneType, CruiseWithRelations } from "@/lib/types";
+import type {
+  PensioneType,
+  CruiseWithRelations,
+  ShipCabinDetail,
+  ShipDeck,
+} from "@/lib/types";
 
 // =============================================================================
 // Zod Schema
@@ -57,18 +63,15 @@ const itineraryDaySchema = z.object({
   descrizione: z.string(),
 });
 
-const cabinSchema = z.object({
-  localita: z.string().min(1, "Obbligatorio"),
-  tipologia_camera: z.string().nullable(),
-  ponte: z.string().nullable(),
+const departurePriceSchema = z.object({
+  cabin_id: z.string(),
+  prezzo: z.string().nullable(),
 });
 
 const departureSchema = z.object({
   from_city: z.string().min(1, "Obbligatorio"),
   data_partenza: z.string(),
-  prezzo_main_deck: z.number().nullable(),
-  prezzo_middle_deck: z.string().nullable(),
-  prezzo_superior_deck: z.string().nullable(),
+  prices: z.array(departurePriceSchema),
 });
 
 const supplementSchema = z.object({
@@ -100,9 +103,6 @@ const cruiseFormSchema = z.object({
   numero_minimo_persone: z.number().nullable(),
   pensione: z.array(z.enum(["no", "mezza", "completa"])),
   tipo_voli: z.string().nullable(),
-  etichetta_primo_deck: z.string().nullable(),
-  etichetta_secondo_deck: z.string().nullable(),
-  etichetta_terzo_deck: z.string().nullable(),
   note_importanti: z.string().nullable(),
   nota_penali: z.string().nullable(),
   programma_pdf_url: z.string().nullable(),
@@ -111,24 +111,21 @@ const cruiseFormSchema = z.object({
   // Tab 2: Programma
   itinerary_days: z.array(itineraryDaySchema),
 
-  // Tab 3: Cabine
-  cabins: z.array(cabinSchema),
-
-  // Tab 4: Partenze
+  // Tab 3: Partenze
   departures: z.array(departureSchema),
 
-  // Tab 5: Supplementi
+  // Tab 4: Supplementi
   supplements: z.array(supplementSchema),
 
-  // Tab 6: Incluso / Escluso
+  // Tab 5: Incluso / Escluso
   inclusions: z.array(textItemSchema),
   exclusions: z.array(textItemSchema),
 
-  // Tab 7: Termini & Penali
+  // Tab 6: Termini & Penali
   terms: z.array(textItemSchema),
   penalties: z.array(textItemSchema),
 
-  // Tab 8: Gallery & PDF
+  // Tab 7: Gallery & PDF
   gallery: z.array(galleryItemSchema),
 });
 
@@ -145,6 +142,37 @@ function slugify(text: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+}
+
+/** Group cabins by their deck for display. */
+function groupCabinsByDeck(
+  cabins: ShipCabinDetail[],
+  decks: ShipDeck[]
+): { deck: ShipDeck | null; cabins: ShipCabinDetail[] }[] {
+  const groups: { deck: ShipDeck | null; cabins: ShipCabinDetail[] }[] = [];
+  const grouped = new Map<string | null, ShipCabinDetail[]>();
+
+  for (const cabin of cabins) {
+    const key = cabin.deck_id;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(cabin);
+  }
+
+  // Add deck groups in deck sort_order
+  for (const deck of decks) {
+    const deckCabins = grouped.get(deck.id) || [];
+    if (deckCabins.length > 0) {
+      groups.push({ deck, cabins: deckCabins });
+    }
+  }
+
+  // Cabins with no deck
+  const noDeckCabins = grouped.get(null) || [];
+  if (noDeckCabins.length > 0) {
+    groups.push({ deck: null, cabins: noDeckCabins });
+  }
+
+  return groups;
 }
 
 // =============================================================================
@@ -164,8 +192,37 @@ interface CruiseFormProps {
 
 export default function CruiseForm({ initialData, ships = [], destinations = [], localities = [] }: CruiseFormProps) {
   // ---------------------------------------------------------------------------
+  // Ship cabins & decks state
+  // ---------------------------------------------------------------------------
+
+  const [shipCabins, setShipCabins] = useState<ShipCabinDetail[]>(
+    initialData?.ship_cabins ?? []
+  );
+  const [shipDecks, setShipDecks] = useState<ShipDeck[]>(
+    initialData?.ship_decks ?? []
+  );
+  const [loadingCabins, setLoadingCabins] = useState(false);
+
+  // ---------------------------------------------------------------------------
   // Form setup
   // ---------------------------------------------------------------------------
+
+  /** Build the prices array for a departure based on ship cabins. */
+  function buildPricesForDeparture(
+    cabins: ShipCabinDetail[],
+    departureId?: string,
+    existingPrices?: { departure_id: string; cabin_id: string; prezzo: string | null }[]
+  ) {
+    return cabins.map((cabin) => {
+      const found = existingPrices?.find(
+        (p) => p.departure_id === departureId && p.cabin_id === cabin.id
+      );
+      return {
+        cabin_id: cabin.id,
+        prezzo: found?.prezzo ?? null,
+      };
+    });
+  }
 
   const defaultValues: CruiseFormValues = initialData
     ? {
@@ -182,9 +239,6 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         numero_minimo_persone: initialData.numero_minimo_persone,
         pensione: initialData.pensione,
         tipo_voli: initialData.tipo_voli,
-        etichetta_primo_deck: initialData.etichetta_primo_deck,
-        etichetta_secondo_deck: initialData.etichetta_secondo_deck,
-        etichetta_terzo_deck: initialData.etichetta_terzo_deck,
         note_importanti: initialData.note_importanti,
         nota_penali: initialData.nota_penali,
         programma_pdf_url: initialData.programma_pdf_url,
@@ -194,17 +248,14 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
           localita: d.localita,
           descrizione: d.descrizione,
         })),
-        cabins: initialData.cabins.map((c) => ({
-          localita: c.localita,
-          tipologia_camera: c.tipologia_camera,
-          ponte: c.ponte,
-        })),
         departures: initialData.departures.map((d) => ({
           from_city: d.from_city,
           data_partenza: d.data_partenza,
-          prezzo_main_deck: d.prezzo_main_deck,
-          prezzo_middle_deck: d.prezzo_middle_deck,
-          prezzo_superior_deck: d.prezzo_superior_deck,
+          prices: buildPricesForDeparture(
+            initialData.ship_cabins ?? [],
+            d.id,
+            initialData.departure_prices ?? []
+          ),
         })),
         supplements: initialData.supplements.map((s) => ({
           titolo: s.titolo,
@@ -237,15 +288,11 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         numero_minimo_persone: null,
         pensione: [],
         tipo_voli: null,
-        etichetta_primo_deck: null,
-        etichetta_secondo_deck: null,
-        etichetta_terzo_deck: null,
         note_importanti: null,
         nota_penali: null,
         programma_pdf_url: null,
         status: "draft",
         itinerary_days: [],
-        cabins: [],
         departures: [],
         supplements: [],
         inclusions: [],
@@ -261,6 +308,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<CruiseFormValues>({
     resolver: zodResolver(cruiseFormSchema),
@@ -271,13 +319,49 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
   const title = watch("title");
   const status = watch("status");
   const pensione = watch("pensione");
+  const watchedShipId = watch("ship_id");
+
+  // ---------------------------------------------------------------------------
+  // Fetch ship cabins when ship_id changes
+  // ---------------------------------------------------------------------------
+
+  const prevShipIdRef = useRef(watchedShipId);
+
+  useEffect(() => {
+    if (watchedShipId === prevShipIdRef.current) return;
+    prevShipIdRef.current = watchedShipId;
+
+    if (!watchedShipId) {
+      setShipCabins([]);
+      setShipDecks([]);
+      return;
+    }
+
+    setLoadingCabins(true);
+    getShipCabinsAndDecks(watchedShipId).then(({ cabins, decks }) => {
+      setShipCabins(cabins as ShipCabinDetail[]);
+      setShipDecks(decks as ShipDeck[]);
+      setLoadingCabins(false);
+
+      // Rebuild prices for all existing departures with new cabin structure
+      const currentDeps = getValues("departures");
+      for (let i = 0; i < currentDeps.length; i++) {
+        setValue(
+          `departures.${i}.prices`,
+          (cabins as ShipCabinDetail[]).map((c) => ({
+            cabin_id: c.id,
+            prezzo: null,
+          }))
+        );
+      }
+    });
+  }, [watchedShipId, getValues, setValue]);
 
   // ---------------------------------------------------------------------------
   // Field Arrays
   // ---------------------------------------------------------------------------
 
   const itineraryDays = useFieldArray({ control, name: "itinerary_days" });
-  const cabins = useFieldArray({ control, name: "cabins" });
   const departures = useFieldArray({ control, name: "departures" });
   const supplements = useFieldArray({ control, name: "supplements" });
   const inclusions = useFieldArray({ control, name: "inclusions" });
@@ -287,7 +371,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
   const gallery = useFieldArray({ control, name: "gallery" });
 
   // ---------------------------------------------------------------------------
-  // Locations map (localita name → coordinates)
+  // Locations map (localita name -> coordinates)
   // ---------------------------------------------------------------------------
 
   const [locationsMap, setLocationsMap] = useState<Record<string, { lat: number; lng: number }>>(() => {
@@ -373,6 +457,12 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
   }
 
   // ---------------------------------------------------------------------------
+  // Cabin groups for departure pricing display
+  // ---------------------------------------------------------------------------
+
+  const cabinGroups = groupCabinsByDeck(shipCabins, shipDecks);
+
+  // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
 
@@ -383,7 +473,6 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         <TabsList className="flex w-full flex-wrap" variant="line">
           <TabsTrigger value="info-base">Info Base</TabsTrigger>
           <TabsTrigger value="programma">Programma</TabsTrigger>
-          <TabsTrigger value="cabine">Cabine</TabsTrigger>
           <TabsTrigger value="partenze">Partenze</TabsTrigger>
           <TabsTrigger value="supplementi">Supplementi</TabsTrigger>
           <TabsTrigger value="incluso-escluso">Incluso / Escluso</TabsTrigger>
@@ -631,39 +720,6 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
 
               <Separator />
 
-              {/* Etichette Deck */}
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Etichette Ponti</Label>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="etichetta_primo_deck">Primo Ponte</Label>
-                    <Input
-                      id="etichetta_primo_deck"
-                      placeholder="es. Main Deck"
-                      {...register("etichetta_primo_deck")}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="etichetta_secondo_deck">Secondo Ponte</Label>
-                    <Input
-                      id="etichetta_secondo_deck"
-                      placeholder="es. Middle Deck"
-                      {...register("etichetta_secondo_deck")}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="etichetta_terzo_deck">Terzo Ponte</Label>
-                    <Input
-                      id="etichetta_terzo_deck"
-                      placeholder="es. Superior Deck"
-                      {...register("etichetta_terzo_deck")}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
               {/* Cover Image */}
               <div className="space-y-2">
                 <Label>Immagine Copertina</Label>
@@ -879,101 +935,12 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         </TabsContent>
 
         {/* ================================================================= */}
-        {/* TAB 3: CABINE                                                     */}
-        {/* ================================================================= */}
-        <TabsContent value="cabine">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Cabine</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  cabins.append({
-                    localita: "",
-                    tipologia_camera: null,
-                    ponte: null,
-                  })
-                }
-              >
-                <Plus className="mr-2 size-4" />
-                Aggiungi Cabina
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {cabins.fields.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  Nessuna cabina aggiunta. Clicca &quot;Aggiungi Cabina&quot; per iniziare.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {/* Column headers (visible on sm+) */}
-                  <div className="hidden gap-4 sm:grid sm:grid-cols-[1fr_1fr_1fr_auto]">
-                    <Label className="text-xs text-muted-foreground">Località</Label>
-                    <Label className="text-xs text-muted-foreground">
-                      Tipologia Camera
-                    </Label>
-                    <Label className="text-xs text-muted-foreground">
-                      Ponte
-                    </Label>
-                    <div className="w-8" />
-                  </div>
-
-                  {cabins.fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="grid gap-4 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:border-0 sm:p-0"
-                    >
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">Località</Label>
-                        <Input
-                          placeholder="es. Ponte Principale"
-                          {...register(`cabins.${index}.localita`)}
-                        />
-                      </div>
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">
-                          Tipologia Camera
-                        </Label>
-                        <Input
-                          placeholder="es. Doppia"
-                          {...register(`cabins.${index}.tipologia_camera`)}
-                        />
-                      </div>
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">
-                          Ponte
-                        </Label>
-                        <Input
-                          placeholder="es. Main Deck"
-                          {...register(`cabins.${index}.ponte`)}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 self-end text-destructive hover:text-destructive sm:self-center"
-                        onClick={() => cabins.remove(index)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ================================================================= */}
-        {/* TAB 4: PARTENZE                                                   */}
+        {/* TAB 3: PARTENZE (con prezzi per cabina)                           */}
         {/* ================================================================= */}
         <TabsContent value="partenze">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Partenze</CardTitle>
+              <CardTitle>Partenze &amp; Prezzi per Cabina</CardTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -982,9 +949,10 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                   departures.append({
                     from_city: "",
                     data_partenza: "",
-                    prezzo_main_deck: null,
-                    prezzo_middle_deck: null,
-                    prezzo_superior_deck: null,
+                    prices: shipCabins.map((c) => ({
+                      cabin_id: c.id,
+                      prezzo: null,
+                    })),
                   })
                 }
               >
@@ -992,102 +960,153 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                 Aggiungi Partenza
               </Button>
             </CardHeader>
-            <CardContent>
-              {departures.fields.length === 0 ? (
+            <CardContent className="space-y-4">
+              {/* Warning if no ship selected */}
+              {!watchedShipId && (
+                <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                  <Ship className="size-5 text-amber-600 shrink-0" />
+                  <p className="text-sm text-amber-800">
+                    Seleziona una nave nel tab &quot;Info Base&quot; per gestire i prezzi per cabina nelle partenze.
+                  </p>
+                </div>
+              )}
+
+              {/* Loading state */}
+              {loadingCabins && (
+                <div className="flex items-center justify-center gap-2 py-4">
+                  <Loader2 className="size-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Caricamento cabine della nave...</span>
+                </div>
+              )}
+
+              {/* No cabins configured */}
+              {watchedShipId && !loadingCabins && shipCabins.length === 0 && (
+                <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                  <Ship className="size-5 text-amber-600 shrink-0" />
+                  <p className="text-sm text-amber-800">
+                    La nave selezionata non ha cabine configurate. Configura le cabine nella sezione Flotta.
+                  </p>
+                </div>
+              )}
+
+              {departures.fields.length === 0 && (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   Nessuna partenza aggiunta.
                 </p>
-              ) : (
-                <div className="space-y-4">
-                  {/* Column headers (visible on sm+) */}
-                  <div className="hidden gap-4 sm:grid sm:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
-                    <Label className="text-xs text-muted-foreground">Da</Label>
-                    <Label className="text-xs text-muted-foreground">
-                      Data Partenza
-                    </Label>
-                    <Label className="text-xs text-muted-foreground">
-                      Main Deck
-                    </Label>
-                    <Label className="text-xs text-muted-foreground">
-                      Middle Deck
-                    </Label>
-                    <Label className="text-xs text-muted-foreground">
-                      Superior Deck
-                    </Label>
-                    <div className="w-8" />
-                  </div>
+              )}
 
-                  {departures.fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="grid gap-4 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] sm:border-0 sm:p-0"
-                    >
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">Da</Label>
+              {departures.fields.map((field, depIndex) => (
+                <div
+                  key={field.id}
+                  className="rounded-lg border bg-muted/30 p-4 space-y-4"
+                >
+                  {/* Departure header: city, date, actions */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="grid flex-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Città partenza</Label>
                         <Input
                           placeholder="es. Roma"
-                          {...register(`departures.${index}.from_city`)}
+                          {...register(`departures.${depIndex}.from_city`)}
                         />
                       </div>
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">
-                          Data Partenza
-                        </Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Data Partenza</Label>
                         <Input
                           type="date"
-                          {...register(`departures.${index}.data_partenza`)}
+                          {...register(`departures.${depIndex}.data_partenza`)}
                         />
                       </div>
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">
-                          Main Deck
-                        </Label>
-                        <Input
-                          type="number"
-                          placeholder="€"
-                          {...register(`departures.${index}.prezzo_main_deck`, {
-                            setValueAs: (v) =>
-                              v === "" || v === null ? null : Number(v),
-                          })}
-                        />
-                      </div>
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">
-                          Middle Deck
-                        </Label>
-                        <Input
-                          placeholder="€"
-                          {...register(`departures.${index}.prezzo_middle_deck`)}
-                        />
-                      </div>
-                      <div className="space-y-1 sm:space-y-0">
-                        <Label className="text-xs sm:hidden">
-                          Superior Deck
-                        </Label>
-                        <Input
-                          placeholder="€"
-                          {...register(`departures.${index}.prezzo_superior_deck`)}
-                        />
-                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 pt-5">
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="size-8 self-end text-destructive hover:text-destructive sm:self-center"
-                        onClick={() => departures.remove(index)}
+                        className="size-7"
+                        disabled={depIndex === 0}
+                        onClick={() =>
+                          moveItem(departures, depIndex, depIndex - 1, departures.fields.length)
+                        }
+                      >
+                        <ChevronUp className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        disabled={depIndex === departures.fields.length - 1}
+                        onClick={() =>
+                          moveItem(departures, depIndex, depIndex + 1, departures.fields.length)
+                        }
+                      >
+                        <ChevronDown className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 text-destructive hover:text-destructive"
+                        onClick={() => departures.remove(depIndex)}
                       >
                         <Trash2 className="size-4" />
                       </Button>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Per-cabin pricing grid */}
+                  {shipCabins.length > 0 && (
+                    <div className="space-y-3 rounded-md border bg-background p-3">
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Prezzi per Cabina
+                      </Label>
+                      {cabinGroups.map((group) => (
+                        <div key={group.deck?.id ?? "no-deck"} className="space-y-2">
+                          <p className="text-xs font-medium text-primary">
+                            {group.deck?.nome ?? "Senza ponte"}
+                          </p>
+                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            {group.cabins.map((cabin) => {
+                              // Find the price index for this cabin in the departure
+                              const priceIndex = shipCabins.findIndex(
+                                (c) => c.id === cabin.id
+                              );
+                              if (priceIndex < 0) return null;
+                              return (
+                                <div key={cabin.id} className="flex items-center gap-2">
+                                  <input
+                                    type="hidden"
+                                    {...register(
+                                      `departures.${depIndex}.prices.${priceIndex}.cabin_id`
+                                    )}
+                                  />
+                                  <Label className="min-w-0 flex-1 truncate text-xs">
+                                    {cabin.titolo}
+                                  </Label>
+                                  <Input
+                                    className="w-28"
+                                    placeholder="€"
+                                    {...register(
+                                      `departures.${depIndex}.prices.${priceIndex}.prezzo`
+                                    )}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* ================================================================= */}
-        {/* TAB 5: SUPPLEMENTI                                                */}
+        {/* TAB 4: SUPPLEMENTI                                                */}
         {/* ================================================================= */}
         <TabsContent value="supplementi">
           <Card>
@@ -1144,7 +1163,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         </TabsContent>
 
         {/* ================================================================= */}
-        {/* TAB 6: INCLUSO / ESCLUSO                                          */}
+        {/* TAB 5: INCLUSO / ESCLUSO                                          */}
         {/* ================================================================= */}
         <TabsContent value="incluso-escluso">
           <div className="grid gap-6 lg:grid-cols-2">
@@ -1239,7 +1258,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         </TabsContent>
 
         {/* ================================================================= */}
-        {/* TAB 7: TERMINI & PENALI                                           */}
+        {/* TAB 6: TERMINI & PENALI                                           */}
         {/* ================================================================= */}
         <TabsContent value="termini">
           <div className="space-y-6">
@@ -1358,7 +1377,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         </TabsContent>
 
         {/* ================================================================= */}
-        {/* TAB 8: GALLERY & PDF                                              */}
+        {/* TAB 7: GALLERY & PDF                                              */}
         {/* ================================================================= */}
         <TabsContent value="gallery">
           <div className="space-y-6">

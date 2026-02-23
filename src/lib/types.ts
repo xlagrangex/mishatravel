@@ -193,6 +193,14 @@ export interface ShipCabinDetail {
   immagine_url: string | null;
   tipologia: ShipCabinTipologia | null;
   descrizione: string | null;
+  deck_id: string | null;
+  sort_order: number;
+}
+
+export interface ShipDeck {
+  id: string;
+  ship_id: string;
+  nome: string;
   sort_order: number;
 }
 
@@ -265,6 +273,14 @@ export interface CruiseDeparture {
   prezzo_main_deck: number | null;
   prezzo_middle_deck: string | null;
   prezzo_superior_deck: string | null;
+  sort_order: number;
+}
+
+export interface CruiseDeparturePrice {
+  id: string;
+  departure_id: string;
+  cabin_id: string;
+  prezzo: string | null;
   sort_order: number;
 }
 
@@ -446,14 +462,17 @@ export interface AccountStatement {
 
 export type QuoteRequestType = 'tour' | 'cruise';
 export type QuoteRequestStatus =
+  | 'requested'
+  | 'offered'
+  | 'accepted'
+  | 'confirmed'
+  | 'declined'
+  | 'rejected'
+  // Legacy statuses (kept for DB enum compatibility)
   | 'sent'
   | 'in_review'
   | 'offer_sent'
-  | 'accepted'
-  | 'declined'
-  | 'payment_sent'
-  | 'confirmed'
-  | 'rejected';
+  | 'payment_sent';
 
 export interface QuoteRequest {
   id: string;
@@ -468,6 +487,8 @@ export interface QuoteRequest {
   num_cabins: number | null;
   notes: string | null;
   status: QuoteRequestStatus;
+  preview_price: number | null;
+  preview_price_label: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -487,6 +508,29 @@ export interface QuoteOffer {
   conditions: string | null;
   payment_terms: string | null;
   offer_expiry: string | null;
+  contract_file_url: string | null;
+  iban: string | null;
+  created_at: string;
+}
+
+export interface QuoteParticipant {
+  id: string;
+  request_id: string;
+  full_name: string;
+  document_type: string | null;
+  document_number: string | null;
+  is_child: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface QuoteDocument {
+  id: string;
+  request_id: string;
+  file_url: string;
+  file_name: string;
+  document_type: string;
+  uploaded_by: string | null;
   created_at: string;
 }
 
@@ -594,12 +638,15 @@ export type CruiseWithRelations = Cruise & {
   itinerary_days: CruiseItineraryDay[];
   cabins: CruiseCabin[];
   departures: CruiseDeparture[];
+  departure_prices: CruiseDeparturePrice[];
   supplements: CruiseSupplement[];
   inclusions: CruiseInclusion[];
   terms: CruiseTerm[];
   penalties: CruisePenalty[];
   gallery: CruiseGalleryItem[];
   ship: Ship | null;
+  ship_decks: ShipDeck[];
+  ship_cabins: ShipCabinDetail[];
   destination: Destination | null;
 };
 
@@ -609,4 +656,5 @@ export type ShipWithRelations = Ship & {
   services: ShipService[];
   gallery: ShipGalleryItem[];
   cabin_details: ShipCabinDetail[];
+  decks: ShipDeck[];
 };

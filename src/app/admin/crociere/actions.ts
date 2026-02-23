@@ -31,9 +31,6 @@ const cruiseSchema = z.object({
   numero_minimo_persone: z.coerce.number().int().nullable().default(null),
   pensione: z.array(z.enum(['no', 'mezza', 'completa'])).default([]),
   tipo_voli: z.string().nullable().default(null),
-  etichetta_primo_deck: z.string().nullable().default(null),
-  etichetta_secondo_deck: z.string().nullable().default(null),
-  etichetta_terzo_deck: z.string().nullable().default(null),
   note_importanti: z.string().nullable().default(null),
   nota_penali: z.string().nullable().default(null),
   programma_pdf_url: z.string().nullable().default(null),
@@ -52,24 +49,19 @@ const cruiseSchema = z.object({
     )
     .default([]),
 
-  cabins: z
-    .array(
-      z.object({
-        localita: z.string(),
-        tipologia_camera: z.string().nullable().default(null),
-        ponte: z.string().nullable().default(null),
-      })
-    )
-    .default([]),
-
   departures: z
     .array(
       z.object({
         from_city: z.string(),
         data_partenza: z.string(),
-        prezzo_main_deck: z.coerce.number().nullable().default(null),
-        prezzo_middle_deck: z.string().nullable().default(null),
-        prezzo_superior_deck: z.string().nullable().default(null),
+        prices: z
+          .array(
+            z.object({
+              cabin_id: z.string(),
+              prezzo: z.string().nullable().default(null),
+            })
+          )
+          .default([]),
       })
     )
     .default([]),
@@ -170,7 +162,7 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
   const data: CruiseFormData = parsed.data
   const supabase = createAdminClient()
 
-  // 2. Prepare main cruise row
+  // 2. Prepare main cruise row (legacy deck-label columns left untouched in DB)
   const cruiseRow = {
     title: data.title,
     slug: data.slug,
@@ -185,9 +177,6 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
     numero_minimo_persone: data.numero_minimo_persone,
     pensione: data.pensione,
     tipo_voli: emptyToNull(data.tipo_voli),
-    etichetta_primo_deck: emptyToNull(data.etichetta_primo_deck),
-    etichetta_secondo_deck: emptyToNull(data.etichetta_secondo_deck),
-    etichetta_terzo_deck: emptyToNull(data.etichetta_terzo_deck),
     note_importanti: emptyToNull(data.note_importanti),
     nota_penali: emptyToNull(data.nota_penali),
     programma_pdf_url: emptyToNull(data.programma_pdf_url),
@@ -268,19 +257,7 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
       await syncSubTable(supabase, 'cruise_locations', cruiseId, locationRows)
     }
 
-    // Cabins
-    await syncSubTable(
-      supabase,
-      'cruise_cabins',
-      cruiseId,
-      data.cabins.map((c) => ({
-        localita: c.localita,
-        tipologia_camera: emptyToNull(c.tipologia_camera),
-        ponte: emptyToNull(c.ponte),
-      }))
-    )
-
-    // Departures
+    // Departures — cascade-deletes old cruise_departure_prices automatically
     await syncSubTable(
       supabase,
       'cruise_departures',
@@ -288,11 +265,42 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
       data.departures.map((d) => ({
         from_city: d.from_city,
         data_partenza: d.data_partenza,
-        prezzo_main_deck: d.prezzo_main_deck,
-        prezzo_middle_deck: emptyToNull(d.prezzo_middle_deck),
-        prezzo_superior_deck: emptyToNull(d.prezzo_superior_deck),
       }))
     )
+
+    // Fetch newly-created departure IDs (ordered by sort_order)
+    const { data: newDepartures } = await supabase
+      .from('cruise_departures')
+      .select('id, sort_order')
+      .eq('cruise_id', cruiseId)
+      .order('sort_order')
+
+    // Insert departure prices per cabin
+    const priceRows: Record<string, unknown>[] = []
+    for (let i = 0; i < data.departures.length; i++) {
+      const depId = (newDepartures ?? []).find((d) => d.sort_order === i)?.id
+      if (!depId) continue
+      for (let j = 0; j < data.departures[i].prices.length; j++) {
+        const p = data.departures[i].prices[j]
+        if (!p.cabin_id) continue
+        priceRows.push({
+          departure_id: depId,
+          cabin_id: p.cabin_id,
+          prezzo: emptyToNull(p.prezzo),
+          sort_order: j,
+        })
+      }
+    }
+
+    if (priceRows.length > 0) {
+      const { error: priceInsertError } = await supabase
+        .from('cruise_departure_prices')
+        .insert(priceRows)
+
+      if (priceInsertError) {
+        throw new Error(`Failed to insert departure prices: ${priceInsertError.message}`)
+      }
+    }
 
     // Supplements
     await syncSubTable(
@@ -393,4 +401,30 @@ export async function toggleCruiseStatus(
   revalidatePath('/')
 
   return { success: true, id }
+}
+
+/**
+ * Fetch ship cabins and decks for the cruise form.
+ * Called dynamically when the user selects or changes a ship.
+ */
+export async function getShipCabinsAndDecks(shipId: string) {
+  const supabase = createAdminClient()
+
+  const [cabinsResult, decksResult] = await Promise.all([
+    supabase
+      .from('ship_cabin_details')
+      .select('*')
+      .eq('ship_id', shipId)
+      .order('sort_order'),
+    supabase
+      .from('ship_decks')
+      .select('*')
+      .eq('ship_id', shipId)
+      .order('sort_order'),
+  ])
+
+  return {
+    cabins: cabinsResult.data ?? [],
+    decks: decksResult.data ?? [],
+  }
 }

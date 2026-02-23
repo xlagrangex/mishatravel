@@ -51,7 +51,8 @@ export async function getShipById(id: string) {
       activities:ship_activities(*),
       services:ship_services(*),
       gallery:ship_gallery(*),
-      cabin_details:ship_cabin_details(*)
+      cabin_details:ship_cabin_details(*),
+      decks:ship_decks(*)
     `
     )
     .eq('id', id)
@@ -76,6 +77,7 @@ export async function getShipById(id: string) {
     services: sortBySortOrder(data.services),
     gallery: sortBySortOrder(data.gallery),
     cabin_details: sortBySortOrder(data.cabin_details),
+    decks: sortBySortOrder(data.decks),
   }
 }
 
@@ -147,7 +149,8 @@ export async function getShipBySlug(slug: string) {
       activities:ship_activities(*),
       services:ship_services(*),
       gallery:ship_gallery(*),
-      cabin_details:ship_cabin_details(*)
+      cabin_details:ship_cabin_details(*),
+      decks:ship_decks(*)
     `
     )
     .eq('slug', slug)
@@ -171,5 +174,6 @@ export async function getShipBySlug(slug: string) {
     services: sortBySortOrder(data.services),
     gallery: sortBySortOrder(data.gallery),
     cabin_details: sortBySortOrder(data.cabin_details),
+    decks: sortBySortOrder(data.decks),
   }
 }
