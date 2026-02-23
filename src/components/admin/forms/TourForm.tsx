@@ -466,11 +466,18 @@ export default function TourForm({ initialData, destinations = [], localities = 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="a_partire_da">A Partire Da</Label>
-                  <Input
-                    id="a_partire_da"
-                    placeholder="es. 1.290€ a persona"
-                    {...register("a_partire_da")}
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                    <Input
+                      id="a_partire_da"
+                      type="number"
+                      step="any"
+                      min="0"
+                      className="pl-7"
+                      placeholder="1290"
+                      {...register("a_partire_da")}
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 pt-7">
                   <Controller
@@ -863,23 +870,36 @@ export default function TourForm({ initialData, destinations = [], localities = 
                         <Label className="text-xs sm:hidden">
                           Prezzo 3 Stelle
                         </Label>
-                        <Input
-                          type="number"
-                          placeholder="€"
-                          {...register(`departures.${index}.prezzo_3_stelle`, {
-                            setValueAs: (v) =>
-                              v === "" || v === null ? null : Number(v),
-                          })}
-                        />
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                          <Input
+                            type="number"
+                            step="any"
+                            min="0"
+                            className="pl-7"
+                            placeholder="0"
+                            {...register(`departures.${index}.prezzo_3_stelle`, {
+                              setValueAs: (v) =>
+                                v === "" || v === null ? null : Number(v),
+                            })}
+                          />
+                        </div>
                       </div>
                       <div className="space-y-1 sm:space-y-0">
                         <Label className="text-xs sm:hidden">
                           Prezzo 4 Stelle
                         </Label>
-                        <Input
-                          placeholder="€"
-                          {...register(`departures.${index}.prezzo_4_stelle`)}
-                        />
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                          <Input
+                            type="number"
+                            step="any"
+                            min="0"
+                            className="pl-7"
+                            placeholder="0"
+                            {...register(`departures.${index}.prezzo_4_stelle`)}
+                          />
+                        </div>
                       </div>
                       <Button
                         type="button"
@@ -937,10 +957,17 @@ export default function TourForm({ initialData, destinations = [], localities = 
                     </div>
                     <div className="w-32 space-y-1">
                       <Label className="text-xs">Prezzo</Label>
-                      <Input
-                        placeholder="€"
-                        {...register(`supplements.${index}.prezzo`)}
-                      />
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                        <Input
+                          type="number"
+                          step="any"
+                          min="0"
+                          className="pl-7"
+                          placeholder="0"
+                          {...register(`supplements.${index}.prezzo`)}
+                        />
+                      </div>
                     </div>
                     <Button
                       type="button"
@@ -1014,18 +1041,24 @@ export default function TourForm({ initialData, destinations = [], localities = 
                         />
                       </div>
                       <div className="w-32 space-y-2">
-                        <Label>Prezzo (€)</Label>
-                        <Input
-                          type="number"
-                          placeholder="€"
-                          {...register(
-                            `optional_excursions.${index}.prezzo`,
-                            {
-                              setValueAs: (v) =>
-                                v === "" || v === null ? null : Number(v),
-                            },
-                          )}
-                        />
+                        <Label>Prezzo</Label>
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                          <Input
+                            type="number"
+                            step="any"
+                            min="0"
+                            className="pl-7"
+                            placeholder="0"
+                            {...register(
+                              `optional_excursions.${index}.prezzo`,
+                              {
+                                setValueAs: (v) =>
+                                  v === "" || v === null ? null : Number(v),
+                              },
+                            )}
+                          />
+                        </div>
                       </div>
                     </div>
 

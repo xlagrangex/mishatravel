@@ -632,11 +632,18 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="a_partire_da">A Partire Da</Label>
-                  <Input
-                    id="a_partire_da"
-                    placeholder="es. 1.490€ a persona"
-                    {...register("a_partire_da")}
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                    <Input
+                      id="a_partire_da"
+                      type="number"
+                      step="any"
+                      min="0"
+                      className="pl-7"
+                      placeholder="1490"
+                      {...register("a_partire_da")}
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 pt-7">
                   <Controller
@@ -1084,13 +1091,19 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                                   <Label className="min-w-0 flex-1 truncate text-xs">
                                     {cabin.titolo}
                                   </Label>
-                                  <Input
-                                    className="w-28"
-                                    placeholder="€"
-                                    {...register(
-                                      `departures.${depIndex}.prices.${priceIndex}.prezzo`
-                                    )}
-                                  />
+                                  <div className="relative w-28">
+                                    <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                                    <Input
+                                      type="number"
+                                      step="any"
+                                      min="0"
+                                      className="pl-6"
+                                      placeholder="0"
+                                      {...register(
+                                        `departures.${depIndex}.prices.${priceIndex}.prezzo`
+                                      )}
+                                    />
+                                  </div>
                                 </div>
                               );
                             })}
@@ -1142,10 +1155,17 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                   </div>
                   <div className="w-32 space-y-1">
                     <Label className="text-xs">Prezzo</Label>
-                    <Input
-                      placeholder="€"
-                      {...register(`supplements.${index}.prezzo`)}
-                    />
+                    <div className="relative">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                      <Input
+                        type="number"
+                        step="any"
+                        min="0"
+                        className="pl-7"
+                        placeholder="0"
+                        {...register(`supplements.${index}.prezzo`)}
+                      />
+                    </div>
                   </div>
                   <Button
                     type="button"
