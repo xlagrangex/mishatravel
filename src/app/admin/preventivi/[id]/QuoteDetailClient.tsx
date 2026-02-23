@@ -16,7 +16,6 @@ import {
   FileText,
   Clock,
   Send,
-  Eye,
   CheckCircle,
   XCircle,
   ThumbsDown,
@@ -25,6 +24,10 @@ import {
   Package,
   DollarSign,
   Loader2,
+  Upload,
+  Download,
+  Trash2,
+  UserCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,42 +48,42 @@ import {
 import { cn } from '@/lib/utils'
 import type { QuoteDetailData } from '@/lib/supabase/queries/admin-quotes'
 import {
-  updateQuoteStatus,
   createOffer,
-  sendPaymentDetails,
-  confirmPayment,
+  confirmWithContract,
+  uploadQuoteDocument,
+  deleteQuoteDocument,
   rejectQuote,
 } from '../actions'
 
 // ---------------------------------------------------------------------------
-// Status config
+// Status config — new 4-state workflow
 // ---------------------------------------------------------------------------
 
 const STATUS_CONFIG: Record<
   string,
   { label: string; color: string; icon: React.ElementType; step: number }
 > = {
-  sent: {
-    label: 'Inviato',
+  requested: {
+    label: 'Richiesto',
     color: 'border-blue-200 bg-blue-50 text-blue-700',
     icon: Send,
     step: 1,
   },
-  in_review: {
-    label: 'In Revisione',
-    color: 'border-yellow-200 bg-yellow-50 text-yellow-700',
-    icon: Eye,
-    step: 2,
-  },
-  offer_sent: {
+  offered: {
     label: 'Offerta Inviata',
     color: 'border-purple-200 bg-purple-50 text-purple-700',
     icon: FileText,
-    step: 3,
+    step: 2,
   },
   accepted: {
     label: 'Accettato',
     color: 'border-green-200 bg-green-50 text-green-700',
+    icon: CheckCircle,
+    step: 3,
+  },
+  confirmed: {
+    label: 'Confermato',
+    color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
     icon: CheckCircle,
     step: 4,
   },
@@ -90,34 +93,40 @@ const STATUS_CONFIG: Record<
     icon: ThumbsDown,
     step: 0,
   },
-  payment_sent: {
-    label: 'Pagamento Inviato',
-    color: 'border-cyan-200 bg-cyan-50 text-cyan-700',
-    icon: CreditCard,
-    step: 5,
-  },
-  confirmed: {
-    label: 'Confermato',
-    color: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-    icon: CheckCircle,
-    step: 6,
-  },
   rejected: {
     label: 'Rifiutato',
     color: 'border-red-200 bg-red-50 text-red-700',
     icon: XCircle,
     step: 0,
   },
+  // Legacy statuses (for old data)
+  sent: {
+    label: 'Inviato',
+    color: 'border-blue-200 bg-blue-50 text-blue-700',
+    icon: Send,
+    step: 1,
+  },
+  in_review: {
+    label: 'In Revisione',
+    color: 'border-yellow-200 bg-yellow-50 text-yellow-700',
+    icon: FileText,
+    step: 1,
+  },
+  offer_sent: {
+    label: 'Offerta Inviata',
+    color: 'border-purple-200 bg-purple-50 text-purple-700',
+    icon: FileText,
+    step: 2,
+  },
+  payment_sent: {
+    label: 'Pagamento Inviato',
+    color: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+    icon: CreditCard,
+    step: 3,
+  },
 }
 
-const TIMELINE_STEPS = [
-  'sent',
-  'in_review',
-  'offer_sent',
-  'accepted',
-  'payment_sent',
-  'confirmed',
-]
+const TIMELINE_STEPS = ['requested', 'offered', 'accepted', 'confirmed']
 
 // ---------------------------------------------------------------------------
 // Helper components
@@ -184,12 +193,30 @@ function formatDateShort(dateStr: string) {
   })
 }
 
+/**
+ * Map legacy statuses to the new 4-step workflow for the visual timeline.
+ */
+function normalizeStatus(status: string): string {
+  switch (status) {
+    case 'sent':
+    case 'in_review':
+      return 'requested'
+    case 'offer_sent':
+      return 'offered'
+    case 'payment_sent':
+      return 'confirmed'
+    default:
+      return status
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Visual Timeline (workflow steps)
 // ---------------------------------------------------------------------------
 
 function WorkflowTimeline({ currentStatus }: { currentStatus: string }) {
-  const currentStep = STATUS_CONFIG[currentStatus]?.step ?? 0
+  const normalized = normalizeStatus(currentStatus)
+  const currentStep = STATUS_CONFIG[normalized]?.step ?? 0
   const isFinal = currentStatus === 'rejected' || currentStatus === 'declined'
 
   return (
@@ -197,7 +224,7 @@ function WorkflowTimeline({ currentStatus }: { currentStatus: string }) {
       {TIMELINE_STEPS.map((stepKey, idx) => {
         const config = STATUS_CONFIG[stepKey]
         const step = config.step
-        const isActive = stepKey === currentStatus
+        const isActive = stepKey === normalized
         const isCompleted = !isFinal && currentStep > step
         const Icon = config.icon
 
@@ -345,8 +372,7 @@ function CreateOfferDialog({
         <DialogHeader>
           <DialogTitle>Crea Offerta</DialogTitle>
           <DialogDescription>
-            Prepara un&apos;offerta per l&apos;agenzia con prezzo, condizioni e
-            termini di pagamento.
+            Prepara un&apos;offerta per l&apos;agenzia con prezzo e condizioni.
           </DialogDescription>
         </DialogHeader>
 
@@ -429,36 +455,74 @@ function CreateOfferDialog({
 }
 
 // ---------------------------------------------------------------------------
-// Send Payment Details Dialog
+// Confirm Contract Dialog (replaces SendPaymentDialog)
 // ---------------------------------------------------------------------------
 
-function SendPaymentDialog({
+function ConfirmContractDialog({
   requestId,
-  offerAmount,
+  offerId,
   onSuccess,
 }: {
   requestId: string
-  offerAmount: number | null
+  offerId: string
   onSuccess: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [contractUrl, setContractUrl] = useState<string | null>(null)
+  const [contractFileName, setContractFileName] = useState<string | null>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        throw new Error('Upload fallito')
+      }
+
+      const data = await res.json()
+      setContractUrl(data.url)
+      setContractFileName(file.name)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore upload')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
-    const form = new FormData(e.currentTarget)
 
-    const payload = {
-      request_id: requestId,
-      bank_details: form.get('bank_details') as string,
-      amount: Number(form.get('amount')),
-      reference: form.get('reference') as string,
+    if (!contractUrl) {
+      setError('Carica il contratto PDF prima di procedere.')
+      return
     }
 
+    const form = new FormData(e.currentTarget)
+    const iban = form.get('iban') as string
+    const sendEmail = form.get('send_email') === 'on'
+
     startTransition(async () => {
-      const result = await sendPaymentDetails(payload)
+      const result = await confirmWithContract({
+        request_id: requestId,
+        offer_id: offerId,
+        contract_file_url: contractUrl,
+        iban,
+        send_email: sendEmail,
+      })
       if (result.success) {
         setOpen(false)
         onSuccess()
@@ -471,52 +535,81 @@ function SendPaymentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <CreditCard className="h-4 w-4" />
-          Invia Estremi Pagamento
+        <Button className="bg-emerald-600 hover:bg-emerald-700">
+          <FileText className="h-4 w-4" />
+          Invia Contratto + IBAN
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Invia Estremi di Pagamento</DialogTitle>
+          <DialogTitle>Invia Contratto e Dati Pagamento</DialogTitle>
           <DialogDescription>
-            Invia all&apos;agenzia i dati per effettuare il bonifico.
+            Carica il contratto PDF e inserisci l&apos;IBAN. La prenotazione
+            verra confermata.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="bank_details">IBAN / Coordinate bancarie *</Label>
+            <Label>Contratto PDF *</Label>
+            {contractFileName ? (
+              <div className="mt-1 flex items-center gap-2 rounded-md border bg-green-50 px-3 py-2 text-sm">
+                <FileText className="h-4 w-4 text-green-600" />
+                <span className="flex-1 truncate">{contractFileName}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setContractUrl(null)
+                    setContractFileName(null)
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-1">
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {uploading ? 'Caricamento...' : 'Clicca per caricare il PDF'}
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="iban">IBAN *</Label>
             <Input
-              id="bank_details"
-              name="bank_details"
+              id="iban"
+              name="iban"
               required
               placeholder="IT60 X054 2811 1010 0000 0123 456"
             />
           </div>
 
-          <div>
-            <Label htmlFor="amount">Importo (EUR) *</Label>
-            <Input
-              id="amount"
-              name="amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              required
-              defaultValue={offerAmount ?? ''}
-              placeholder="1500.00"
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="send_email"
+              name="send_email"
+              defaultChecked
+              className="h-4 w-4 rounded border-gray-300"
             />
-          </div>
-
-          <div>
-            <Label htmlFor="reference">Causale *</Label>
-            <Input
-              id="reference"
-              name="reference"
-              required
-              placeholder="Es. Acconto prenotazione Tour Russia - Rif. 12345"
-            />
+            <Label htmlFor="send_email" className="text-sm font-normal">
+              Invia email all&apos;agenzia
+            </Label>
           </div>
 
           {error && (
@@ -534,9 +627,181 @@ function SendPaymentDialog({
             >
               Annulla
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              disabled={isPending || !contractUrl}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
               {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Invia Pagamento
+              Conferma e Invia
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Upload Quote Document Dialog
+// ---------------------------------------------------------------------------
+
+function UploadDocumentDialog({
+  requestId,
+  onSuccess,
+}: {
+  requestId: string
+  onSuccess: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [fileUrl, setFileUrl] = useState<string | null>(null)
+  const [fileName, setFileName] = useState<string | null>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) throw new Error('Upload fallito')
+      const data = await res.json()
+      setFileUrl(data.url)
+      setFileName(file.name)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore upload')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!fileUrl || !fileName) {
+      setError('Seleziona un file.')
+      return
+    }
+
+    const form = new FormData(e.currentTarget)
+    const documentType = (form.get('document_type') as string) || 'altro'
+
+    startTransition(async () => {
+      const result = await uploadQuoteDocument({
+        request_id: requestId,
+        file_url: fileUrl,
+        file_name: fileName,
+        document_type: documentType,
+      })
+      if (result.success) {
+        setOpen(false)
+        setFileUrl(null)
+        setFileName(null)
+        onSuccess()
+      } else {
+        setError(result.error)
+      }
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Upload className="h-4 w-4" />
+          Carica Documento
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Carica Documento</DialogTitle>
+          <DialogDescription>
+            Carica un documento (fattura, contratto, altro) per questo
+            preventivo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>File *</Label>
+            {fileName ? (
+              <div className="mt-1 flex items-center gap-2 rounded-md border bg-green-50 px-3 py-2 text-sm">
+                <FileText className="h-4 w-4 text-green-600" />
+                <span className="flex-1 truncate">{fileName}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setFileUrl(null)
+                    setFileName(null)
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <label className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {uploading ? 'Caricamento...' : 'Clicca per caricare'}
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                />
+              </label>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="document_type">Tipo documento</Label>
+            <select
+              id="document_type"
+              name="document_type"
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              defaultValue="altro"
+            >
+              <option value="fattura">Fattura</option>
+              <option value="contratto">Contratto</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              Annulla
+            </Button>
+            <Button type="submit" disabled={isPending || !fileUrl}>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Carica
             </Button>
           </DialogFooter>
         </form>
@@ -644,36 +909,19 @@ interface QuoteDetailClientProps {
 export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
 
   const handleRefresh = () => {
     router.refresh()
   }
 
-  const handleSetInReview = () => {
-    startTransition(async () => {
-      const result = await updateQuoteStatus({
-        request_id: quote.id,
-        status: 'in_review',
-        details: 'Presa in carico dall\'admin',
-      })
-      if (result.success) {
-        router.refresh()
-      } else {
-        alert(`Errore: ${result.error}`)
-      }
-    })
-  }
+  const handleDeleteDocument = (docId: string) => {
+    if (!confirm('Eliminare questo documento?')) return
 
-  const handleConfirmPayment = () => {
-    if (
-      !confirm(
-        'Confermi di aver ricevuto il pagamento? La prenotazione verra confermata.'
-      )
-    )
-      return
-
+    setDeletingDocId(docId)
     startTransition(async () => {
-      const result = await confirmPayment(quote.id)
+      const result = await deleteQuoteDocument(docId, quote.id)
+      setDeletingDocId(null)
       if (result.success) {
         router.refresh()
       } else {
@@ -696,7 +944,10 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
       : quote.cruise?.durata_notti
 
   const latestOffer = quote.offers[0] ?? null
-  const latestPayment = quote.payments[0] ?? null
+
+  // Normalized status for action button logic
+  const normalized = normalizeStatus(quote.status)
+  const isTerminal = normalized === 'rejected' || normalized === 'declined'
 
   return (
     <div className="space-y-6">
@@ -724,55 +975,30 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
 
         {/* Action buttons based on current status */}
         <div className="flex flex-wrap items-center gap-2">
-          {quote.status === 'sent' && (
-            <Button onClick={handleSetInReview} disabled={isPending}>
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-              Prendi in Carico
-            </Button>
-          )}
-
-          {(quote.status === 'sent' || quote.status === 'in_review') && (
+          {/* requested/sent/in_review → Create Offer */}
+          {(normalized === 'requested') && (
             <CreateOfferDialog
               requestId={quote.id}
               onSuccess={handleRefresh}
             />
           )}
 
-          {quote.status === 'accepted' && (
-            <SendPaymentDialog
+          {/* accepted → Send Contract + IBAN */}
+          {normalized === 'accepted' && latestOffer && (
+            <ConfirmContractDialog
               requestId={quote.id}
-              offerAmount={latestOffer?.total_price ?? null}
+              offerId={latestOffer.id}
               onSuccess={handleRefresh}
             />
           )}
 
-          {quote.status === 'payment_sent' && (
-            <Button
-              onClick={handleConfirmPayment}
-              disabled={isPending}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle className="h-4 w-4" />
-              )}
-              Conferma Pagamento
-            </Button>
+          {/* Reject — available when not terminal and not confirmed */}
+          {!isTerminal && normalized !== 'confirmed' && (
+            <RejectDialog
+              requestId={quote.id}
+              onSuccess={handleRefresh}
+            />
           )}
-
-          {quote.status !== 'confirmed' &&
-            quote.status !== 'rejected' &&
-            quote.status !== 'declined' && (
-              <RejectDialog
-                requestId={quote.id}
-                onSuccess={handleRefresh}
-              />
-            )}
         </div>
       </div>
 
@@ -785,7 +1011,7 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
 
       {/* Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Agency + Package */}
+        {/* Left column: Agency + Package + Offers + Participants + Documents */}
         <div className="space-y-6 lg:col-span-2">
           {/* Agency Info */}
           <Card>
@@ -799,7 +1025,14 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
                   <InfoRow
                     icon={Building2}
                     label="Ragione sociale"
-                    value={quote.agency.business_name}
+                    value={
+                      <Link
+                        href={`/admin/agenzie/${quote.agency.id}`}
+                        className="text-primary hover:underline"
+                      >
+                        {quote.agency.business_name}
+                      </Link>
+                    }
                   />
                   <InfoRow
                     icon={Users}
@@ -902,6 +1135,18 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
                     />
                   </>
                 )}
+                {/* Preview price */}
+                <InfoRow
+                  icon={DollarSign}
+                  label="Prezzo visto dall'agenzia"
+                  value={
+                    quote.preview_price_label
+                      ? quote.preview_price_label
+                      : quote.preview_price
+                        ? `EUR ${Number(quote.preview_price).toLocaleString('it-IT', { minimumFractionDigits: 2 })}`
+                        : null
+                  }
+                />
               </div>
 
               {/* Extras */}
@@ -1004,6 +1249,31 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
                           </p>
                         </div>
                       )}
+                      {/* Contract + IBAN (shown after confirmation) */}
+                      {offer.contract_file_url && (
+                        <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-emerald-600" />
+                            <span className="text-sm font-medium text-emerald-800">
+                              Contratto caricato
+                            </span>
+                            <a
+                              href={offer.contract_file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-auto text-xs text-emerald-600 hover:underline"
+                            >
+                              <Download className="inline h-3 w-3 mr-1" />
+                              Scarica
+                            </a>
+                          </div>
+                          {offer.iban && (
+                            <p className="mt-1 text-xs text-emerald-700">
+                              IBAN: <span className="font-mono font-semibold">{offer.iban}</span>
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1011,7 +1281,7 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
             </Card>
           )}
 
-          {/* Payment section */}
+          {/* Payment section (legacy — kept for old records) */}
           {quote.payments.length > 0 && (
             <Card>
               <CardContent className="p-6">
@@ -1077,6 +1347,118 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
               </CardContent>
             </Card>
           )}
+
+          {/* Participants section */}
+          {quote.participants && quote.participants.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-secondary">
+                  <UserCheck className="h-5 w-5" />
+                  Partecipanti
+                </h2>
+                <div className="space-y-3">
+                  {quote.participants
+                    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                    .map((p, idx) => (
+                      <div
+                        key={p.id}
+                        className="flex items-start gap-3 rounded-lg border p-3"
+                      >
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {p.full_name}
+                            {p.is_child && (
+                              <Badge
+                                variant="outline"
+                                className="ml-2 text-xs border-amber-200 bg-amber-50 text-amber-700"
+                              >
+                                bambino
+                              </Badge>
+                            )}
+                          </p>
+                          {(p.document_type || p.document_number) && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {p.document_type && <span>{p.document_type}</span>}
+                              {p.document_type && p.document_number && ' \u2022 '}
+                              {p.document_number && (
+                                <span className="font-mono">{p.document_number}</span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Documents section */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-secondary">
+                  <FileText className="h-5 w-5" />
+                  Documenti Preventivo
+                </h2>
+                <UploadDocumentDialog
+                  requestId={quote.id}
+                  onSuccess={handleRefresh}
+                />
+              </div>
+              {quote.documents && quote.documents.length > 0 ? (
+                <div className="space-y-2">
+                  {quote.documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">{doc.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {doc.document_type} &middot;{' '}
+                            {formatDateShort(doc.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="sm" asChild>
+                          <a
+                            href={doc.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                          disabled={deletingDocId === doc.id}
+                        >
+                          {deletingDocId === doc.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  Nessun documento caricato.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right column: Timeline */}
