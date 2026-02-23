@@ -14,7 +14,6 @@ export default async function DestinazioniPage() {
   // Reclassify destinations that would land in "Altro" to more specific areas
   const RECLASSIFY: Record<string, string> = {
     "scozia": "Europa",
-    "turchia": "Medio Oriente",
     "irlanda": "Europa",
     "islanda": "Europa",
   };

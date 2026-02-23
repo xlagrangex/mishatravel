@@ -187,7 +187,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
   const filterGroups: FilterGroup[] = useMemo(() => [
     {
       key: "macroAreas",
-      label: "Macro Area",
+      label: "Destinazione",
       type: "checkbox" as const,
       options: MACRO_AREAS.map((a) => ({
         value: a,
@@ -351,11 +351,11 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
         </div>
       </section>
 
-      {/* Macro Area Navigation */}
+      {/* Destination Navigation */}
       <section className="py-10 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-poppins)] mb-6">
-            Esplora per macro area
+            Esplora per destinazione
           </h2>
           <MacroAreaNavigation
             areas={areaInfos}

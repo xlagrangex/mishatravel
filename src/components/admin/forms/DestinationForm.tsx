@@ -62,7 +62,7 @@ function generateSlug(text: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Macro area options
+// Geographic area options
 // ---------------------------------------------------------------------------
 
 const MACRO_AREAS = [
@@ -184,9 +184,9 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
                 )}
               </div>
 
-              {/* Macro Area */}
+              {/* Area Geografica */}
               <div className="space-y-2">
-                <Label htmlFor="macro_area">Macro Area</Label>
+                <Label htmlFor="macro_area">Area Geografica</Label>
                 <Controller
                   name="macro_area"
                   control={control}
@@ -196,7 +196,7 @@ export default function DestinationForm({ initialData }: DestinationFormProps) {
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger id="macro_area" className="w-full">
-                        <SelectValue placeholder="Seleziona macro area" />
+                        <SelectValue placeholder="Seleziona area geografica" />
                       </SelectTrigger>
                       <SelectContent>
                         {MACRO_AREAS.map((area) => (

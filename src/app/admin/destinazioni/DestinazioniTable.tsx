@@ -104,7 +104,7 @@ export default function DestinazioniTable({ destinations }: DestinazioniTablePro
                 <TableHead className="w-[64px]">Immagine</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Anteprima</TableHead>
-                <TableHead>Macro Area</TableHead>
+                <TableHead>Area Geografica</TableHead>
                 <TableHead>Coordinate</TableHead>
                 <TableHead>Stato</TableHead>
                 <TableHead className="text-right">Azioni</TableHead>
@@ -155,7 +155,7 @@ export default function DestinazioniTable({ destinations }: DestinazioniTablePro
                     </Link>
                   </TableCell>
 
-                  {/* Macro Area */}
+                  {/* Area Geografica */}
                   <TableCell className="text-muted-foreground">
                     {destination.macro_area ?? "—"}
                   </TableCell>
