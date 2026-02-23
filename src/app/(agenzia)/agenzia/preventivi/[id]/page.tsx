@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getQuoteById } from "@/lib/supabase/queries/quotes";
 import QuoteActions from "./QuoteActions";
+import DownloadPdfButton from "./DownloadPdfButton";
 
 export const dynamic = "force-dynamic";
 
@@ -100,13 +101,14 @@ export default async function PreventivoDetailPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between">
         <Button asChild variant="ghost" size="sm">
           <Link href="/agenzia/preventivi">
             <ArrowLeft className="mr-1 h-4 w-4" />
             Torna ai preventivi
           </Link>
         </Button>
+        <DownloadPdfButton quoteId={id} />
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
