@@ -172,7 +172,7 @@ export async function getAllQuotes(
     query = query.eq('status', filters.status)
   } else {
     // By default, exclude archived quotes
-    query = query.neq('status', 'archived')
+    query = query.not('status', 'eq', 'archived')
   }
   if (filters?.request_type && filters.request_type !== 'all') {
     query = query.eq('request_type', filters.request_type)
