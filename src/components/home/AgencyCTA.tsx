@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { MapPin, Ship } from "lucide-react";
 import SectionReveal from "./SectionReveal";
 
 export default function AgencyCTA() {
@@ -19,19 +20,19 @@ export default function AgencyCTA() {
 
       <div className="container mx-auto px-4 relative z-10">
         <SectionReveal>
-          <h2 className="text-3xl md:text-[2.4rem] font-semibold text-center text-slate-800 font-[family-name:var(--font-poppins)] leading-[1.3] mb-6 max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-[2.4rem] font-semibold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] leading-[1.3] mb-6 max-w-4xl mx-auto">
             Offri ai tuoi clienti il viaggio della loro vita,
             <br />
             Al resto pensiamo noi
           </h2>
 
           <div className="max-w-[80%] mx-auto text-center space-y-4 mb-12">
-            <p className="text-lg text-slate-500 leading-relaxed font-[family-name:var(--font-poppins)]">
+            <p className="text-lg text-gray-500 leading-relaxed">
               Misha Travel &egrave; il partner ideale per le agenzie di viaggio
               che vogliono proporre tour e crociere fluviali progettati con cura,
               garantiti e personalizzabili.
             </p>
-            <p className="text-lg text-slate-500 leading-relaxed font-[family-name:var(--font-poppins)]">
+            <p className="text-lg text-gray-500 leading-relaxed">
               Dalle esperienze culturali alle rotte fluviali esclusive, ti
               forniamo itinerari pronti da vendere, assistenza continua e
               materiali per la promozione.
@@ -54,15 +55,9 @@ export default function AgencyCTA() {
                 className="object-cover object-left transition-transform duration-500 group-hover:scale-105"
                 sizes="380px"
               />
+              <div className="absolute inset-0 bg-black/20" />
               <div className="relative flex items-center justify-center gap-4 p-8 h-full">
-                <Image
-                  src="/images/agency-cta/icon-tour.gif"
-                  alt=""
-                  width={70}
-                  height={70}
-                  className="shrink-0"
-                  unoptimized
-                />
+                <MapPin className="size-12 text-white shrink-0" strokeWidth={1.5} />
                 <h3 className="text-2xl font-semibold text-white font-[family-name:var(--font-poppins)]">
                   I nostri tour
                 </h3>
@@ -81,15 +76,9 @@ export default function AgencyCTA() {
                 className="object-cover object-left transition-transform duration-500 group-hover:scale-105"
                 sizes="380px"
               />
+              <div className="absolute inset-0 bg-black/20" />
               <div className="relative flex items-center justify-center gap-4 p-8 h-full">
-                <Image
-                  src="/images/agency-cta/icon-cruise.gif"
-                  alt=""
-                  width={70}
-                  height={70}
-                  className="shrink-0"
-                  unoptimized
-                />
+                <Ship className="size-12 text-white shrink-0" strokeWidth={1.5} />
                 <h3 className="text-2xl font-semibold text-white font-[family-name:var(--font-poppins)]">
                   Crociere Fluviali
                 </h3>
