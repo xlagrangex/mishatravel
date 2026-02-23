@@ -140,8 +140,6 @@ export async function getQuoteById(id: string): Promise<QuoteDetail | null> {
       extras:quote_request_extras(*),
       offers:quote_offers(*),
       payments:quote_payments(*),
-      participants:quote_participants(*),
-      documents:quote_documents(*),
       timeline:quote_timeline(*)
     `
     )
@@ -155,6 +153,26 @@ export async function getQuoteById(id: string): Promise<QuoteDetail | null> {
     return null
   }
 
+  // Fetch participants and documents separately (tables may not exist yet before migration)
+  let participants: any[] = []
+  let documents: any[] = []
+
+  try {
+    const { data: p } = await supabase
+      .from('quote_participants')
+      .select('*')
+      .eq('request_id', id)
+    participants = p ?? []
+  } catch { /* table may not exist yet */ }
+
+  try {
+    const { data: d } = await supabase
+      .from('quote_documents')
+      .select('*')
+      .eq('request_id', id)
+    documents = d ?? []
+  } catch { /* table may not exist yet */ }
+
   // Sort timeline by created_at descending
   const sortedTimeline = (data.timeline ?? []).sort(
     (a: any, b: any) =>
@@ -163,6 +181,8 @@ export async function getQuoteById(id: string): Promise<QuoteDetail | null> {
 
   return {
     ...data,
+    participants,
+    documents,
     timeline: sortedTimeline,
   } as QuoteDetail
 }

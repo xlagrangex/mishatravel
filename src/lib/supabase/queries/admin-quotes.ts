@@ -256,10 +256,8 @@ export async function getQuoteDetail(
       tour:tours(id, title, slug, durata_notti, cover_image_url),
       cruise:cruises(id, title, slug, durata_notti, cover_image_url),
       extras:quote_request_extras(id, extra_name, quantity),
-      offers:quote_offers(id, package_details, total_price, conditions, payment_terms, offer_expiry, contract_file_url, iban, created_at),
+      offers:quote_offers(*),
       payments:quote_payments(id, bank_details, amount, reference, status, created_at),
-      participants:quote_participants(id, full_name, document_type, document_number, is_child, sort_order, created_at),
-      documents:quote_documents(id, file_url, file_name, document_type, uploaded_by, created_at),
       timeline:quote_timeline(id, action, details, actor, created_at)
     `
     )
@@ -270,6 +268,26 @@ export async function getQuoteDetail(
     if (error.code === 'PGRST116') return null
     throw new Error(`Failed to fetch quote detail: ${error.message}`)
   }
+
+  // Fetch participants and documents separately (tables may not exist yet before migration)
+  let participants: any[] = []
+  let documents: any[] = []
+
+  try {
+    const { data: p } = await supabase
+      .from('quote_participants')
+      .select('id, full_name, document_type, document_number, is_child, sort_order, created_at')
+      .eq('request_id', id)
+    participants = p ?? []
+  } catch { /* table may not exist yet */ }
+
+  try {
+    const { data: d } = await supabase
+      .from('quote_documents')
+      .select('id, file_url, file_name, document_type, uploaded_by, created_at')
+      .eq('request_id', id)
+    documents = d ?? []
+  } catch { /* table may not exist yet */ }
 
   return {
     id: data.id,
@@ -297,10 +315,10 @@ export async function getQuoteDetail(
       (a: any, b: any) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     ),
-    participants: (data.participants ?? []).sort(
+    participants: participants.sort(
       (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
     ),
-    documents: (data.documents ?? []).sort(
+    documents: documents.sort(
       (a: any, b: any) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     ),
