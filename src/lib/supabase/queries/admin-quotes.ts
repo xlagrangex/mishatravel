@@ -170,10 +170,9 @@ export async function getAllQuotes(
 
   if (filters?.status && filters.status !== 'all') {
     query = query.eq('status', filters.status)
-  } else {
-    // By default, exclude archived quotes
-    query = query.not('status', 'eq', 'archived')
   }
+  // Note: archived quotes are filtered client-side in AdminQuotesTable
+  // because PostgREST returns 400 when using neq/not.eq on the "status" column
   if (filters?.request_type && filters.request_type !== 'all') {
     query = query.eq('request_type', filters.request_type)
   }
