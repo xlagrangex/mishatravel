@@ -327,11 +327,15 @@ function ActivityTimeline({
 
 function CreateOfferDialog({
   requestId,
-  defaultPrice,
+  previewPricePerPerson,
+  previewPriceLabel,
+  totalParticipants,
   onSuccess,
 }: {
   requestId: string
-  defaultPrice?: number | null
+  previewPricePerPerson?: number | null
+  previewPriceLabel?: string | null
+  totalParticipants: number
   onSuccess: () => void
 }) {
   const [open, setOpen] = useState(false)
@@ -342,6 +346,12 @@ function CreateOfferDialog({
   const defaultExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split('T')[0]
+
+  // Calculate default total: price per person × participants
+  const defaultTotal =
+    previewPricePerPerson && totalParticipants > 0
+      ? previewPricePerPerson * totalParticipants
+      : previewPricePerPerson ?? null
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -385,6 +395,23 @@ function CreateOfferDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Price reference from agency request */}
+        {(previewPricePerPerson || previewPriceLabel) && (
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
+            <p className="text-xs font-semibold text-blue-700 mb-1">Riferimento prezzo dal preventivo</p>
+            <div className="flex items-baseline gap-3">
+              <span className="text-sm text-blue-900">
+                Prezzo a persona: <strong>{previewPriceLabel || `EUR ${Number(previewPricePerPerson).toLocaleString('it-IT', { minimumFractionDigits: 2 })}`}</strong>
+              </span>
+              {totalParticipants > 0 && previewPricePerPerson && (
+                <span className="text-sm text-blue-900">
+                  &middot; {totalParticipants} pax = <strong>EUR {(previewPricePerPerson * totalParticipants).toLocaleString('it-IT', { minimumFractionDigits: 2 })}</strong>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="total_price">Prezzo totale *</Label>
@@ -399,7 +426,7 @@ function CreateOfferDialog({
                 required
                 className="pl-7"
                 placeholder="1500.00"
-                defaultValue={defaultPrice ?? ''}
+                defaultValue={defaultTotal ?? ''}
               />
             </div>
           </div>
@@ -1043,7 +1070,9 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
           {(normalized === 'requested') && (
             <CreateOfferDialog
               requestId={quote.id}
-              defaultPrice={quote.preview_price}
+              previewPricePerPerson={quote.preview_price}
+              previewPriceLabel={quote.preview_price_label}
+              totalParticipants={(quote.participants_adults ?? 0) + (quote.participants_children ?? 0)}
               onSuccess={handleRefresh}
             />
           )}
