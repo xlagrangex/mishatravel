@@ -2,6 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock, MapPin } from "lucide-react";
 import { parsePrice } from "@/lib/utils";
+
+function formatDuration(val: string): string {
+  const trimmed = val.trim();
+  if (/^\d+$/.test(trimmed)) return `${trimmed} giorni`;
+  return trimmed;
+}
 import SectionReveal from "./SectionReveal";
 import type { TourListItem } from "@/lib/supabase/queries/tours";
 import type { CruiseListItem } from "@/lib/supabase/queries/cruises";
@@ -88,31 +94,29 @@ export default function LatestAdditions({
                     </div>
 
                     {/* Content */}
-                    <div className="p-4 flex flex-col flex-1">
-                      <h3 className="font-semibold text-[#1B2D4F] text-sm mb-2 line-clamp-2 group-hover:text-[#C41E2F] transition-colors leading-snug">
+                    <div className="px-4 py-3 flex flex-col flex-1">
+                      <h3 className="font-semibold text-[#1B2D4F] text-[15px] mb-1.5 line-clamp-2 group-hover:text-[#C41E2F] transition-colors leading-snug">
                         {item.title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 mb-3">
-                        {item.destination_name && (
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="size-3.5 text-[#C41E2F]" />
-                            {item.destination_name}
-                          </span>
-                        )}
-                        {item.durata_notti && (
-                          <span className="flex items-center gap-1.5">
-                            <Clock className="size-3.5 text-[#C41E2F]" />
-                            {item.durata_notti}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-auto">
+                      {item.destination_name && (
+                        <p className="flex items-center gap-1.5 text-sm text-gray-600 mb-0.5">
+                          <MapPin className="size-3.5 text-[#C41E2F] shrink-0" />
+                          {item.destination_name}
+                        </p>
+                      )}
+                      {item.durata_notti && (
+                        <p className="flex items-center gap-1.5 text-sm text-gray-600 mb-0.5">
+                          <Clock className="size-3.5 text-[#C41E2F] shrink-0" />
+                          {formatDuration(item.durata_notti)}
+                        </p>
+                      )}
+                      <div className="mt-auto pt-2">
                         {item.prezzo_su_richiesta ? (
-                          <p className="text-xs font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
+                          <p className="text-sm font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
                         ) : price > 0 ? (
-                          <p className="text-xs text-gray-400">
+                          <p className="text-sm text-gray-400">
                             da{" "}
-                            <span className="font-bold text-[#C41E2F] text-sm">
+                            <span className="font-bold text-[#C41E2F] text-lg">
                               &euro;{price.toLocaleString("it-IT")}
                             </span>
                           </p>

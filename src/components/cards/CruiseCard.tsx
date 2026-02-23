@@ -13,6 +13,12 @@ interface CruiseCardProps {
   image: string;
 }
 
+function formatDuration(val: string): string {
+  const trimmed = val.trim();
+  if (/^\d+$/.test(trimmed)) return `${trimmed} giorni`;
+  return trimmed;
+}
+
 export default function CruiseCard({
   slug,
   title,
@@ -35,7 +41,7 @@ export default function CruiseCard({
   return (
     <Link href={`/crociere/${slug}`} className="group h-full">
       <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col">
-        {/* Image — only type badge */}
+        {/* Image */}
         <div className="relative aspect-[16/10] overflow-hidden">
           <Image
             src={image}
@@ -53,40 +59,38 @@ export default function CruiseCard({
         </div>
 
         {/* Content */}
-        <div className="p-4 flex flex-col flex-1">
-          <h3 className="font-semibold text-[15px] text-[#1B2D4F] font-[family-name:var(--font-poppins)] line-clamp-2 group-hover:text-[#C41E2F] transition-colors leading-snug mb-3">
+        <div className="px-5 py-4 flex flex-col flex-1">
+          <h3 className="font-semibold text-base text-[#1B2D4F] font-[family-name:var(--font-poppins)] line-clamp-2 group-hover:text-[#C41E2F] transition-colors leading-snug mb-2">
             {title}
           </h3>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-500 mb-3">
-            {river && (
-              <span className="flex items-center gap-1.5">
-                <MapPin className="size-3.5 text-[#C41E2F]" />
-                {river}
-              </span>
-            )}
-            {duration && (
-              <span className="flex items-center gap-1.5">
-                <Clock className="size-3.5 text-[#C41E2F]" />
-                {duration}
-              </span>
-            )}
-            {ship && (
-              <span className="flex items-center gap-1.5">
-                <Ship className="size-3.5 text-gray-400" />
-                {ship}
-              </span>
-            )}
-          </div>
+          {river && (
+            <p className="flex items-center gap-1.5 text-[15px] text-gray-600 mb-1">
+              <MapPin className="size-4 text-[#C41E2F] shrink-0" />
+              {river}
+            </p>
+          )}
+          {duration && (
+            <p className="flex items-center gap-1.5 text-[15px] text-gray-600 mb-1">
+              <Clock className="size-4 text-[#C41E2F] shrink-0" />
+              {formatDuration(duration)}
+            </p>
+          )}
+          {ship && (
+            <p className="flex items-center gap-1.5 text-[15px] text-gray-600 mb-1">
+              <Ship className="size-4 text-gray-400 shrink-0" />
+              {ship}
+            </p>
+          )}
 
           {/* Price */}
-          <div className="mt-auto pt-3 border-t border-gray-100">
+          <div className="mt-auto pt-3">
             {prezzoSuRichiesta ? (
-              <p className="text-sm font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
+              <p className="text-[15px] font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
             ) : formattedPrice ? (
-              <p className="text-xs text-gray-400">
+              <p className="text-sm text-gray-400">
                 da{" "}
-                <span className="font-bold text-[#C41E2F] text-lg">
+                <span className="font-bold text-[#C41E2F] text-xl">
                   {formattedPrice}
                 </span>
               </p>
