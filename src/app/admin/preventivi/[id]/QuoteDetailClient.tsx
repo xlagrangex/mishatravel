@@ -28,6 +28,7 @@ import {
   Download,
   Trash2,
   UserCheck,
+  Undo2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,6 +54,7 @@ import {
   uploadQuoteDocument,
   deleteQuoteDocument,
   rejectQuote,
+  revokeOffer,
 } from '../actions'
 
 // ---------------------------------------------------------------------------
@@ -325,14 +327,21 @@ function ActivityTimeline({
 
 function CreateOfferDialog({
   requestId,
+  defaultPrice,
   onSuccess,
 }: {
   requestId: string
+  defaultPrice?: number | null
   onSuccess: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+
+  // Default expiry: 7 days from today
+  const defaultExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0]
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -346,7 +355,6 @@ function CreateOfferDialog({
       payment_terms: form.get('payment_terms') as string || null,
       offer_expiry: form.get('offer_expiry') as string || null,
       package_details: null,
-      send_now: form.get('send_now') === 'on',
     }
 
     startTransition(async () => {
@@ -373,6 +381,7 @@ function CreateOfferDialog({
           <DialogTitle>Crea Offerta</DialogTitle>
           <DialogDescription>
             Prepara un&apos;offerta per l&apos;agenzia con prezzo e condizioni.
+            L&apos;offerta verra inviata immediatamente.
           </DialogDescription>
         </DialogHeader>
 
@@ -390,6 +399,7 @@ function CreateOfferDialog({
                 required
                 className="pl-7"
                 placeholder="1500.00"
+                defaultValue={defaultPrice ?? ''}
               />
             </div>
           </div>
@@ -416,20 +426,12 @@ function CreateOfferDialog({
 
           <div>
             <Label htmlFor="offer_expiry">Scadenza offerta</Label>
-            <Input id="offer_expiry" name="offer_expiry" type="date" />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="send_now"
-              name="send_now"
-              className="h-4 w-4 rounded border-gray-300"
+            <Input
+              id="offer_expiry"
+              name="offer_expiry"
+              type="date"
+              defaultValue={defaultExpiry}
             />
-            <Label htmlFor="send_now" className="text-sm font-normal">
-              Invia subito all&apos;agenzia (aggiorna stato a &quot;Offerta
-              Inviata&quot;)
-            </Label>
           </div>
 
           {error && (
@@ -449,10 +451,68 @@ function CreateOfferDialog({
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salva Offerta
+              Invia Offerta
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Revoke Offer Button
+// ---------------------------------------------------------------------------
+
+function RevokeOfferButton({
+  requestId,
+  onSuccess,
+}: {
+  requestId: string
+  onSuccess: () => void
+}) {
+  const [isPending, startTransition] = useTransition()
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const handleRevoke = () => {
+    startTransition(async () => {
+      const result = await revokeOffer(requestId)
+      if (result.success) {
+        setShowConfirm(false)
+        onSuccess()
+      }
+    })
+  }
+
+  return (
+    <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="text-orange-600 border-orange-300 hover:bg-orange-50">
+          <Undo2 className="h-4 w-4" />
+          Revoca Offerta
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Revoca Offerta</DialogTitle>
+          <DialogDescription>
+            Sei sicuro di voler revocare l&apos;offerta? Lo stato tornera a
+            &quot;Richiesto&quot; e potrai creare una nuova offerta.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowConfirm(false)}>
+            Annulla
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleRevoke}
+            disabled={isPending}
+          >
+            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Conferma Revoca
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
@@ -982,6 +1042,15 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
           {/* requested/sent/in_review → Create Offer */}
           {(normalized === 'requested') && (
             <CreateOfferDialog
+              requestId={quote.id}
+              defaultPrice={quote.preview_price}
+              onSuccess={handleRefresh}
+            />
+          )}
+
+          {/* offered → Revoke Offer */}
+          {normalized === 'offered' && (
+            <RevokeOfferButton
               requestId={quote.id}
               onSuccess={handleRefresh}
             />

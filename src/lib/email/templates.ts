@@ -422,6 +422,30 @@ export function quoteRejectedEmail(
   `);
 }
 
+/**
+ * Offer revoked by tour operator.
+ */
+export function offerRevokedEmail(
+  agencyName: string,
+  productName: string
+): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#C41E2F;font-size:22px;">Offerta revocata</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Ti informiamo che l&rsquo;offerta relativa a <strong>&ldquo;${productName}&rdquo;</strong>
+      &egrave; stata revocata.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Riceverai una nuova proposta aggiornata a breve.
+      Per qualsiasi domanda, non esitare a contattarci.
+    </p>
+    ${ctaButton("Accedi alla tua area riservata", SITE_URL + "/agenzia/offerte")}
+  `);
+}
+
 // ---------------------------------------------------------------------------
 // 3. Admin notification emails
 // ---------------------------------------------------------------------------

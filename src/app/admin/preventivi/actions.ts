@@ -9,6 +9,7 @@ import {
   paymentDetailsSentEmail,
   contractSentEmail,
   quoteRejectedEmail,
+  offerRevokedEmail,
 } from '@/lib/email/templates'
 
 // ---------------------------------------------------------------------------
@@ -156,7 +157,6 @@ const createOfferSchema = z.object({
   payment_terms: z.string().nullable().default(null),
   offer_expiry: z.string().nullable().default(null),
   package_details: z.record(z.string(), z.unknown()).nullable().default(null),
-  send_now: z.boolean().default(false),
 })
 
 export type CreateOfferInput = z.infer<typeof createOfferSchema>
@@ -179,7 +179,6 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
     payment_terms,
     offer_expiry,
     package_details,
-    send_now,
   } = parsed.data
   const supabase = createAdminClient()
 
@@ -210,45 +209,42 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
       `Prezzo totale: EUR ${total_price.toFixed(2)}${offer_expiry ? ` - Scadenza: ${offer_expiry}` : ''}`
     )
 
-    // If send_now, send email first then update status
-    if (send_now) {
-      // --- Email: notify agency of new offer ---
-      let emailSent = false
-      try {
-        const ctx = await getQuoteEmailContext(supabase, request_id)
-        if (ctx?.agencyEmail) {
-          emailSent = await sendTransactionalEmail(
-            { email: ctx.agencyEmail, name: ctx.agencyName },
-            'Nuova offerta ricevuta - MishaTravel',
-            newOfferReceivedEmail(
-              ctx.agencyName,
-              ctx.productName,
-              total_price,
-              offer_expiry
-            )
+    // Always send the offer to the agency (email + status update)
+    let emailSent = false
+    try {
+      const ctx = await getQuoteEmailContext(supabase, request_id)
+      if (ctx?.agencyEmail) {
+        emailSent = await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Nuova offerta ricevuta - MishaTravel',
+          newOfferReceivedEmail(
+            ctx.agencyName,
+            ctx.productName,
+            total_price,
+            offer_expiry
           )
-        }
-      } catch (emailErr) {
-        console.error('Error sending new offer email:', emailErr)
+        )
       }
-
-      // Update status to 'offer_sent' regardless (the offer exists in DB)
-      const { error: statusError } = await supabase
-        .from('quote_requests')
-        .update({ status: 'offer_sent' })
-        .eq('id', request_id)
-
-      if (statusError) {
-        return { success: false, error: statusError.message }
-      }
-
-      await addTimelineEntry(
-        supabase,
-        request_id,
-        'Offerta inviata all\'agenzia',
-        emailSent ? 'Email inviata con successo' : 'Attenzione: invio email fallito'
-      )
+    } catch (emailErr) {
+      console.error('Error sending new offer email:', emailErr)
     }
+
+    // Update status to 'offer_sent'
+    const { error: statusError } = await supabase
+      .from('quote_requests')
+      .update({ status: 'offer_sent' })
+      .eq('id', request_id)
+
+    if (statusError) {
+      return { success: false, error: statusError.message }
+    }
+
+    await addTimelineEntry(
+      supabase,
+      request_id,
+      'Offerta inviata all\'agenzia',
+      emailSent ? 'Email inviata con successo' : 'Attenzione: invio email fallito'
+    )
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
@@ -644,6 +640,89 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
     return { success: true, id: request_id }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 8. Revoke Offer
+// ---------------------------------------------------------------------------
+
+export async function revokeOffer(requestId: string): Promise<ActionResult> {
+  if (!requestId) {
+    return { success: false, error: 'ID preventivo mancante' }
+  }
+
+  const supabase = createAdminClient()
+
+  try {
+    // Verify the request is in offer_sent status
+    const { data: request } = await supabase
+      .from('quote_requests')
+      .select('id, status')
+      .eq('id', requestId)
+      .single()
+
+    if (!request) {
+      return { success: false, error: 'Richiesta non trovata' }
+    }
+
+    if (request.status !== 'offer_sent') {
+      return {
+        success: false,
+        error: 'Lo stato della richiesta non permette questa azione.',
+      }
+    }
+
+    // Delete the offer(s) for this request
+    const { error: deleteError } = await supabase
+      .from('quote_offers')
+      .delete()
+      .eq('request_id', requestId)
+
+    if (deleteError) {
+      return { success: false, error: deleteError.message }
+    }
+
+    // Notify agency via email before status update
+    let emailSent = false
+    try {
+      const ctx = await getQuoteEmailContext(supabase, requestId)
+      if (ctx?.agencyEmail) {
+        emailSent = await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Offerta revocata - MishaTravel',
+          offerRevokedEmail(ctx.agencyName, ctx.productName)
+        )
+      }
+    } catch (emailErr) {
+      console.error('Error sending offer revoked email:', emailErr)
+    }
+
+    // Revert status to 'sent'
+    const { error: statusError } = await supabase
+      .from('quote_requests')
+      .update({ status: 'sent' })
+      .eq('id', requestId)
+
+    if (statusError) {
+      return { success: false, error: statusError.message }
+    }
+
+    await addTimelineEntry(
+      supabase,
+      requestId,
+      'Offerta revocata',
+      `L'offerta e stata revocata dal tour operator.${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
+    )
+
+    revalidatePath('/admin/preventivi')
+    revalidatePath(`/admin/preventivi/${requestId}`)
+    return { success: true, id: requestId }
   } catch (err) {
     return {
       success: false,
