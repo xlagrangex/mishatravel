@@ -1396,56 +1396,68 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                 {gallery.fields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="flex items-end gap-3 rounded-lg border bg-muted/30 p-3"
+                    className="rounded-lg border bg-muted/30 p-3 space-y-3"
                   >
-                    <div className="flex-1 space-y-2">
-                      <Label className="text-xs">URL Immagine</Label>
-                      <Input
-                        placeholder="https://..."
-                        {...register(`gallery.${index}.image_url`)}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Immagine {index + 1}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7"
+                          disabled={index === 0}
+                          onClick={() =>
+                            moveItem(gallery, index, index - 1, gallery.fields.length)
+                          }
+                        >
+                          <ChevronUp className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7"
+                          disabled={index === gallery.fields.length - 1}
+                          onClick={() =>
+                            moveItem(gallery, index, index + 1, gallery.fields.length)
+                          }
+                        >
+                          <ChevronDown className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 text-destructive hover:text-destructive"
+                          onClick={() => gallery.remove(index)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Immagine</Label>
+                      <Controller
+                        control={control}
+                        name={`gallery.${index}.image_url`}
+                        render={({ field: imgField }) => (
+                          <ImageUpload
+                            value={imgField.value ? [imgField.value] : []}
+                            onUpload={(urls) => imgField.onChange(urls[0] || "")}
+                            bucket="cruises"
+                          />
+                        )}
                       />
                     </div>
-                    <div className="w-48 space-y-2">
+                    <div className="space-y-2">
                       <Label className="text-xs">Didascalia</Label>
                       <Input
                         placeholder="Descrizione immagine"
                         {...register(`gallery.${index}.caption`)}
                       />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        disabled={index === 0}
-                        onClick={() =>
-                          moveItem(gallery, index, index - 1, gallery.fields.length)
-                        }
-                      >
-                        <ChevronUp className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        disabled={index === gallery.fields.length - 1}
-                        onClick={() =>
-                          moveItem(gallery, index, index + 1, gallery.fields.length)
-                        }
-                      >
-                        <ChevronDown className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-destructive hover:text-destructive"
-                        onClick={() => gallery.remove(index)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
                     </div>
                   </div>
                 ))}

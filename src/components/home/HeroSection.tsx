@@ -114,6 +114,7 @@ export default function HeroSection({ destinations, tours, cruises, departures }
                 fill
                 className="object-cover"
                 priority={i === 0}
+                quality={i === 0 ? 65 : 55}
                 sizes="100vw"
               />
             </div>

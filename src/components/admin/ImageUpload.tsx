@@ -55,6 +55,7 @@ interface UploadingFile {
 
 const DEFAULT_ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/svg+xml";
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const WEBP_QUALITY = 0.82;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -65,6 +66,36 @@ function formatBytes(bytes: number): string {
 let idCounter = 0;
 function uid(): string {
   return `img-upload-${Date.now()}-${++idCounter}`;
+}
+
+/** Convert raster images (JPEG/PNG) to WebP via Canvas. GIF/SVG are kept as-is. */
+async function convertToWebP(file: File): Promise<File> {
+  const skipTypes = ["image/gif", "image/svg+xml", "image/webp"];
+  if (skipTypes.includes(file.type)) return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; }
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) { resolve(file); return; }
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          resolve(new File([blob], `${baseName}.webp`, { type: "image/webp" }));
+        },
+        "image/webp",
+        WEBP_QUALITY,
+      );
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => { resolve(file); };
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -186,7 +217,8 @@ export default function ImageUpload({
           }, 200);
 
           try {
-            const url = await uploadToStorage(entry.file);
+            const optimized = await convertToWebP(entry.file);
+            const url = await uploadToStorage(optimized);
             clearInterval(progressInterval);
 
             setUploading((prev) =>

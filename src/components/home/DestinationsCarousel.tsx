@@ -22,6 +22,7 @@ function CarouselTrack({ items }: { items: Destination[] }) {
                 alt={dest.name}
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
+                quality={55}
                 sizes="200px"
               />
             ) : (

@@ -363,16 +363,23 @@ export default function ShipForm({ initialData }: ShipFormProps) {
                 </div>
               </div>
 
-              {/* Piani Ponte URL */}
+              {/* Piani Ponte */}
               <div className="space-y-2">
-                <Label htmlFor="piani_ponte_url">URL Piani Ponte</Label>
-                <Input
-                  id="piani_ponte_url"
-                  placeholder="https://example.com/piani-ponte.pdf"
-                  {...register("piani_ponte_url")}
+                <Label>Piani Ponte (immagine o PDF)</Label>
+                <Controller
+                  control={control}
+                  name="piani_ponte_url"
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value ? [field.value] : []}
+                      onUpload={(urls) => field.onChange(urls[0] || null)}
+                      bucket="ships"
+                      accept="image/png,image/jpeg,image/webp,application/pdf"
+                    />
+                  )}
                 />
                 <p className="text-xs text-muted-foreground">
-                  URL dell&apos;immagine o PDF con i piani ponte della nave.
+                  Carica l&apos;immagine o PDF con i piani ponte della nave.
                 </p>
               </div>
 
@@ -781,12 +788,19 @@ export default function ShipForm({ initialData }: ShipFormProps) {
                     </div>
                   </div>
 
-                  {/* Immagine URL */}
+                  {/* Immagine cabina */}
                   <div className="mt-4 space-y-2">
-                    <Label>URL Immagine</Label>
-                    <Input
-                      placeholder="https://example.com/cabina.jpg"
-                      {...register(`cabin_details.${index}.immagine_url`)}
+                    <Label>Immagine Cabina</Label>
+                    <Controller
+                      control={control}
+                      name={`cabin_details.${index}.immagine_url`}
+                      render={({ field }) => (
+                        <ImageUpload
+                          value={field.value ? [field.value] : []}
+                          onUpload={(urls) => field.onChange(urls[0] || null)}
+                          bucket="ships"
+                        />
+                      )}
                     />
                   </div>
 
@@ -885,12 +899,19 @@ export default function ShipForm({ initialData }: ShipFormProps) {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>URL Immagine *</Label>
-                      <Input
-                        placeholder="https://example.com/foto.jpg"
-                        {...register(`gallery.${index}.image_url`)}
+                      <Label>Immagine *</Label>
+                      <Controller
+                        control={control}
+                        name={`gallery.${index}.image_url`}
+                        render={({ field }) => (
+                          <ImageUpload
+                            value={field.value ? [field.value] : []}
+                            onUpload={(urls) => field.onChange(urls[0] || "")}
+                            bucket="ships"
+                          />
+                        )}
                       />
                       {errors.gallery?.[index]?.image_url && (
                         <p className="text-xs text-destructive">
