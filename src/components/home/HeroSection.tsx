@@ -38,7 +38,7 @@ function buildSlides(tours: TourListItem[], cruises: CruiseListItem[]): Slide[] 
   return all;
 }
 
-const INTERVAL = 5000;
+const INTERVAL = 7500;
 
 export default function HeroSection({ destinations, tours, cruises, departures }: Props) {
   const slides = buildSlides(tours, cruises);

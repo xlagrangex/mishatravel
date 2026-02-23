@@ -50,13 +50,13 @@ export default async function HomePage() {
       <AgencyCTA />
 
       {/* 6. I nostri Tour */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <SectionReveal>
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
               I nostri Tour
             </h2>
-            <div className="section-divider mb-12" />
+            <div className="section-divider mb-14" />
           </SectionReveal>
           {featuredTours.length > 0 ? (
             <SectionReveal delay={0.15}>
@@ -90,13 +90,13 @@ export default async function HomePage() {
       </section>
 
       {/* 7. Crociere Fluviali */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionReveal>
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
               Crociere Fluviali
             </h2>
-            <div className="section-divider mb-12" />
+            <div className="section-divider mb-14" />
           </SectionReveal>
           {featuredCruises.length > 0 ? (
             <SectionReveal delay={0.15}>

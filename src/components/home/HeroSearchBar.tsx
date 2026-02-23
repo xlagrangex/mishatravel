@@ -38,9 +38,10 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
   const futureMonths = useMemo(() => getFutureMonths(18), []);
 
   const suggestions = useMemo(() => {
+    if (query.length === 0) return destinations.slice(0, 8);
     if (query.length < 2) return [];
     const q = query.toLowerCase();
-    return destinations.filter((d) => d.name.toLowerCase().includes(q)).slice(0, 6);
+    return destinations.filter((d) => d.name.toLowerCase().includes(q)).slice(0, 8);
   }, [query, destinations]);
 
   const results = useMemo(() => {
@@ -109,11 +110,11 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
-                setShowAutocomplete(e.target.value.length >= 2);
+                setShowAutocomplete(e.target.value.length === 0 || e.target.value.length >= 2);
                 setShowResults(false);
               }}
               onFocus={() => {
-                if (query.length >= 2) setShowAutocomplete(true);
+                setShowAutocomplete(true);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSearch();
@@ -128,15 +129,20 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
             {/* Autocomplete dropdown */}
             {showAutocomplete && suggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl overflow-hidden" style={{ zIndex: 60 }}>
+                {query.length === 0 && (
+                  <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                    Destinazioni popolari
+                  </p>
+                )}
                 {suggestions.map((dest) => (
                   <button
                     key={dest.id}
                     type="button"
                     onMouseDown={(e) => {
-                      e.preventDefault(); // Prevent input blur
+                      e.preventDefault();
                       selectSuggestion(dest.name);
                     }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors text-gray-800 text-sm flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors text-gray-800 text-sm flex items-center gap-2.5 cursor-pointer"
                   >
                     <MapPin className="size-4 text-[#C41E2F] shrink-0" />
                     {dest.name}

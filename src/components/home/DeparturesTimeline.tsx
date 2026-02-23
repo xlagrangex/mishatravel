@@ -51,13 +51,13 @@ export default function DeparturesTimeline({ departures, tours, cruises }: Props
   const cruiseImages = new Map(cruises.map((c) => [c.slug, c.cover_image_url]));
 
   return (
-    <section className="py-16 bg-white overflow-hidden">
+    <section className="py-20 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
         <SectionReveal>
           <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
             Prossime partenze
           </h2>
-          <div className="section-divider mb-12" />
+          <div className="section-divider mb-14" />
         </SectionReveal>
 
         <div className="relative group">
