@@ -168,7 +168,8 @@
   width: 60px;
   height: 3px;
   background-color: #C41E2F;
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Smooth scroll for the whole page */
