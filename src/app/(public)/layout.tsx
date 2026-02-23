@@ -8,16 +8,17 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AdminEditProvider } from "@/components/admin/AdminEditContext";
 import { getAuthContext } from "@/lib/supabase/auth";
 import { getAgencyByUserId } from "@/lib/supabase/queries/agency-dashboard";
-import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
+import { getPublishedDestinations, getTourCountsPerDestination } from "@/lib/supabase/queries/destinations";
 
 export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [{ user, role, permissions }, destinations] = await Promise.all([
+  const [{ user, role, permissions }, destinations, productCounts] = await Promise.all([
     getAuthContext(),
     getPublishedDestinations(),
+    getTourCountsPerDestination(),
   ]);
 
   let displayName: string | undefined;
@@ -36,13 +37,17 @@ export default async function PublicLayout({
     "America Latina",
     "Percorsi Fluviali",
   ];
-  const groupedRaw: Record<string, { name: string; slug: string }[]> = {};
+  const groupedRaw: Record<string, { name: string; slug: string; hasProducts: boolean }[]> = {};
   for (const dest of destinations) {
     const area = dest.macro_area ?? "Altro";
     if (!groupedRaw[area]) groupedRaw[area] = [];
-    groupedRaw[area].push({ name: dest.name, slug: dest.slug });
+    groupedRaw[area].push({
+      name: dest.name,
+      slug: dest.slug,
+      hasProducts: (productCounts[dest.slug] ?? 0) > 0,
+    });
   }
-  const destinationsByArea: Record<string, { name: string; slug: string }[]> = {};
+  const destinationsByArea: Record<string, { name: string; slug: string; hasProducts: boolean }[]> = {};
   for (const area of AREA_ORDER) {
     if (groupedRaw[area]?.length) destinationsByArea[area] = groupedRaw[area];
   }

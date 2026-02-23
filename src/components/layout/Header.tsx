@@ -15,7 +15,7 @@ import {
 import { mainNavItems } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-type DestItem = { name: string; slug: string };
+type DestItem = { name: string; slug: string; hasProducts: boolean };
 
 type Props = {
   destinationsByArea: Record<string, DestItem[]>;
@@ -98,27 +98,38 @@ export default function Header({ destinationsByArea }: Props) {
                               {area}
                             </h4>
                             <ul className="space-y-0.5">
-                              {destinationsByArea[area].map((dest) => (
-                                <li key={dest.slug}>
-                                  <Link
-                                    href={`/destinazioni/${dest.slug}`}
-                                    className={cn(
-                                      "group/link flex items-center gap-1.5 text-sm text-gray-600 transition-colors py-0.5",
-                                      isFluviali
-                                        ? "hover:text-[#1B6FA8]"
-                                        : "hover:text-[#C41E2F]"
-                                    )}
-                                  >
-                                    <ChevronRight
+                              {destinationsByArea[area].map((dest) =>
+                                dest.hasProducts ? (
+                                  <li key={dest.slug}>
+                                    <Link
+                                      href={`/destinazioni/${dest.slug}`}
                                       className={cn(
-                                        "size-3 opacity-0 -ml-4 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-200",
-                                        isFluviali ? "text-[#1B6FA8]" : "text-[#C41E2F]"
+                                        "group/link flex items-center gap-1.5 text-sm text-gray-600 transition-colors py-0.5",
+                                        isFluviali
+                                          ? "hover:text-[#1B6FA8]"
+                                          : "hover:text-[#C41E2F]"
                                       )}
-                                    />
-                                    {dest.name}
-                                  </Link>
-                                </li>
-                              ))}
+                                    >
+                                      <ChevronRight
+                                        className={cn(
+                                          "size-3 opacity-0 -ml-4 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-200",
+                                          isFluviali ? "text-[#1B6FA8]" : "text-[#C41E2F]"
+                                        )}
+                                      />
+                                      {dest.name}
+                                    </Link>
+                                  </li>
+                                ) : (
+                                  <li key={dest.slug} className="relative group/disabled">
+                                    <span className="flex items-center text-sm text-gray-300 py-0.5 cursor-default italic">
+                                      {dest.name}
+                                    </span>
+                                    <span className="absolute left-0 -top-6 hidden group-hover/disabled:block bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
+                                      Presto disponibile
+                                    </span>
+                                  </li>
+                                )
+                              )}
                             </ul>
                           </div>
                         );
@@ -206,21 +217,30 @@ export default function Header({ destinationsByArea }: Props) {
                                 {area}
                               </p>
                               <div className="flex flex-wrap gap-x-3 gap-y-1">
-                                {destinationsByArea[area].map((dest) => (
-                                  <SheetClose asChild key={dest.slug}>
-                                    <Link
-                                      href={`/destinazioni/${dest.slug}`}
-                                      className={cn(
-                                        "text-sm text-gray-600 transition-colors",
-                                        isFluviali
-                                          ? "hover:text-[#1B6FA8]"
-                                          : "hover:text-[#C41E2F]"
-                                      )}
+                                {destinationsByArea[area].map((dest) =>
+                                  dest.hasProducts ? (
+                                    <SheetClose asChild key={dest.slug}>
+                                      <Link
+                                        href={`/destinazioni/${dest.slug}`}
+                                        className={cn(
+                                          "text-sm text-gray-600 transition-colors",
+                                          isFluviali
+                                            ? "hover:text-[#1B6FA8]"
+                                            : "hover:text-[#C41E2F]"
+                                        )}
+                                      >
+                                        {dest.name}
+                                      </Link>
+                                    </SheetClose>
+                                  ) : (
+                                    <span
+                                      key={dest.slug}
+                                      className="text-sm text-gray-300 italic cursor-default"
                                     >
                                       {dest.name}
-                                    </Link>
-                                  </SheetClose>
-                                ))}
+                                    </span>
+                                  )
+                                )}
                               </div>
                             </div>
                           );
