@@ -24,11 +24,30 @@ const SECTION_MAP: Record<string, string> = {
 const ADMIN_ROLES = ['super_admin', 'admin', 'operator']
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isAgencyRoute = pathname.startsWith('/agenzia')
+
+  // For non-protected routes, just pass through without Supabase
+  if (!isAdminRoute && !isAgencyRoute) {
+    return NextResponse.next({ request })
+  }
+
+  // Ensure env vars are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Middleware: missing Supabase env vars')
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
+  try {
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -51,19 +70,6 @@ export async function middleware(request: NextRequest) {
   // 1. Refresh session token (existing logic - must run on every request)
   // -------------------------------------------------------------------------
   const { data: { user } } = await supabase.auth.getUser()
-
-  // -------------------------------------------------------------------------
-  // 2. Route protection
-  // -------------------------------------------------------------------------
-  const { pathname } = request.nextUrl
-
-  const isAdminRoute = pathname.startsWith('/admin')
-  const isAgencyRoute = pathname.startsWith('/agenzia')
-
-  // Only protect /admin and /agenzia routes
-  if (!isAdminRoute && !isAgencyRoute) {
-    return supabaseResponse
-  }
 
   // --- Not authenticated: redirect to login ---
   if (!user) {
@@ -191,6 +197,10 @@ export async function middleware(request: NextRequest) {
   }
 
   return supabaseResponse
+  } catch (err) {
+    console.error('Middleware error:', err)
+    return NextResponse.next({ request })
+  }
 }
 
 export const config = {
