@@ -24,15 +24,15 @@ function FooterLinkList({
 }) {
   return (
     <div>
-      <h4 className="font-semibold text-white text-sm uppercase tracking-wider mb-5 font-[family-name:var(--font-poppins)]">
+      <h4 className="font-bold text-white text-base uppercase tracking-wider mb-5 font-[family-name:var(--font-poppins)] border-b border-white/25 pb-2">
         {title}
       </h4>
-      <ul className="space-y-3">
+      <ul className="space-y-2.5">
         {links.map((link) => (
           <li key={link.href + link.label}>
             <Link
               href={link.href}
-              className="group inline-flex items-center gap-1.5 text-base text-white/90 hover:text-white transition-all duration-300"
+              className="group inline-flex items-center gap-1.5 text-sm text-white/75 hover:text-white transition-all duration-300"
             >
               <span className="inline-block w-0 group-hover:w-2.5 h-px bg-white transition-all duration-300" />
               {link.label}

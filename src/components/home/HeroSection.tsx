@@ -19,16 +19,25 @@ type Props = {
 type Slide = { image: string; label: string };
 
 function buildSlides(tours: TourListItem[], cruises: CruiseListItem[]): Slide[] {
-  const all = [
-    ...tours
-      .filter((t) => t.cover_image_url)
-      .slice(0, 3)
-      .map((t) => ({ image: t.cover_image_url!, label: t.title })),
-    ...cruises
-      .filter((c) => c.cover_image_url)
-      .slice(0, 2)
-      .map((c) => ({ image: c.cover_image_url!, label: c.title })),
-  ];
+  const seen = new Set<string>();
+  const all: Slide[] = [];
+
+  // Add up to 3 tours
+  for (const t of tours) {
+    if (all.length >= 3 || !t.cover_image_url) continue;
+    if (seen.has(t.cover_image_url)) continue;
+    seen.add(t.cover_image_url);
+    all.push({ image: t.cover_image_url, label: t.title });
+  }
+
+  // Add up to 2 cruises (with unique images)
+  for (const c of cruises) {
+    if (all.length >= 5 || !c.cover_image_url) continue;
+    if (seen.has(c.cover_image_url)) continue;
+    seen.add(c.cover_image_url);
+    all.push({ image: c.cover_image_url, label: c.title });
+  }
+
   if (all.length === 0) {
     return [
       { image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&q=80", label: "Scopri il mondo" },
@@ -82,37 +91,37 @@ export default function HeroSection({ destinations, tours, cruises, departures }
   }, [current]);
 
   return (
-    <section className="relative h-[600px] md:h-[680px] lg:h-[720px] flex items-center justify-center overflow-hidden bg-black">
-      {/* All slides stacked — CSS transition for crossfade + blur */}
-      {slides.map((slide, i) => (
-        <div
-          key={i}
-          className="absolute inset-0 transition-[opacity,filter] duration-[1500ms] ease-in-out"
-          style={{
-            opacity: i === current ? 1 : 0,
-            filter: i === current ? "blur(0px)" : "blur(18px)",
-          }}
-        >
-          {/* Inner div for Ken Burns zoom — NO remount, animation restarted via ref */}
+    <section className="relative h-[600px] md:h-[680px] lg:h-[720px] flex items-center justify-center bg-black">
+      {/* Slides container with overflow hidden (so Ken Burns doesn't leak) */}
+      <div className="absolute inset-0 overflow-hidden">
+        {slides.map((slide, i) => (
           <div
-            ref={(el) => { zoomRefs.current[i] = el; }}
-            className={i === 0 ? "hero-ken-burns" : ""}
-            style={{ position: "absolute", inset: 0 }}
+            key={i}
+            className="absolute inset-0 transition-[opacity,filter] duration-[1500ms] ease-in-out"
+            style={{
+              opacity: i === current ? 1 : 0,
+              filter: i === current ? "blur(0px)" : "blur(18px)",
+            }}
           >
-            <Image
-              src={slide.image}
-              alt={slide.label}
-              fill
-              className="object-cover"
-              priority={i === 0}
-              sizes="100vw"
-            />
+            <div
+              ref={(el) => { zoomRefs.current[i] = el; }}
+              className={i === 0 ? "hero-ken-burns" : ""}
+              style={{ position: "absolute", inset: 0 }}
+            >
+              <Image
+                src={slide.image}
+                alt={slide.label}
+                fill
+                className="object-cover"
+                priority={i === 0}
+                sizes="100vw"
+              />
+            </div>
           </div>
-        </div>
-      ))}
-
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70 z-[1]" />
+        ))}
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70" />
+      </div>
 
       {/* Content */}
       <div className="relative z-10 w-full flex flex-col items-center justify-center px-4 pt-16">

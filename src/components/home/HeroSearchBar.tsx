@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Search, MapPin, Ship, Calendar } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, Calendar } from "lucide-react";
 import type { Destination } from "@/lib/types";
 import type { TourListItem } from "@/lib/supabase/queries/tours";
 import type { CruiseListItem } from "@/lib/supabase/queries/cruises";
@@ -154,7 +154,7 @@ export default function HeroSearchBar({ destinations, tours, cruises, departures
 
           {/* Type select */}
           <div className="relative md:w-44">
-            <Ship className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/60 pointer-events-none" />
+            <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-white/60 pointer-events-none" />
             <select
               value={tipo}
               onChange={(e) => setTipo(e.target.value as "tutti" | "tour" | "crociera")}
