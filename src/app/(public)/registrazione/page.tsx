@@ -326,7 +326,7 @@ export default function RegistrazionePage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-2xl">
+        <div className="container mx-auto px-4 max-w-xl">
           <div className="bg-gray-50 rounded-lg p-8 border border-gray-100">
             <StepIndicator current={currentStep} />
 

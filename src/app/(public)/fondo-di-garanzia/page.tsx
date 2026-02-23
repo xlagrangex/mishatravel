@@ -10,7 +10,7 @@ export default function FondoDiGaranziaPage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-4 max-w-2xl">
           <div className="bg-gray-50 rounded-lg p-8 border border-gray-100 mb-8 flex items-start gap-4">
             <Shield className="size-10 text-[#C41E2F] shrink-0" />
             <div>

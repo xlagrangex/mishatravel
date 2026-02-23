@@ -19,7 +19,7 @@ export default function ContattiPage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 max-w-4xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Info */}
             <div>
@@ -105,6 +105,18 @@ export default function ContattiPage() {
                     <p className="font-semibold text-[#1B2D4F] text-sm">Reparto Amministrazione</p>
                     <p className="text-sm text-gray-600">
                       Email: <a href="mailto:amministrazione@mishatravel.com" className="hover:text-[#C41E2F]">amministrazione@mishatravel.com</a>
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="font-semibold text-[#1B2D4F] text-sm">Reparto Marketing e Comunicazione</p>
+                    <p className="text-sm text-gray-600">
+                      Email: <a href="mailto:marketing@mishatravel.com" className="hover:text-[#C41E2F]">marketing@mishatravel.com</a>
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="font-semibold text-[#1B2D4F] text-sm">Supporto Tecnico Portale</p>
+                    <p className="text-sm text-gray-600">
+                      Email: <a href="mailto:supporto@mishatravel.com" className="hover:text-[#C41E2F]">supporto@mishatravel.com</a>
                     </p>
                   </div>
                 </div>

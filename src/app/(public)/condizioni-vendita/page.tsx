@@ -14,7 +14,7 @@ export default function CondizioniVenditaPage() {
       />
 
       <section className="py-16 bg-white">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-2xl">
           {/* Banner revisione */}
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-10">
             <p className="text-amber-800 text-sm font-medium">
