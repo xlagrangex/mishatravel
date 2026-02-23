@@ -32,8 +32,9 @@ function FooterLinkList({
           <li key={link.href + link.label}>
             <Link
               href={link.href}
-              className="text-[15px] text-white/75 hover:text-white transition-colors"
+              className="group inline-flex items-center gap-1.5 text-[15px] text-white/70 hover:text-white transition-all duration-300"
             >
+              <span className="inline-block w-0 group-hover:w-2 h-px bg-white/80 transition-all duration-300" />
               {link.label}
             </Link>
           </li>
@@ -51,20 +52,23 @@ export default function Footer() {
          ============================ */}
       <div className="bg-[#A31825] text-white">
         <div className="container mx-auto px-4 py-16 lg:py-20">
-          {/* Top area: Logo left + Links 2×2 right */}
+          {/* Top area: Logo left + Links right */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
             {/* Logo & company info */}
             <div className="lg:col-span-4">
-              <Link href="/" className="inline-block mb-5">
+              <Link
+                href="/"
+                className="group inline-block mb-6"
+              >
                 <Image
                   src="/images/logo/logo-footer.webp"
                   alt="Misha Travel"
-                  width={220}
-                  height={70}
-                  className="h-14 w-auto"
+                  width={280}
+                  height={90}
+                  className="h-20 w-auto transition-all duration-500 group-hover:brightness-110 group-hover:scale-[1.02]"
                 />
               </Link>
-              <p className="text-[15px] text-white/65 leading-relaxed max-w-sm">
+              <p className="text-base text-white/60 leading-relaxed max-w-sm">
                 Tour operator italiano specializzato in viaggi culturali, grandi
                 itinerari e crociere fluviali in Europa e nel mondo.
               </p>
@@ -75,23 +79,23 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Facebook"
-                  className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  className="group/social p-3 rounded-full bg-white/10 hover:bg-white hover:scale-110 transition-all duration-300"
                 >
-                  <Facebook className="size-5" />
+                  <Facebook className="size-5 text-white group-hover/social:text-[#A31825] transition-colors duration-300" />
                 </a>
                 <a
                   href="https://www.instagram.com/mishatravel"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
-                  className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  className="group/social p-3 rounded-full bg-white/10 hover:bg-white hover:scale-110 transition-all duration-300"
                 >
-                  <Instagram className="size-5" />
+                  <Instagram className="size-5 text-white group-hover/social:text-[#A31825] transition-colors duration-300" />
                 </a>
               </div>
             </div>
 
-            {/* Link columns in 2×2 grid */}
+            {/* Link columns */}
             <div className="lg:col-span-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10">
                 <FooterLinkList title="Link Rapidi" links={footerLinkRapidi} />
@@ -109,22 +113,25 @@ export default function Footer() {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-white/15 mt-12 pt-10" />
+          <div className="border-t border-white/15 mt-14 pt-10" />
 
           {/* Contact row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {footerContacts.map((contact) => (
-              <div key={contact.title}>
-                <h5 className="font-semibold text-sm mb-2 font-[family-name:var(--font-poppins)]">
+              <div
+                key={contact.title}
+                className="group/card rounded-lg p-4 -m-4 hover:bg-white/5 transition-all duration-300"
+              >
+                <h5 className="font-semibold text-sm mb-2.5 font-[family-name:var(--font-poppins)] group-hover/card:translate-x-0.5 transition-transform duration-300">
                   {contact.title}
                 </h5>
-                <div className="space-y-1.5 text-sm text-white/70">
+                <div className="space-y-1.5 text-sm text-white/65">
                   {contact.phones.map((phone) => (
                     <p key={phone} className="flex items-center gap-2">
                       <Phone className="size-3.5 shrink-0" />
                       <a
                         href={`tel:${phone.replace(/\s/g, "")}`}
-                        className="hover:text-white transition-colors"
+                        className="hover:text-white transition-colors duration-300"
                       >
                         {phone}
                       </a>
@@ -135,7 +142,7 @@ export default function Footer() {
                       <Mail className="size-3.5 shrink-0" />
                       <a
                         href={`mailto:${email}`}
-                        className="hover:text-white transition-colors"
+                        className="hover:text-white transition-colors duration-300"
                       >
                         {email}
                       </a>
@@ -151,7 +158,7 @@ export default function Footer() {
       {/* ============================
           Bottom Bar: Legal + Credits
          ============================ */}
-      <div className="bg-[#8B1520] text-white/60">
+      <div className="bg-[#8B1520] text-white/55">
         <div className="container mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
           <p>
             Crucemundo Italia Misha Travel S.r.l. &mdash; Sede Legale: Piazza
@@ -164,7 +171,7 @@ export default function Footer() {
               href="https://bizstudio.it"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-white transition-colors"
+              className="underline hover:text-white transition-colors duration-300"
             >
               Biz Studio
             </a>
