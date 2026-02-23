@@ -10,7 +10,7 @@ export default function CancellazioniEPenaliPage() {
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-[1000px]">
+        <div className="mx-auto px-4 max-w-[1000px]">
           <div className="prose prose-lg max-w-none text-gray-600">
             <p className="text-sm text-gray-400 mb-8">Ultimo aggiornamento: 21 febbraio 2026</p>
 
