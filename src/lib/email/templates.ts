@@ -350,6 +350,35 @@ export function paymentDetailsSentEmail(
 }
 
 /**
+ * Contract + IBAN sent by admin to the agency after acceptance.
+ */
+export function contractSentEmail(
+  agencyName: string,
+  productName: string,
+  iban: string
+): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Contratto e dati di pagamento</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Il contratto per <strong>&ldquo;${productName}&rdquo;</strong> &egrave; pronto. In allegato trovi il documento contrattuale.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;border:1px solid #e2e8f0;border-radius:6px;">
+      <tr>
+        <td style="padding:12px 16px;font-size:13px;color:#64748b;width:140px;">IBAN</td>
+        <td style="padding:12px 16px;font-size:14px;color:#333333;font-weight:600;">${iban}</td>
+      </tr>
+    </table>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Accedi alla tua area riservata per scaricare il contratto completo e procedere con il pagamento.
+    </p>
+    ${ctaButton("Vedi dettagli", `${SITE_URL}/agenzia/richieste`)}
+  `);
+}
+
+/**
  * Quote rejected by admin.
  */
 export function quoteRejectedEmail(

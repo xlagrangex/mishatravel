@@ -7,6 +7,7 @@ import { sendTransactionalEmail } from '@/lib/email/brevo'
 import {
   newOfferReceivedEmail,
   paymentDetailsSentEmail,
+  contractSentEmail,
   quoteRejectedEmail,
 } from '@/lib/email/templates'
 
@@ -90,14 +91,17 @@ async function addTimelineEntry(
 const updateStatusSchema = z.object({
   request_id: z.string().uuid(),
   status: z.enum([
+    'requested',
+    'offered',
+    'accepted',
+    'confirmed',
+    'declined',
+    'rejected',
+    // Legacy values kept for compatibility
     'sent',
     'in_review',
     'offer_sent',
-    'accepted',
-    'declined',
     'payment_sent',
-    'confirmed',
-    'rejected',
   ]),
   details: z.string().nullable().optional(),
 })
@@ -231,10 +235,10 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
         console.error('Error sending new offer email:', emailErr)
       }
 
-      // Update status to 'offer_sent' regardless (the offer exists in DB)
+      // Update status to 'offered' regardless (the offer exists in DB)
       const { error: statusError } = await supabase
         .from('quote_requests')
-        .update({ status: 'offer_sent' })
+        .update({ status: 'offered' })
         .eq('id', request_id)
 
       if (statusError) {
@@ -408,7 +412,187 @@ export async function confirmPayment(requestId: string): Promise<ActionResult> {
 }
 
 // ---------------------------------------------------------------------------
-// 5. Reject Quote
+// 5. Confirm with Contract (new workflow — replaces sendPaymentDetails)
+// ---------------------------------------------------------------------------
+
+const confirmContractSchema = z.object({
+  request_id: z.string().uuid(),
+  offer_id: z.string().uuid(),
+  contract_file_url: z.string().min(1, 'URL contratto obbligatorio'),
+  iban: z.string().min(1, 'IBAN obbligatorio'),
+  send_email: z.boolean().default(true),
+})
+
+export type ConfirmContractInput = z.infer<typeof confirmContractSchema>
+
+export async function confirmWithContract(
+  formData: unknown
+): Promise<ActionResult> {
+  const parsed = confirmContractSchema.safeParse(formData)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues
+        .map((i) => `${i.path.join('.')}: ${i.message}`)
+        .join('; '),
+    }
+  }
+
+  const { request_id, offer_id, contract_file_url, iban, send_email } =
+    parsed.data
+  const supabase = createAdminClient()
+
+  try {
+    // Update the offer with contract file and IBAN
+    const { error: offerError } = await supabase
+      .from('quote_offers')
+      .update({
+        contract_file_url,
+        iban: iban.trim(),
+      })
+      .eq('id', offer_id)
+
+    if (offerError) {
+      return { success: false, error: offerError.message }
+    }
+
+    // Send email before status update
+    let emailSent = false
+    if (send_email) {
+      try {
+        const ctx = await getQuoteEmailContext(supabase, request_id)
+        if (ctx?.agencyEmail) {
+          emailSent = await sendTransactionalEmail(
+            { email: ctx.agencyEmail, name: ctx.agencyName },
+            'Contratto e dati di pagamento - MishaTravel',
+            contractSentEmail(ctx.agencyName, ctx.productName, iban.trim())
+          )
+        }
+      } catch (emailErr) {
+        console.error('Error sending contract email:', emailErr)
+      }
+    }
+
+    // Update status to 'confirmed'
+    const { error: statusError } = await supabase
+      .from('quote_requests')
+      .update({ status: 'confirmed' })
+      .eq('id', request_id)
+
+    if (statusError) {
+      return { success: false, error: statusError.message }
+    }
+
+    await addTimelineEntry(
+      supabase,
+      request_id,
+      'Contratto e IBAN inviati',
+      `IBAN: ${iban.trim()}${send_email ? (emailSent ? ' - Email inviata' : ' - Attenzione: invio email fallito') : ' - Email non richiesta'}`
+    )
+
+    revalidatePath('/admin/preventivi')
+    revalidatePath(`/admin/preventivi/${request_id}`)
+    return { success: true, id: request_id }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. Upload / Delete Quote Documents
+// ---------------------------------------------------------------------------
+
+const uploadDocSchema = z.object({
+  request_id: z.string().uuid(),
+  file_url: z.string().min(1, 'URL file obbligatorio'),
+  file_name: z.string().min(1, 'Nome file obbligatorio'),
+  document_type: z.string().default('altro'),
+})
+
+export async function uploadQuoteDocument(
+  formData: unknown
+): Promise<ActionResult> {
+  const parsed = uploadDocSchema.safeParse(formData)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues.map((i) => i.message).join('; '),
+    }
+  }
+
+  const { request_id, file_url, file_name, document_type } = parsed.data
+  const supabase = createAdminClient()
+
+  try {
+    const { data: doc, error } = await supabase
+      .from('quote_documents')
+      .insert({
+        request_id,
+        file_url,
+        file_name,
+        document_type,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    await addTimelineEntry(
+      supabase,
+      request_id,
+      'Documento caricato',
+      `${file_name} (${document_type})`
+    )
+
+    revalidatePath('/admin/preventivi')
+    revalidatePath(`/admin/preventivi/${request_id}`)
+    return { success: true, id: doc.id }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+export async function deleteQuoteDocument(
+  documentId: string,
+  requestId: string
+): Promise<ActionResult> {
+  if (!documentId) {
+    return { success: false, error: 'ID documento mancante' }
+  }
+
+  const supabase = createAdminClient()
+
+  try {
+    const { error } = await supabase
+      .from('quote_documents')
+      .delete()
+      .eq('id', documentId)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/admin/preventivi')
+    revalidatePath(`/admin/preventivi/${requestId}`)
+    return { success: true, id: documentId }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 7. Reject Quote
 // ---------------------------------------------------------------------------
 
 const rejectQuoteSchema = z.object({

@@ -2,10 +2,11 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { sendTransactionalEmail } from '@/lib/email/brevo'
 import { agencyApprovedEmail, agencyCreatedByAdminEmail } from '@/lib/email/templates'
 
-type ActionResult = { success: true } | { success: false; error: string }
+type ActionResult = { success: true; id?: string } | { success: false; error: string }
 
 export interface CreateAgencyInput {
   business_name: string
@@ -221,4 +222,172 @@ export async function verifyAgencyDocument(
 
   revalidatePath('/admin/agenzie')
   return { success: true }
+}
+
+// ---------------------------------------------------------------------------
+// Account Statements (Estratti Conto)
+// ---------------------------------------------------------------------------
+
+const createStatementSchema = z.object({
+  agency_id: z.string().uuid(),
+  title: z.string().min(1, 'Titolo obbligatorio'),
+  file_url: z.string().min(1, 'File obbligatorio'),
+  data: z.string().min(1, 'Data obbligatoria'),
+  stato: z.string().default('Bozza'),
+})
+
+export type CreateStatementInput = z.infer<typeof createStatementSchema>
+
+export async function createAccountStatement(
+  formData: unknown
+): Promise<ActionResult> {
+  const parsed = createStatementSchema.safeParse(formData)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues.map((i) => i.message).join('; '),
+    }
+  }
+
+  const { agency_id, title, file_url, data, stato } = parsed.data
+  const supabase = createAdminClient()
+
+  try {
+    const { data: statement, error } = await supabase
+      .from('account_statements')
+      .insert({
+        agency_id,
+        title,
+        file_url,
+        data,
+        stato,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/admin/estratti-conto')
+    revalidatePath(`/admin/agenzie/${agency_id}`)
+    return { success: true, id: statement.id }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+export async function deleteAccountStatement(
+  statementId: string
+): Promise<ActionResult> {
+  if (!statementId) {
+    return { success: false, error: 'ID estratto conto mancante' }
+  }
+
+  const supabase = createAdminClient()
+
+  try {
+    const { error } = await supabase
+      .from('account_statements')
+      .delete()
+      .eq('id', statementId)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/admin/estratti-conto')
+    revalidatePath('/admin/agenzie')
+    return { success: true, id: statementId }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+export async function sendAccountStatementEmail(
+  statementId: string
+): Promise<ActionResult> {
+  if (!statementId) {
+    return { success: false, error: 'ID estratto conto mancante' }
+  }
+
+  const supabase = createAdminClient()
+
+  try {
+    // Fetch statement + agency data
+    const { data: statement, error: fetchError } = await supabase
+      .from('account_statements')
+      .select('id, title, file_url, agency_id')
+      .eq('id', statementId)
+      .single()
+
+    if (fetchError || !statement) {
+      return { success: false, error: 'Estratto conto non trovato' }
+    }
+
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('business_name, email')
+      .eq('id', statement.agency_id)
+      .single()
+
+    if (!agency?.email) {
+      return { success: false, error: 'Email agenzia non disponibile' }
+    }
+
+    // Send email with link to download
+    const SITE_URL =
+      process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mishatravel.com'
+    const emailSent = await sendTransactionalEmail(
+      { email: agency.email, name: agency.business_name },
+      `Estratto conto: ${statement.title} - MishaTravel`,
+      `<!DOCTYPE html>
+<html lang="it"><head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
+<tr><td align="center" style="padding:24px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;max-width:600px;width:100%;">
+<tr><td style="padding:24px 32px;text-align:center;border-bottom:2px solid #C41E2F;">
+<img src="${SITE_URL}/images/logo/logo-logo.png" alt="MishaTravel" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;"/>
+</td></tr>
+<tr><td style="padding:32px;">
+<h2 style="margin:0 0 16px;color:#333;font-size:22px;">Estratto conto disponibile</h2>
+<p style="color:#334155;font-size:15px;line-height:1.7;">Gentile <strong>${agency.business_name}</strong>,</p>
+<p style="color:#334155;font-size:15px;line-height:1.7;">Il tuo estratto conto <strong>&ldquo;${statement.title}&rdquo;</strong> &egrave; disponibile nella tua area riservata.</p>
+<table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+<tr><td style="background:#C41E2F;border-radius:6px;">
+<a href="${SITE_URL}/agenzia/estratto-conto" style="display:inline-block;padding:12px 28px;color:#fff;font-size:15px;font-weight:600;text-decoration:none;">Vai all'estratto conto</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="background:#f8fafc;padding:24px 32px;border-top:1px solid #e2e8f0;">
+<p style="font-size:12px;color:#64748b;"><strong style="color:#C41E2F;">MishaTravel S.r.l.</strong><br/>info@mishatravel.com</p>
+</td></tr>
+</table></td></tr></table></body></html>`
+    )
+
+    if (!emailSent) {
+      return { success: false, error: 'Invio email fallito' }
+    }
+
+    // Update stato to 'Inviato via Mail'
+    await supabase
+      .from('account_statements')
+      .update({ stato: 'Inviato via Mail' })
+      .eq('id', statementId)
+
+    revalidatePath('/admin/estratti-conto')
+    revalidatePath(`/admin/agenzie/${statement.agency_id}`)
+    return { success: true, id: statementId }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
 }
