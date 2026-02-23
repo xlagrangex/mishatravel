@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, ChevronRight, MapPin } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -12,21 +12,23 @@ import {
   SheetTitle,
   SheetClose,
 } from "@/components/ui/sheet";
-import { mainNavItems, destinationsByArea, type MacroArea } from "@/lib/data";
+import { mainNavItems } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-const macroAreas: MacroArea[] = [
-  "Europa",
-  "America Latina",
-  "Asia/Russia",
-  "Africa",
-  "Percorsi Fluviali",
-];
+type DestItem = { name: string; slug: string };
 
-export default function Header() {
+type Props = {
+  destinationsByArea: Record<string, DestItem[]>;
+};
+
+export default function Header({ destinationsByArea }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [mobileDestOpen, setMobileDestOpen] = useState(false);
+
+  const macroAreas = Object.keys(destinationsByArea).filter(
+    (area) => destinationsByArea[area].length > 0
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,34 +83,48 @@ export default function Header() {
 
                 {/* Mega Menu Dropdown */}
                 {megaMenuOpen && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-[750px] bg-white rounded-b-lg shadow-xl border border-gray-100 p-6 z-50">
-                    <div className="grid grid-cols-5 gap-6">
-                      {macroAreas.map((area) => (
-                        <div key={area}>
-                          <h4 className="font-semibold text-[#C41E2F] text-sm mb-3 font-[family-name:var(--font-poppins)]">
-                            {area}
-                          </h4>
-                          <ul className="space-y-1.5">
-                            {destinationsByArea[area].map((dest) => (
-                              <li key={dest.slug}>
-                                <Link
-                                  href={`/destinazioni/${dest.slug}`}
-                                  className="text-sm text-gray-600 hover:text-[#C41E2F] transition-colors"
-                                >
-                                  {dest.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-[820px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+                    <div className="p-6">
+                      <div
+                        className="grid gap-6"
+                        style={{
+                          gridTemplateColumns: `repeat(${Math.min(macroAreas.length, 5)}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {macroAreas.map((area) => (
+                          <div key={area}>
+                            <h4 className="font-semibold text-[#C41E2F] text-xs uppercase tracking-wider mb-3 font-[family-name:var(--font-poppins)]">
+                              {area}
+                            </h4>
+                            <ul className="space-y-1">
+                              {destinationsByArea[area].map((dest) => (
+                                <li key={dest.slug}>
+                                  <Link
+                                    href={`/destinazioni/${dest.slug}`}
+                                    className="group/link flex items-center gap-1.5 text-sm text-gray-600 hover:text-[#C41E2F] transition-colors py-0.5"
+                                  >
+                                    <ChevronRight className="size-3 opacity-0 -ml-4 group-hover/link:opacity-100 group-hover/link:ml-0 transition-all duration-200 text-[#C41E2F]" />
+                                    {dest.name}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-gray-100">
+                    {/* Footer with CTA */}
+                    <div className="bg-gray-50 px-6 py-3.5 flex items-center justify-between border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <MapPin className="size-4 text-[#C41E2F]" />
+                        <span>{Object.values(destinationsByArea).flat().length} destinazioni disponibili</span>
+                      </div>
                       <Link
                         href="/destinazioni"
-                        className="text-sm font-medium text-[#C41E2F] hover:underline"
+                        className="text-sm font-semibold text-[#C41E2F] hover:text-[#A31825] transition-colors flex items-center gap-1"
                       >
-                        Tutte le destinazioni →
+                        Tutte le destinazioni
+                        <ChevronRight className="size-4" />
                       </Link>
                     </div>
                   </div>

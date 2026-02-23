@@ -14,6 +14,7 @@ const AREA_CONFIG: Record<string, { icon: string; description: string }> = {
   "Russia": { icon: "\u{1F3EF}", description: "Dalla Transiberiana alle cupole dorate, un viaggio senza confini." },
   "Africa": { icon: "\u{1F30D}", description: "Safari, deserti e tradizioni ancestrali nel continente piu selvaggio." },
   "I nostri fiumi": { icon: "\u{1F6A2}", description: "Crociere lungo i grandi fiumi d'Europa tra castelli, vigneti e citta storiche." },
+  "Medio Oriente": { icon: "\u{1F54C}", description: "Crocevia di civilta millenarie, dalla Turchia alla Giordania." },
   "Altro": { icon: "\u{2708}\u{FE0F}", description: "Altre destinazioni selezionate per te." },
 };
 const FALLBACK_ICON = "\u{1F30F}";
@@ -25,38 +26,30 @@ function toSlug(label: string): string {
 function DestinationMosaicCard({
   dest,
   tourCount,
-  large,
 }: {
   dest: Destination;
   tourCount: number;
-  large?: boolean;
 }) {
   const imgSrc = dest.cover_image_url || "/images/placeholder.jpg";
 
   return (
     <Link
       href={`/destinazioni/${dest.slug}`}
-      className={`group relative block rounded-xl overflow-hidden ${
-        large ? "md:col-span-2 md:row-span-2 aspect-[4/3] md:aspect-auto" : "aspect-[4/3]"
-      }`}
+      className="group relative block rounded-xl overflow-hidden aspect-[4/3]"
     >
       <Image
         src={imgSrc}
         alt={dest.name}
         fill
         className="object-cover transition-transform duration-700 group-hover:scale-110"
-        sizes={large ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, 25vw"}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
       />
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-[rgba(27,45,79,0.85)] via-[rgba(27,45,79,0.2)] to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-6 z-10">
-        <h3
-          className={`text-white font-bold font-[family-name:var(--font-poppins)] drop-shadow-lg ${
-            large ? "text-2xl md:text-3xl" : "text-lg md:text-xl"
-          }`}
-        >
+      <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
+        <h3 className="text-white font-bold text-lg md:text-xl font-[family-name:var(--font-poppins)] drop-shadow-lg">
           {dest.name}
         </h3>
         {tourCount > 0 && (
@@ -65,7 +58,7 @@ function DestinationMosaicCard({
           </p>
         )}
         <span className="inline-flex items-center gap-1 text-white text-xs font-medium mt-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-          Scopri di piu
+          Scopri di pi&ugrave;
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
@@ -99,7 +92,7 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
     const el = sectionRefs.current[areaId];
     if (!el) return;
     const navHeight = navRef.current?.offsetHeight || 0;
-    const headerHeight = 80; // approx header height
+    const headerHeight = window.innerWidth >= 1024 ? 80 : 64;
     const top = el.getBoundingClientRect().top + window.scrollY - navHeight - headerHeight - 16;
     window.scrollTo({ top, behavior: "smooth" });
   }, []);
@@ -197,7 +190,7 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
       {/* Sticky navigation */}
       <div
         ref={navRef}
-        className="sticky top-[64px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
+        className="sticky top-[64px] lg:top-[80px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
       >
         <div className="container mx-auto px-4">
           <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
@@ -243,14 +236,13 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
                 </p>
               )}
 
-              {/* Mosaic grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[200px] md:auto-rows-[220px]">
-                {dests.map((dest, i) => (
+              {/* Destination grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {dests.map((dest) => (
                   <DestinationMosaicCard
                     key={dest.slug}
                     dest={dest}
                     tourCount={tourCounts[dest.slug] || 0}
-                    large={i === 0}
                   />
                 ))}
               </div>
