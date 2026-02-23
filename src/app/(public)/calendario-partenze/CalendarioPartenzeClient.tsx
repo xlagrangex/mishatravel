@@ -14,6 +14,7 @@ import {
   CalendarDays,
   List,
   X,
+  Compass,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -129,11 +130,11 @@ export default function CalendarioPartenzeClient({ departures }: CalendarioParte
         <PageHero
           title="Calendario Partenze"
           subtitle="Tutte le date di partenza per tour e crociere"
-          backgroundImage="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=1600&h=600&fit=crop"
+          backgroundImage="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&h=600&fit=crop"
           breadcrumbs={[{ label: "Calendario Partenze", href: "/calendario-partenze" }]}
         />
         <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
+          <div className="max-w-[1100px] mx-auto px-4">
             <div className="bg-gray-50 rounded-lg p-12 text-center">
               <CalendarDays className="size-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">
@@ -154,12 +155,12 @@ export default function CalendarioPartenzeClient({ departures }: CalendarioParte
       <PageHero
         title="Calendario Partenze"
         subtitle="Tutte le date di partenza per tour e crociere"
-        backgroundImage="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=1600&h=600&fit=crop"
+        backgroundImage="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&h=600&fit=crop"
         breadcrumbs={[{ label: "Calendario Partenze", href: "/calendario-partenze" }]}
       />
 
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="max-w-[1100px] mx-auto px-4">
           {/* Controls row */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
             {/* Month navigation */}
@@ -182,12 +183,14 @@ export default function CalendarioPartenzeClient({ departures }: CalendarioParte
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-colors ${
                     filterType === type
                       ? "bg-[#C41E2F] text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
+                  {type === "tour" && <Compass className="size-4" />}
+                  {type === "crociera" && <Ship className="size-4" />}
                   {type === "tutti" ? "Tutti" : type === "tour" ? "Tour" : "Crociere"}
                 </button>
               ))}

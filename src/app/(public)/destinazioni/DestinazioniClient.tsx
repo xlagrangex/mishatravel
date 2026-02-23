@@ -122,7 +122,15 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
   if (activeMacroAreas.length === 0) {
     return (
       <>
-        <section className="relative bg-[#1B2D4F] py-16 md:py-24 overflow-hidden">
+        <section className="relative py-20 md:py-28 overflow-hidden">
+          <Image
+            src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1600&h=800&fit=crop"
+            alt="Destinazioni Misha Travel"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1B2D4F]/70 via-[#1B2D4F]/50 to-[#1B2D4F]/90" />
           <div className="container mx-auto px-4 relative z-10">
             <nav className="mb-6 text-sm text-white/50">
               <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
@@ -136,6 +144,7 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
               Cinque continenti, infinite emozioni. Scopri i tour culturali e le crociere fluviali Misha Travel.
             </p>
           </div>
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
         </section>
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4 text-center">
@@ -150,11 +159,16 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
 
   return (
     <>
-      {/* Hero compatto */}
-      <section className="relative bg-[#1B2D4F] py-16 md:py-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRoLTJ2LTRoMnYtNGgydjRoNHYyaC00djRoLTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')]" />
-        </div>
+      {/* Hero with background image */}
+      <section className="relative py-20 md:py-28 overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1600&h=800&fit=crop"
+          alt="Destinazioni Misha Travel"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1B2D4F]/70 via-[#1B2D4F]/50 to-[#1B2D4F]/90" />
 
         <div className="container mx-auto px-4 relative z-10">
           {/* Breadcrumb */}
@@ -167,24 +181,13 @@ export default function DestinazioniClient({ grouped, tourCounts }: Destinazioni
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white font-[family-name:var(--font-poppins)] mb-4">
             Le Nostre Destinazioni
           </h1>
-          <p className="text-white/70 text-lg md:text-xl max-w-2xl mb-10">
+          <p className="text-white/70 text-lg md:text-xl max-w-2xl">
             Cinque continenti, infinite emozioni. Scopri i tour culturali e le crociere fluviali Misha Travel.
           </p>
-
-          {/* Macro area buttons */}
-          <div className="flex flex-wrap gap-3">
-            {activeMacroAreas.map((area) => (
-              <button
-                key={area.id}
-                onClick={() => handleScrollTo(area.id)}
-                className="px-5 py-2.5 rounded-full text-sm font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all duration-300 backdrop-blur-sm"
-              >
-                <span className="mr-2">{area.icon}</span>
-                {area.label}
-              </button>
-            ))}
-          </div>
         </div>
+
+        {/* Bottom gradient fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
       </section>
 
       {/* Sticky navigation */}
