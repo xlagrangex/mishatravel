@@ -28,7 +28,6 @@ import type {
   CruiseLocation,
   CruiseGalleryItem,
   CruiseDeparture,
-  CruiseCabin,
 } from "@/lib/types";
 import type { CruiseListItem } from "@/lib/supabase/queries/cruises";
 import type { MapLocation } from "@/components/maps/ItineraryMap";
@@ -83,14 +82,10 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
   const includedItems = (cruise.inclusions ?? []).filter((i) => i.is_included);
   const excludedItems = (cruise.inclusions ?? []).filter((i) => !i.is_included);
 
-  // Build deck configuration
-  const decks = useMemo(() => {
-    const d: { label: string; value: string }[] = [];
-    if (cruise.etichetta_primo_deck) d.push({ label: cruise.etichetta_primo_deck, value: "main" });
-    if (cruise.etichetta_secondo_deck) d.push({ label: cruise.etichetta_secondo_deck, value: "middle" });
-    if (cruise.etichetta_terzo_deck) d.push({ label: cruise.etichetta_terzo_deck, value: "superior" });
-    return d;
-  }, [cruise.etichetta_primo_deck, cruise.etichetta_secondo_deck, cruise.etichetta_terzo_deck]);
+  // Ship cabins, decks, and departure prices from the cruise relation
+  const shipCabins = cruise.ship_cabins ?? [];
+  const shipDecks = cruise.ship_decks ?? [];
+  const departurePrices = cruise.departure_prices ?? [];
 
   // Map locations with coordinates
   const mapLocations: MapLocation[] = useMemo(() => {
@@ -362,7 +357,9 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
               <PricingTable
                 type="cruise"
                 departures={cruise.departures ?? []}
-                decks={decks}
+                cabins={shipCabins}
+                shipDecks={shipDecks}
+                departurePrices={departurePrices}
                 onRequestQuote={(depId) => openConfigurator(depId)}
               />
             </TabsContent>
@@ -419,8 +416,9 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
         cruiseTitle={cruise.title}
         departures={cruise.departures ?? []}
         supplements={cruise.supplements ?? []}
-        cabins={cruise.cabins ?? []}
-        decks={decks}
+        shipCabins={shipCabins}
+        shipDecks={shipDecks}
+        departurePrices={departurePrices}
         open={configuratorOpen}
         onOpenChange={setConfiguratorOpen}
         preselectedDepartureId={preselectedDepId}

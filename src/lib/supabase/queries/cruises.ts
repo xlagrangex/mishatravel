@@ -156,17 +156,43 @@ export async function getCruiseBySlug(slug: string): Promise<CruiseWithRelations
   ): T[] =>
     (arr ?? []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 
+  // Fetch departure prices, ship decks and ship cabins
+  const depIds = (data.departures ?? []).map((d: any) => d.id)
+
+  let departure_prices: any[] = []
+  if (depIds.length > 0) {
+    const { data: prices } = await supabase
+      .from('cruise_departure_prices')
+      .select('*')
+      .in('departure_id', depIds)
+    departure_prices = prices ?? []
+  }
+
+  let ship_decks: any[] = []
+  let ship_cabins: any[] = []
+  if (data.ship_id) {
+    const [decksRes, cabinsRes] = await Promise.all([
+      supabase.from('ship_decks').select('*').eq('ship_id', data.ship_id).order('sort_order'),
+      supabase.from('ship_cabin_details').select('*').eq('ship_id', data.ship_id).order('sort_order'),
+    ])
+    ship_decks = decksRes.data ?? []
+    ship_cabins = cabinsRes.data ?? []
+  }
+
   return {
     ...data,
     locations: sortBySortOrder(data.locations),
     itinerary_days: sortBySortOrder(data.itinerary_days),
     cabins: sortBySortOrder(data.cabins),
     departures: sortBySortOrder(data.departures),
+    departure_prices: sortBySortOrder(departure_prices),
     supplements: sortBySortOrder(data.supplements),
     inclusions: sortBySortOrder(data.inclusions),
     terms: sortBySortOrder(data.terms),
     penalties: sortBySortOrder(data.penalties),
     gallery: sortBySortOrder(data.gallery),
+    ship_decks: sortBySortOrder(ship_decks),
+    ship_cabins: sortBySortOrder(ship_cabins),
   } as CruiseWithRelations
 }
 

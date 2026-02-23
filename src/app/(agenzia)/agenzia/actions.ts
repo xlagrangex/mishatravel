@@ -22,6 +22,8 @@ const tourQuoteSchema = z.object({
   cabin_type: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   extras: z.array(z.string()).default([]),
+  preview_price: z.number().optional().nullable(),
+  preview_price_label: z.string().optional().nullable(),
 });
 
 const cruiseQuoteSchema = z.object({
@@ -31,10 +33,12 @@ const cruiseQuoteSchema = z.object({
   participants_adults: z.number().int().min(1, "Almeno 1 adulto richiesto"),
   participants_children: z.number().int().min(0).default(0),
   cabin_type: z.string().optional().nullable(),
+  cabin_id: z.string().uuid().optional().nullable(),
   num_cabins: z.number().int().min(1).default(1),
-  deck: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   extras: z.array(z.string()).default([]),
+  preview_price: z.number().optional().nullable(),
+  preview_price_label: z.string().optional().nullable(),
 });
 
 export type TourQuoteInput = z.infer<typeof tourQuoteSchema>;
@@ -111,9 +115,12 @@ export async function createQuoteRequest(
         participants_adults: validated.participants_adults,
         participants_children: validated.participants_children,
         cabin_type: validated.cabin_type ?? null,
+        cabin_id: !isTour ? ((validated as CruiseQuoteInput).cabin_id ?? null) : null,
         num_cabins: !isTour ? (validated as CruiseQuoteInput).num_cabins : null,
         notes: validated.notes ?? null,
-        status: "sent",
+        preview_price: validated.preview_price ?? null,
+        preview_price_label: validated.preview_price_label ?? null,
+        status: "requested",
       })
       .select("id")
       .single();

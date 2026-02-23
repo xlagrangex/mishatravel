@@ -88,7 +88,7 @@ export default function MediaGrid({ items, buckets }: MediaGridProps) {
     const itemId = `${bucket}/${fileName}`;
     setDeletingId(itemId);
     startTransition(async () => {
-      const result = await deleteMediaAction(bucket, fileName);
+      const result = await deleteMediaAction(itemId);
       if (!result.success) {
         alert(`Errore: ${result.error}`);
       }

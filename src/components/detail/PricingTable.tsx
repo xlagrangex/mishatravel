@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import type { ShipCabinDetail, ShipDeck, CruiseDeparturePrice } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,28 +19,24 @@ interface CruiseDepartureRow {
   id: string;
   from_city: string;
   data_partenza: string;
-  prezzo_main_deck: number | null;
-  prezzo_middle_deck: string | null;
-  prezzo_superior_deck: string | null;
-}
-
-interface DeckConfig {
-  label: string;
-  value: string;
 }
 
 interface TourPricingTableProps {
   type: "tour";
   departures: TourDepartureRow[];
   onRequestQuote: (departureId: string) => void;
-  decks?: never;
+  cabins?: never;
+  shipDecks?: never;
+  departurePrices?: never;
 }
 
 interface CruisePricingTableProps {
   type: "cruise";
   departures: CruiseDepartureRow[];
   onRequestQuote: (departureId: string) => void;
-  decks: DeckConfig[];
+  cabins: ShipCabinDetail[];
+  shipDecks: ShipDeck[];
+  departurePrices: CruiseDeparturePrice[];
 }
 
 type PricingTableProps = TourPricingTableProps | CruisePricingTableProps;
@@ -57,14 +54,27 @@ function formatDate(dateStr: string): string {
 }
 
 function fmtPrice(price: number | string | null): string {
-  if (!price) return "—";
-  const num = typeof price === "string" ? parseFloat(price) : price;
+  if (!price && price !== 0) return "\u2014";
+  const num = typeof price === "string" ? parseFloat(price.replace(",", ".")) : price;
   if (isNaN(num)) return String(price);
   return new Intl.NumberFormat("it-IT", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 0,
   }).format(num);
+}
+
+/** Get short cabin label: removes deck name from cabin title if present */
+function shortCabinLabel(cabin: ShipCabinDetail, deck: ShipDeck | undefined): string {
+  if (!deck) return cabin.titolo;
+  // If cabin title contains the deck name, show just the distinctive part
+  const deckName = deck.nome.toLowerCase();
+  const title = cabin.titolo.toLowerCase();
+  if (title.includes(deckName)) {
+    const cleaned = cabin.titolo.replace(new RegExp(deck.nome, "i"), "").trim();
+    return cleaned || cabin.titolo;
+  }
+  return cabin.titolo;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +86,25 @@ export default function PricingTable(props: PricingTableProps) {
 
   if (departures.length === 0) {
     return <p className="text-gray-500">Nessuna partenza programmata al momento.</p>;
+  }
+
+  // For cruises, build cabin columns ordered by deck
+  const cabinColumns: { cabin: ShipCabinDetail; deck: ShipDeck | undefined }[] = [];
+  if (type === "cruise") {
+    const { cabins, shipDecks } = props;
+    const deckMap = new Map(shipDecks.map((d) => [d.id, d]));
+    for (const cabin of cabins) {
+      cabinColumns.push({ cabin, deck: cabin.deck_id ? deckMap.get(cabin.deck_id) : undefined });
+    }
+  }
+
+  // For cruises, build a lookup: departure_id -> cabin_id -> prezzo
+  const priceMap = new Map<string, Map<string, string | null>>();
+  if (type === "cruise") {
+    for (const dp of props.departurePrices) {
+      if (!priceMap.has(dp.departure_id)) priceMap.set(dp.departure_id, new Map());
+      priceMap.get(dp.departure_id)!.set(dp.cabin_id, dp.prezzo);
+    }
   }
 
   return (
@@ -91,9 +120,12 @@ export default function PricingTable(props: PricingTableProps) {
                 <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">4 Stelle</th>
               </>
             ) : (
-              props.decks.map((d) => (
-                <th key={d.value} className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {d.label}
+              cabinColumns.map(({ cabin, deck }) => (
+                <th key={cabin.id} className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div>{shortCabinLabel(cabin, deck)}</div>
+                  {deck && (
+                    <div className="font-normal text-[10px] text-gray-400 normal-case">{deck.nome}</div>
+                  )}
                 </th>
               ))
             )}
@@ -115,21 +147,15 @@ export default function PricingTable(props: PricingTableProps) {
                   </td>
                 </>
               ) : (
-                <>
-                  <td className="py-3.5 px-4 text-sm font-semibold text-[#C41E2F]">
-                    {fmtPrice((dep as CruiseDepartureRow).prezzo_main_deck)}
-                  </td>
-                  {props.decks.length > 1 && (
-                    <td className="py-3.5 px-4 text-sm font-semibold text-[#C41E2F]">
-                      {fmtPrice((dep as CruiseDepartureRow).prezzo_middle_deck)}
+                cabinColumns.map(({ cabin }) => {
+                  const depPrices = priceMap.get(dep.id);
+                  const prezzo = depPrices?.get(cabin.id) ?? null;
+                  return (
+                    <td key={cabin.id} className="py-3.5 px-4 text-sm font-semibold text-[#C41E2F]">
+                      {fmtPrice(prezzo)}
                     </td>
-                  )}
-                  {props.decks.length > 2 && (
-                    <td className="py-3.5 px-4 text-sm font-semibold text-[#C41E2F]">
-                      {fmtPrice((dep as CruiseDepartureRow).prezzo_superior_deck)}
-                    </td>
-                  )}
-                </>
+                  );
+                })
               )}
               <td className="py-3.5 px-4">
                 <Button
