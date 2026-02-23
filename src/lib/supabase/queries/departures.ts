@@ -43,6 +43,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         title,
         slug,
         durata_notti,
+        a_partire_da,
         prezzo_su_richiesta,
         destination:destinations(name)
       )
@@ -67,6 +68,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         title,
         slug,
         durata_notti,
+        a_partire_da,
         prezzo_su_richiesta,
         destination:destinations(name)
       )
@@ -81,6 +83,8 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
   // Map tour departures to unified shape
   const tourItems: UnifiedDeparture[] = (tourDeps ?? []).map((row: any) => {
     const psr = !!row.tour.prezzo_su_richiesta
+    const depPrice = row.prezzo_3_stelle != null ? Number(row.prezzo_3_stelle) : null
+    const basePrice = row.tour.a_partire_da != null ? Number(row.tour.a_partire_da) : null
     return {
       id: row.id,
       type: 'tour' as const,
@@ -88,7 +92,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
       slug: row.tour.slug,
       destination_name: row.tour.destination?.name ?? null,
       date: row.data_partenza ?? '',
-      price: psr ? null : (row.prezzo_3_stelle != null ? Number(row.prezzo_3_stelle) : null),
+      price: psr ? null : (depPrice ?? basePrice),
       prezzoSuRichiesta: psr,
       duration: row.tour.durata_notti ?? null,
       basePath: '/tours',
@@ -98,6 +102,8 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
   // Map cruise departures to unified shape
   const cruiseItems: UnifiedDeparture[] = (cruiseDeps ?? []).map((row: any) => {
     const psr = !!row.cruise.prezzo_su_richiesta
+    const depPrice = row.prezzo_main_deck != null ? Number(row.prezzo_main_deck) : null
+    const basePrice = row.cruise.a_partire_da != null ? Number(row.cruise.a_partire_da) : null
     return {
       id: row.id,
       type: 'crociera' as const,
@@ -105,7 +111,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
       slug: row.cruise.slug,
       destination_name: row.cruise.destination?.name ?? null,
       date: row.data_partenza ?? '',
-      price: psr ? null : (row.prezzo_main_deck != null ? Number(row.prezzo_main_deck) : null),
+      price: psr ? null : (depPrice ?? basePrice),
       prezzoSuRichiesta: psr,
       duration: row.cruise.durata_notti ?? null,
       basePath: '/crociere',
