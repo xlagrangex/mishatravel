@@ -101,14 +101,13 @@ export default async function PreventivoDetailPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         <Button asChild variant="ghost" size="sm">
           <Link href="/agenzia/preventivi">
             <ArrowLeft className="mr-1 h-4 w-4" />
             Torna ai preventivi
           </Link>
         </Button>
-        <DownloadPdfButton quoteId={id} />
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -127,6 +126,9 @@ export default async function PreventivoDetailPage({
         </div>
         <StatusBadge status={quote.status} />
       </div>
+
+      {/* Prominent PDF Download */}
+      <DownloadPdfButton quoteId={id} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column: details */}

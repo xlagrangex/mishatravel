@@ -113,12 +113,12 @@ export interface QuotePdfPayload {
 
 export async function getQuotePdfData(
   quoteId: string,
-  agencyId: string
+  agencyId: string | null
 ): Promise<QuotePdfPayload | null> {
   const admin = createAdminClient();
 
   // 1. Fetch quote with agency + basic tour/cruise info
-  const { data: quote, error } = await admin
+  let query = admin
     .from("quote_requests")
     .select(
       `
@@ -129,9 +129,14 @@ export async function getQuotePdfData(
       offers:quote_offers(*)
     `
     )
-    .eq("id", quoteId)
-    .eq("agency_id", agencyId)
-    .single();
+    .eq("id", quoteId);
+
+  // Filter by agency only when accessed by an agency user
+  if (agencyId) {
+    query = query.eq("agency_id", agencyId);
+  }
+
+  const { data: quote, error } = await query.single();
 
   if (error || !quote) return null;
 
@@ -185,7 +190,7 @@ export async function getQuotePdfData(
       agency: agencyInfo,
       offer: offerInfo,
       title: tour.title,
-      coverImageUrl: tour.cover_image_url,
+      coverImageUrl: null, // skip external image for performance
       destinationName: tour.destination?.name ?? null,
       durataNotti: tour.durata_notti,
       pensione: tour.pensione ?? [],
@@ -252,7 +257,7 @@ export async function getQuotePdfData(
       agency: agencyInfo,
       offer: offerInfo,
       title: cruise.title,
-      coverImageUrl: cruise.cover_image_url,
+      coverImageUrl: null, // skip external image for performance
       destinationName: cruise.destination?.name ?? null,
       durataNotti: cruise.durata_notti,
       pensione: cruise.pensione ?? [],
@@ -295,7 +300,7 @@ export async function getQuotePdfData(
       penalties: (cruise.penalties ?? []).map((p: any) => p.titolo),
       excursions: [],
       ship: cruise.ship
-        ? { name: cruise.ship.name, cover_image_url: cruise.ship.cover_image_url ?? null }
+        ? { name: cruise.ship.name, cover_image_url: null }
         : null,
       cabinType: quote.cabin_type,
       numCabins: quote.num_cabins,

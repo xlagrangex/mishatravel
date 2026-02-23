@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
+import fs from "fs";
+import path from "path";
 import { createClient } from "@/lib/supabase/server";
 import { getQuotePdfData } from "@/lib/pdf/quote-pdf-data";
-import { generateStaticMap } from "@/lib/pdf/static-map";
 import QuotePdfDocument from "@/lib/pdf/QuotePdfDocument";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 30; // allow up to 30s for PDF generation
+export const maxDuration = 30;
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 2. Auth check — verify user is logged in and belongs to an agency
+    // 2. Auth check — user must be logged in
     const supabase = await createClient();
     const {
       data: { user },
@@ -35,21 +36,37 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 3. Determine access: agency user or admin/operator
+    let agencyId: string | null = null;
+
     const { data: agency } = await supabase
       .from("agencies")
       .select("id")
       .eq("user_id", user.id)
       .single();
 
-    if (!agency) {
-      return NextResponse.json(
-        { error: "Nessuna agenzia associata." },
-        { status: 403 }
-      );
+    if (agency) {
+      agencyId = agency.id;
+    } else {
+      // Check if user is admin or operator
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+
+      const role = roleData?.role;
+      if (role !== "admin" && role !== "operator") {
+        return NextResponse.json(
+          { error: "Accesso non autorizzato." },
+          { status: 403 }
+        );
+      }
+      // Admin/operator: agencyId stays null → no agency filter
     }
 
-    // 3. Fetch all data for the PDF
-    const data = await getQuotePdfData(quoteId, agency.id);
+    // 4. Fetch all data for the PDF
+    const data = await getQuotePdfData(quoteId, agencyId);
 
     if (!data) {
       return NextResponse.json(
@@ -58,29 +75,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4. Generate static map image
-    let mapImageBase64: string | null = null;
+    // 5. Load logo from filesystem as base64 (avoids HTTP self-call)
+    let logoUrl = "";
     try {
-      const mapBuffer = await generateStaticMap(data.locations);
-      if (mapBuffer) {
-        mapImageBase64 = mapBuffer.toString("base64");
-      }
-    } catch (mapErr) {
-      console.error("Error generating map (non-blocking):", mapErr);
+      const logoPath = path.join(process.cwd(), "public/images/logo/logo.png");
+      const logoBuffer = fs.readFileSync(logoPath);
+      logoUrl = `data:image/png;base64,${logoBuffer.toString("base64")}`;
+    } catch {
+      // Fallback to URL if filesystem read fails (e.g. in edge runtime)
+      const origin =
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        request.headers.get("origin") ??
+        "https://mishatravel.com";
+      logoUrl = `${origin}/images/logo/logo.png`;
     }
 
-    // 5. Determine logo URL (absolute for @react-pdf)
-    const origin =
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      request.headers.get("origin") ??
-      "https://mishatravel.com";
-    const logoUrl = `${origin}/images/logo/logo.png`;
-
-    // 6. Render PDF to buffer
+    // 6. Render PDF to buffer (no map — removed for performance)
     const pdfBuffer = await renderToBuffer(
       React.createElement(QuotePdfDocument, {
         data,
-        mapImageBase64,
+        mapImageBase64: null,
         logoUrl,
       }) as any
     );

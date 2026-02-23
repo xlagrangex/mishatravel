@@ -1307,6 +1307,16 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
 
         {/* Action buttons based on current status */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* PDF Download */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`/api/agenzia/preventivo-pdf?id=${quote.id}`, '_blank')}
+          >
+            <Download className="h-4 w-4" />
+            Scarica PDF
+          </Button>
+
           {/* requested/sent/in_review → Create Offer */}
           {(normalized === 'requested') && (
             <CreateOfferDialog
