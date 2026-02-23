@@ -51,7 +51,7 @@ export default function DeparturesTimeline({ departures, tours, cruises }: Props
   const cruiseImages = new Map(cruises.map((c) => [c.slug, c.cover_image_url]));
 
   return (
-    <section className="py-20 bg-white overflow-hidden">
+    <section className="py-24 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
         <SectionReveal>
           <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
@@ -97,6 +97,7 @@ export default function DeparturesTimeline({ departures, tours, cruises }: Props
                           alt={dep.title}
                           fill
                           className="object-cover transition-transform duration-500 group-hover/card:scale-105"
+                          quality={55}
                           sizes="300px"
                         />
                       ) : (

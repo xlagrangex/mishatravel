@@ -5,7 +5,7 @@ import SectionReveal from "./SectionReveal";
 
 export default function AgencyCTA() {
   return (
-    <section className="relative py-20 bg-gray-50 overflow-hidden">
+    <section className="relative py-24 bg-gray-50 overflow-hidden">
       {/* World map watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Image

@@ -14,7 +14,7 @@ import { getPublishedTours } from "@/lib/supabase/queries/tours";
 import { getPublishedCruises } from "@/lib/supabase/queries/cruises";
 import { getAllDepartures } from "@/lib/supabase/queries/departures";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: rigenera ogni 5 minuti
 
 export default async function HomePage() {
   const [destinations, tours, cruises, departures] = await Promise.all([
@@ -50,7 +50,7 @@ export default async function HomePage() {
       <AgencyCTA />
 
       {/* 6. I nostri Tour */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <SectionReveal>
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
@@ -90,7 +90,7 @@ export default async function HomePage() {
       </section>
 
       {/* 7. Crociere Fluviali */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionReveal>
             <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-3">
