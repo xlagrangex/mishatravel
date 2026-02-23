@@ -494,6 +494,65 @@ export function offerRevokedEmail(
   `);
 }
 
+/**
+ * Reminder email sent to agency by admin.
+ */
+export function reminderEmail(
+  agencyName: string,
+  productName: string,
+  message?: string | null
+): string {
+  const messageBlock = message
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;">
+      <tr>
+        <td style="background-color:#fffbeb;border-radius:6px;padding:16px;border-left:4px solid #f59e0b;">
+          <p style="margin:0;font-size:13px;color:#64748b;">Messaggio dal tour operator</p>
+          <p style="margin:8px 0 0;font-size:14px;color:#334155;line-height:1.6;">${message.replace(/\n/g, "<br/>")}</p>
+        </td>
+      </tr>
+    </table>`
+    : "";
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Promemoria</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Ti ricordiamo che la tua richiesta per <strong>&ldquo;${productName}&rdquo;</strong> &egrave; in attesa di un tuo riscontro.
+    </p>
+    ${messageBlock}
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Accedi alla tua area riservata per verificare lo stato e procedere.
+    </p>
+    ${ctaButton("Vai alla tua area", `${SITE_URL}/agenzia/richieste`)}
+  `);
+}
+
+/**
+ * Notify agency that a document has been uploaded by the admin.
+ */
+export function documentUploadedToAgencyEmail(
+  agencyName: string,
+  productName: string,
+  documentType: string
+): string {
+  const typeLabel = documentType === 'fattura' ? 'una fattura' :
+    documentType === 'contratto' ? 'un contratto' : `un documento (${documentType})`;
+  return baseTemplate(`
+    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuovo documento disponibile</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      &Egrave; stato caricato ${typeLabel} relativo alla tua richiesta per <strong>&ldquo;${productName}&rdquo;</strong>.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Accedi alla tua area riservata per scaricare il documento.
+    </p>
+    ${ctaButton("Vedi i tuoi documenti", `${SITE_URL}/agenzia/richieste`)}
+  `);
+}
+
 // ---------------------------------------------------------------------------
 // 3. Admin notification emails
 // ---------------------------------------------------------------------------

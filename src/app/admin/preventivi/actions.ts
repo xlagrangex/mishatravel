@@ -10,6 +10,8 @@ import {
   contractSentEmail,
   quoteRejectedEmail,
   offerRevokedEmail,
+  reminderEmail,
+  documentUploadedToAgencyEmail,
 } from '@/lib/email/templates'
 
 // ---------------------------------------------------------------------------
@@ -431,7 +433,7 @@ export async function confirmWithContract(
     }
   }
 
-  const { request_id, offer_id, contract_file_url, iban, send_email } =
+  const { request_id, offer_id, contract_file_url, iban } =
     parsed.data
   const supabase = createAdminClient()
 
@@ -449,21 +451,19 @@ export async function confirmWithContract(
       return { success: false, error: offerError.message }
     }
 
-    // Send email before status update
+    // Always send email to agency
     let emailSent = false
-    if (send_email) {
-      try {
-        const ctx = await getQuoteEmailContext(supabase, request_id)
-        if (ctx?.agencyEmail) {
-          emailSent = await sendTransactionalEmail(
-            { email: ctx.agencyEmail, name: ctx.agencyName },
-            'Contratto e dati di pagamento - MishaTravel',
-            contractSentEmail(ctx.agencyName, ctx.productName, iban.trim())
-          )
-        }
-      } catch (emailErr) {
-        console.error('Error sending contract email:', emailErr)
+    try {
+      const ctx = await getQuoteEmailContext(supabase, request_id)
+      if (ctx?.agencyEmail) {
+        emailSent = await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Contratto e dati di pagamento - MishaTravel',
+          contractSentEmail(ctx.agencyName, ctx.productName, iban.trim())
+        )
       }
+    } catch (emailErr) {
+      console.error('Error sending contract email:', emailErr)
     }
 
     // Update status to 'confirmed'
@@ -480,7 +480,7 @@ export async function confirmWithContract(
       supabase,
       request_id,
       'Contratto e IBAN inviati',
-      `IBAN: ${iban.trim()}${send_email ? (emailSent ? ' - Email inviata' : ' - Attenzione: invio email fallito') : ' - Email non richiesta'}`
+      `IBAN: ${iban.trim()}${emailSent ? ' - Email inviata' : ' - Attenzione: invio email fallito'}`
     )
 
     revalidatePath('/admin/preventivi')
@@ -541,6 +541,20 @@ export async function uploadQuoteDocument(
       'Documento caricato',
       `${file_name} (${document_type})`
     )
+
+    // Send email notification to agency
+    try {
+      const ctx = await getQuoteEmailContext(supabase, request_id)
+      if (ctx?.agencyEmail) {
+        await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Nuovo documento disponibile - MishaTravel',
+          documentUploadedToAgencyEmail(ctx.agencyName, ctx.productName, document_type)
+        )
+      }
+    } catch (emailErr) {
+      console.error('Error sending document uploaded email:', emailErr)
+    }
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
@@ -649,7 +663,61 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
 }
 
 // ---------------------------------------------------------------------------
-// 8. Revoke Offer
+// 8. Send Reminder to Agency
+// ---------------------------------------------------------------------------
+
+const sendReminderSchema = z.object({
+  request_id: z.string().uuid(),
+  message: z.string().nullable().default(null),
+})
+
+export async function sendReminder(formData: unknown): Promise<ActionResult> {
+  const parsed = sendReminderSchema.safeParse(formData)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues.map((i) => i.message).join('; '),
+    }
+  }
+
+  const { request_id, message } = parsed.data
+  const supabase = createAdminClient()
+
+  try {
+    let emailSent = false
+    try {
+      const ctx = await getQuoteEmailContext(supabase, request_id)
+      if (ctx?.agencyEmail) {
+        emailSent = await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Promemoria - MishaTravel',
+          reminderEmail(ctx.agencyName, ctx.productName, message)
+        )
+      }
+    } catch (emailErr) {
+      console.error('Error sending reminder email:', emailErr)
+    }
+
+    await addTimelineEntry(
+      supabase,
+      request_id,
+      'Sollecito inviato all\'agenzia',
+      `${message ? message : 'Sollecito generico'}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
+    )
+
+    revalidatePath('/admin/preventivi')
+    revalidatePath(`/admin/preventivi/${request_id}`)
+    return { success: true, id: request_id }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 9. Revoke Offer
 // ---------------------------------------------------------------------------
 
 export async function revokeOffer(requestId: string): Promise<ActionResult> {

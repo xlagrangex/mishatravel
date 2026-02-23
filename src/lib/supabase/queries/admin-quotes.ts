@@ -100,6 +100,7 @@ export type QuoteDetailData = {
     document_type: string | null
     document_number: string | null
     is_child: boolean
+    age: number | null
     sort_order: number
     created_at: string
   }[]
@@ -276,7 +277,7 @@ export async function getQuoteDetail(
   try {
     const { data: p } = await supabase
       .from('quote_participants')
-      .select('id, full_name, document_type, document_number, is_child, sort_order, created_at')
+      .select('id, full_name, document_type, document_number, is_child, age, sort_order, created_at')
       .eq('request_id', id)
     participants = p ?? []
   } catch { /* table may not exist yet */ }

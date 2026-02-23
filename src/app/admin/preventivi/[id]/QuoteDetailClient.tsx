@@ -29,6 +29,7 @@ import {
   Trash2,
   UserCheck,
   Undo2,
+  Bell,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -55,6 +56,7 @@ import {
   deleteQuoteDocument,
   rejectQuote,
   revokeOffer,
+  sendReminder,
 } from '../actions'
 
 // ---------------------------------------------------------------------------
@@ -604,7 +606,6 @@ function ConfirmContractDialog({
 
     const form = new FormData(e.currentTarget)
     const iban = form.get('iban') as string
-    const sendEmail = form.get('send_email') === 'on'
 
     startTransition(async () => {
       const result = await confirmWithContract({
@@ -612,7 +613,7 @@ function ConfirmContractDialog({
         offer_id: offerId,
         contract_file_url: contractUrl,
         iban,
-        send_email: sendEmail,
+        send_email: true,
       })
       if (result.success) {
         setOpen(false)
@@ -688,19 +689,6 @@ function ConfirmContractDialog({
               required
               placeholder="IT60 X054 2811 1010 0000 0123 456"
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="send_email"
-              name="send_email"
-              defaultChecked
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <Label htmlFor="send_email" className="text-sm font-normal">
-              Invia email all&apos;agenzia
-            </Label>
           </div>
 
           {error && (
@@ -871,6 +859,7 @@ function UploadDocumentDialog({
             >
               <option value="fattura">Fattura</option>
               <option value="contratto">Contratto</option>
+              <option value="estratto_conto">Estratto Conto</option>
               <option value="altro">Altro</option>
             </select>
           </div>
@@ -990,6 +979,164 @@ function RejectDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Document Section (sidebar)
+// ---------------------------------------------------------------------------
+
+function DocumentSection({
+  title,
+  type,
+  documents,
+  onDelete,
+  deletingDocId,
+}: {
+  title: string
+  type: string
+  documents: QuoteDetailData['documents']
+  onDelete: (id: string) => void
+  deletingDocId: string | null
+}) {
+  if (documents.length === 0) return null
+
+  return (
+    <div className="mb-4">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h3>
+      <div className="space-y-1.5">
+        {documents.map((doc) => (
+          <div
+            key={doc.id}
+            className="flex items-center justify-between rounded-md border px-2.5 py-2"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-medium truncate">{doc.file_name}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {formatDateShort(doc.created_at)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" asChild>
+                <a
+                  href={doc.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => onDelete(doc.id)}
+                disabled={deletingDocId === doc.id}
+              >
+                {deletingDocId === doc.id ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                )}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Send Reminder Dialog
+// ---------------------------------------------------------------------------
+
+function SendReminderDialog({
+  requestId,
+  onSuccess,
+}: {
+  requestId: string
+  onSuccess: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    const form = new FormData(e.currentTarget)
+    const message = (form.get('message') as string)?.trim() || null
+
+    startTransition(async () => {
+      const result = await sendReminder({
+        request_id: requestId,
+        message,
+      })
+      if (result.success) {
+        setOpen(false)
+        onSuccess()
+      } else {
+        setError(result.error)
+      }
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Bell className="h-4 w-4" />
+          Sollecita Agenzia
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Sollecita Agenzia</DialogTitle>
+          <DialogDescription>
+            Invia un promemoria all&apos;agenzia per questa richiesta.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="message">Messaggio (opzionale)</Label>
+            <Textarea
+              id="message"
+              name="message"
+              rows={3}
+              placeholder="Aggiungi un messaggio personalizzato..."
+            />
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              Annulla
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Invia Sollecito
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main Detail Component
 // ---------------------------------------------------------------------------
 
@@ -1090,6 +1237,14 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
             <ConfirmContractDialog
               requestId={quote.id}
               offerId={latestOffer.id}
+              onSuccess={handleRefresh}
+            />
+          )}
+
+          {/* Reminder — available when not terminal */}
+          {!isTerminal && (
+            <SendReminderDialog
+              requestId={quote.id}
               onSuccess={handleRefresh}
             />
           )}
@@ -1472,12 +1627,19 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
                         <div className="flex-1">
                           <p className="text-sm font-medium">
                             {p.full_name}
-                            {p.is_child && (
+                            {p.is_child ? (
                               <Badge
                                 variant="outline"
                                 className="ml-2 text-xs border-amber-200 bg-amber-50 text-amber-700"
                               >
-                                bambino
+                                bambino{p.age != null ? ` (${p.age} anni)` : ''}
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="ml-2 text-xs border-blue-200 bg-blue-50 text-blue-700"
+                              >
+                                adulto{p.age != null ? ` (${p.age} anni)` : ''}
                               </Badge>
                             )}
                           </p>
@@ -1498,72 +1660,9 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
             </Card>
           )}
 
-          {/* Documents section */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-secondary">
-                  <FileText className="h-5 w-5" />
-                  Documenti Preventivo
-                </h2>
-                <UploadDocumentDialog
-                  requestId={quote.id}
-                  onSuccess={handleRefresh}
-                />
-              </div>
-              {quote.documents && quote.documents.length > 0 ? (
-                <div className="space-y-2">
-                  {quote.documents.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between rounded-lg border p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">{doc.file_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {doc.document_type} &middot;{' '}
-                            {formatDateShort(doc.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" asChild>
-                          <a
-                            href={doc.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Download className="h-4 w-4" />
-                          </a>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          disabled={deletingDocId === doc.id}
-                        >
-                          {deletingDocId === doc.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  Nessun documento caricato.
-                </p>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Right column: Timeline */}
+        {/* Right column: Timeline + Documents */}
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6">
@@ -1572,6 +1671,71 @@ export default function QuoteDetailClient({ quote }: QuoteDetailClientProps) {
                 Storico Attivita
               </h2>
               <ActivityTimeline entries={quote.timeline} />
+            </CardContent>
+          </Card>
+
+          {/* Documents section — organized by type */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-secondary">
+                  <FileText className="h-5 w-5" />
+                  Documenti
+                </h2>
+                <UploadDocumentDialog
+                  requestId={quote.id}
+                  onSuccess={handleRefresh}
+                />
+              </div>
+
+              {/* Fatture */}
+              <DocumentSection
+                title="Fatture"
+                type="fattura"
+                documents={quote.documents?.filter(d => d.document_type === 'fattura') ?? []}
+                onDelete={handleDeleteDocument}
+                deletingDocId={deletingDocId}
+              />
+
+              {/* Contratti */}
+              <DocumentSection
+                title="Contratti"
+                type="contratto"
+                documents={quote.documents?.filter(d => d.document_type === 'contratto') ?? []}
+                onDelete={handleDeleteDocument}
+                deletingDocId={deletingDocId}
+              />
+
+              {/* Estratti conto */}
+              <DocumentSection
+                title="Estratti Conto"
+                type="estratto_conto"
+                documents={quote.documents?.filter(d => d.document_type === 'estratto_conto') ?? []}
+                onDelete={handleDeleteDocument}
+                deletingDocId={deletingDocId}
+              />
+
+              {/* Altri documenti */}
+              {(() => {
+                const others = quote.documents?.filter(
+                  d => !['fattura', 'contratto', 'estratto_conto'].includes(d.document_type)
+                ) ?? []
+                return others.length > 0 ? (
+                  <DocumentSection
+                    title="Altri"
+                    type="altro"
+                    documents={others}
+                    onDelete={handleDeleteDocument}
+                    deletingDocId={deletingDocId}
+                  />
+                ) : null
+              })()}
+
+              {(!quote.documents || quote.documents.length === 0) && (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  Nessun documento caricato.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
