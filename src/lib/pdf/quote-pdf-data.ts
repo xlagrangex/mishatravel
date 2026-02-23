@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getTourById } from "@/lib/supabase/queries/tours";
 import { getCruiseById } from "@/lib/supabase/queries/cruises";
+import { getShipById } from "@/lib/supabase/queries/ships";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,6 +34,7 @@ export interface ItineraryDayInfo {
   numero_giorno: string;
   localita: string;
   descrizione: string;
+  date: string | null;
 }
 
 export interface HotelInfo {
@@ -42,6 +44,7 @@ export interface HotelInfo {
 }
 
 export interface DepartureInfo {
+  id: string;
   from_city: string;
   data_partenza: string;
   prices: { label: string; value: string | number | null }[];
@@ -66,6 +69,16 @@ export interface ExcursionInfo {
 export interface ShipInfo {
   name: string;
   cover_image_url: string | null;
+  description: string | null;
+  services: string[];
+  activities: string[];
+}
+
+export interface CabinDetailInfo {
+  titolo: string;
+  immagine_url: string | null;
+  tipologia: string | null;
+  descrizione: string | null;
 }
 
 export interface QuotePdfPayload {
@@ -79,6 +92,10 @@ export interface QuotePdfPayload {
 
   agency: AgencyInfo;
   offer: QuoteOfferInfo | null;
+
+  // Selected departure
+  selectedDepartureDate: string | null;
+  selectedDepartureCity: string | null;
 
   // Product details
   title: string;
@@ -102,9 +119,30 @@ export interface QuotePdfPayload {
 
   // Cruise-specific
   ship: ShipInfo | null;
+  shipCabinDetails: CabinDetailInfo[];
   cabinType: string | null;
   numCabins: number | null;
   deckLabels: { primo: string | null; secondo: string | null; terzo: string | null } | null;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Given a selectedDepartureDate and a numero_giorno string (e.g. "1", "2", "3-4"),
+ * calculate the actual calendar date for that day.
+ */
+function calculateDayDate(
+  departureDate: string | null,
+  numeroGiorno: string
+): string | null {
+  if (!departureDate) return null;
+  const firstDay = parseInt(numeroGiorno.split("-")[0].replace(/\D/g, ""), 10);
+  if (isNaN(firstDay) || firstDay < 1) return null;
+  const base = new Date(departureDate + "T00:00:00");
+  base.setDate(base.getDate() + firstDay - 1);
+  return base.toISOString().split("T")[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -131,7 +169,6 @@ export async function getQuotePdfData(
     )
     .eq("id", quoteId);
 
-  // Filter by agency only when accessed by an agency user
   if (agencyId) {
     query = query.eq("agency_id", agencyId);
   }
@@ -170,8 +207,25 @@ export async function getQuotePdfData(
       }
     : null;
 
-  // 2. Fetch full product data
+  // 2. Resolve selected departure date
   const isTour = quote.request_type === "tour";
+  let selectedDepartureDate: string | null = null;
+  let selectedDepartureCity: string | null = null;
+
+  if (quote.departure_id) {
+    const table = isTour ? "tour_departures" : "cruise_departures";
+    const { data: dep } = await admin
+      .from(table)
+      .select("data_partenza, from_city")
+      .eq("id", quote.departure_id)
+      .single();
+    if (dep) {
+      selectedDepartureDate = dep.data_partenza ?? null;
+      selectedDepartureCity = dep.from_city ?? null;
+    }
+  }
+
+  // 3. Fetch full product data
   const tourRef = quote.tour as any;
   const cruiseRef = quote.cruise as any;
 
@@ -189,8 +243,10 @@ export async function getQuotePdfData(
       notes: quote.notes,
       agency: agencyInfo,
       offer: offerInfo,
+      selectedDepartureDate,
+      selectedDepartureCity,
       title: tour.title,
-      coverImageUrl: null, // skip external image for performance
+      coverImageUrl: tour.cover_image_url,
       destinationName: tour.destination?.name ?? null,
       durataNotti: tour.durata_notti,
       pensione: tour.pensione ?? [],
@@ -205,6 +261,7 @@ export async function getQuotePdfData(
         numero_giorno: d.numero_giorno,
         localita: d.localita,
         descrizione: d.descrizione,
+        date: calculateDayDate(selectedDepartureDate, d.numero_giorno),
       })),
       hotels: (tour.hotels ?? []).map((h: any) => ({
         localita: h.localita,
@@ -212,6 +269,7 @@ export async function getQuotePdfData(
         stelle: h.stelle,
       })),
       departures: (tour.departures ?? []).map((d: any) => ({
+        id: d.id,
         from_city: d.from_city,
         data_partenza: d.data_partenza,
         prices: [
@@ -235,6 +293,7 @@ export async function getQuotePdfData(
         prezzo: e.prezzo,
       })),
       ship: null,
+      shipCabinDetails: [],
       cabinType: null,
       numCabins: null,
       deckLabels: null,
@@ -246,6 +305,31 @@ export async function getQuotePdfData(
     const cruise = await getCruiseById(cruiseRef.id);
     if (!cruise) return null;
 
+    // Fetch full ship details
+    let shipDescription: string | null = null;
+    let shipServices: string[] = [];
+    let shipActivities: string[] = [];
+    let shipCabinDetails: CabinDetailInfo[] = [];
+
+    if (cruise.ship?.id) {
+      try {
+        const fullShip = await getShipById(cruise.ship.id);
+        if (fullShip) {
+          shipDescription = fullShip.description ?? null;
+          shipServices = (fullShip.services ?? []).map((s: any) => s.testo);
+          shipActivities = (fullShip.activities ?? []).map((a: any) => a.attivita);
+          shipCabinDetails = (fullShip.cabin_details ?? []).map((c: any) => ({
+            titolo: c.titolo,
+            immagine_url: c.immagine_url,
+            tipologia: c.tipologia,
+            descrizione: c.descrizione,
+          }));
+        }
+      } catch {
+        // Non-blocking: ship details are optional
+      }
+    }
+
     return {
       quoteId,
       quoteCreatedAt: quote.created_at,
@@ -256,8 +340,10 @@ export async function getQuotePdfData(
       notes: quote.notes,
       agency: agencyInfo,
       offer: offerInfo,
+      selectedDepartureDate,
+      selectedDepartureCity,
       title: cruise.title,
-      coverImageUrl: null, // skip external image for performance
+      coverImageUrl: cruise.cover_image_url,
       destinationName: cruise.destination?.name ?? null,
       durataNotti: cruise.durata_notti,
       pensione: cruise.pensione ?? [],
@@ -272,6 +358,7 @@ export async function getQuotePdfData(
         numero_giorno: d.numero_giorno,
         localita: d.localita,
         descrizione: d.descrizione,
+        date: calculateDayDate(selectedDepartureDate, d.numero_giorno),
       })),
       hotels: [],
       departures: (cruise.departures ?? []).map((d: any) => {
@@ -283,6 +370,7 @@ export async function getQuotePdfData(
         if (d.prezzo_superior_deck != null)
           prices.push({ label: cruise.etichetta_terzo_deck ?? "Superior Deck", value: d.prezzo_superior_deck });
         return {
+          id: d.id,
           from_city: d.from_city,
           data_partenza: d.data_partenza,
           prices,
@@ -300,8 +388,15 @@ export async function getQuotePdfData(
       penalties: (cruise.penalties ?? []).map((p: any) => p.titolo),
       excursions: [],
       ship: cruise.ship
-        ? { name: cruise.ship.name, cover_image_url: null }
+        ? {
+            name: cruise.ship.name,
+            cover_image_url: cruise.ship.cover_image_url ?? null,
+            description: shipDescription,
+            services: shipServices,
+            activities: shipActivities,
+          }
         : null,
+      shipCabinDetails,
       cabinType: quote.cabin_type,
       numCabins: quote.num_cabins,
       deckLabels: {

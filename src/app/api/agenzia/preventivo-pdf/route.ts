@@ -10,6 +10,35 @@ import QuotePdfDocument from "@/lib/pdf/QuotePdfDocument";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
+// ---------------------------------------------------------------------------
+// Image pre-fetching utility
+// ---------------------------------------------------------------------------
+
+async function fetchImageAsBase64(
+  url: string,
+  timeoutMs = 3000
+): Promise<string | null> {
+  if (!url) return null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    // Skip images larger than 800KB to keep PDF size reasonable
+    if (buf.byteLength > 800_000) return null;
+    const ct = res.headers.get("content-type") ?? "image/jpeg";
+    return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Route handler
+// ---------------------------------------------------------------------------
+
 export async function GET(request: NextRequest) {
   try {
     // 1. Get quote ID from query params
@@ -23,7 +52,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 2. Auth check — user must be logged in
+    // 2. Auth check
     const supabase = await createClient();
     const {
       data: { user },
@@ -48,7 +77,6 @@ export async function GET(request: NextRequest) {
     if (agency) {
       agencyId = agency.id;
     } else {
-      // Check if user is admin or operator
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -62,7 +90,6 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
-      // Admin/operator: agencyId stays null → no agency filter
     }
 
     // 4. Fetch all data for the PDF
@@ -75,14 +102,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 5. Load logo from filesystem as base64 (avoids HTTP self-call)
+    // 5. Load logo from filesystem as base64
     let logoUrl = "";
     try {
       const logoPath = path.join(process.cwd(), "public/images/logo/logo.png");
       const logoBuffer = fs.readFileSync(logoPath);
       logoUrl = `data:image/png;base64,${logoBuffer.toString("base64")}`;
     } catch {
-      // Fallback to URL if filesystem read fails (e.g. in edge runtime)
       const origin =
         process.env.NEXT_PUBLIC_SITE_URL ??
         request.headers.get("origin") ??
@@ -90,16 +116,77 @@ export async function GET(request: NextRequest) {
       logoUrl = `${origin}/images/logo/logo.png`;
     }
 
-    // 6. Render PDF to buffer (no map — removed for performance)
+    // 6. Pre-fetch images in parallel with a total budget
+    const IMAGE_BUDGET_MS = 5000;
+
+    const imagePromises: Promise<{ key: string; base64: string | null }>[] = [];
+
+    // Cover image
+    if (data.coverImageUrl) {
+      imagePromises.push(
+        fetchImageAsBase64(data.coverImageUrl, 3500).then((b) => ({
+          key: "__cover__",
+          base64: b,
+        }))
+      );
+    }
+
+    // Ship image
+    if (data.ship?.cover_image_url) {
+      imagePromises.push(
+        fetchImageAsBase64(data.ship.cover_image_url, 3500).then((b) => ({
+          key: "__ship__",
+          base64: b,
+        }))
+      );
+    }
+
+    // Cabin images (max 4)
+    for (const cabin of data.shipCabinDetails.slice(0, 4)) {
+      if (cabin.immagine_url) {
+        imagePromises.push(
+          fetchImageAsBase64(cabin.immagine_url, 3000).then((b) => ({
+            key: cabin.titolo,
+            base64: b,
+          }))
+        );
+      }
+    }
+
+    // Race all images against budget
+    let imageResults: { key: string; base64: string | null }[] = [];
+    if (imagePromises.length > 0) {
+      imageResults = await Promise.race([
+        Promise.all(imagePromises),
+        new Promise<{ key: string; base64: string | null }[]>((resolve) =>
+          setTimeout(() => resolve([]), IMAGE_BUDGET_MS)
+        ),
+      ]);
+    }
+
+    let coverImageBase64: string | null = null;
+    let shipImageBase64: string | null = null;
+    const cabinImagesBase64: Record<string, string> = {};
+
+    for (const r of imageResults) {
+      if (!r.base64) continue;
+      if (r.key === "__cover__") coverImageBase64 = r.base64;
+      else if (r.key === "__ship__") shipImageBase64 = r.base64;
+      else cabinImagesBase64[r.key] = r.base64;
+    }
+
+    // 7. Render PDF to buffer
     const pdfBuffer = await renderToBuffer(
       React.createElement(QuotePdfDocument, {
         data,
-        mapImageBase64: null,
         logoUrl,
+        coverImageBase64,
+        shipImageBase64,
+        cabinImagesBase64,
       }) as any
     );
 
-    // 7. Return PDF response
+    // 8. Return PDF response
     const filename = `preventivo-${quoteId.slice(0, 8)}.pdf`;
 
     return new Response(new Uint8Array(pdfBuffer), {

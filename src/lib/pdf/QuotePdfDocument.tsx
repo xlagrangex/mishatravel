@@ -6,7 +6,6 @@ import {
   View,
   Image,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
 import type { QuotePdfPayload } from "./quote-pdf-data";
 
@@ -14,7 +13,7 @@ import type { QuotePdfPayload } from "./quote-pdf-data";
 // Brand constants
 // ---------------------------------------------------------------------------
 
-const BRAND = {
+const B = {
   red: "#C41E2F",
   navy: "#1B2D4F",
   gray: "#64748B",
@@ -23,6 +22,14 @@ const BRAND = {
   white: "#FFFFFF",
   text: "#1E293B",
   textLight: "#475569",
+  green: "#16A34A",
+  greenBg: "#F0FDF4",
+  greenDark: "#166534",
+  redBg: "#FEF2F2",
+  redDark: "#991B1B",
+  amberBg: "#FFFBEB",
+  amberBorder: "#F59E0B",
+  amberDark: "#92400E",
 };
 
 // ---------------------------------------------------------------------------
@@ -30,15 +37,16 @@ const BRAND = {
 // ---------------------------------------------------------------------------
 
 const s = StyleSheet.create({
+  // Page base
   page: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    color: BRAND.text,
+    color: B.text,
     paddingTop: 50,
     paddingBottom: 50,
     paddingHorizontal: 40,
   },
-  // Header/Footer on every page
+  // Header/Footer
   pageHeader: {
     position: "absolute",
     top: 15,
@@ -47,12 +55,9 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottom: `1px solid ${BRAND.border}`,
+    borderBottomWidth: 1,
+    borderBottomColor: B.border,
     paddingBottom: 6,
-  },
-  pageHeaderText: {
-    fontSize: 7,
-    color: BRAND.gray,
   },
   pageFooter: {
     position: "absolute",
@@ -61,136 +66,86 @@ const s = StyleSheet.create({
     right: 40,
     flexDirection: "row",
     justifyContent: "space-between",
-    borderTop: `1px solid ${BRAND.border}`,
+    borderTopWidth: 1,
+    borderTopColor: B.border,
     paddingTop: 6,
   },
-  pageFooterText: {
-    fontSize: 6.5,
-    color: BRAND.gray,
-  },
+  footerText: { fontSize: 6.5, color: B.gray },
   // Cover
   coverPage: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    color: BRAND.text,
+    color: B.text,
     paddingHorizontal: 40,
-    paddingTop: 60,
+    paddingTop: 50,
     paddingBottom: 40,
-    justifyContent: "space-between",
-  },
-  coverLogo: {
-    width: 180,
-    marginBottom: 20,
-  },
-  coverTitle: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    color: BRAND.red,
-    letterSpacing: 4,
-    marginBottom: 8,
-  },
-  coverProductName: {
-    fontSize: 24,
-    fontFamily: "Helvetica-Bold",
-    color: BRAND.navy,
-    marginBottom: 6,
-  },
-  coverSubtitle: {
-    fontSize: 12,
-    color: BRAND.textLight,
-    marginBottom: 24,
+    justifyContent: "flex-start",
   },
   coverImage: {
     width: "100%",
-    height: 220,
+    height: 240,
     objectFit: "cover",
-    borderRadius: 4,
-    marginBottom: 24,
+    borderRadius: 6,
   },
-  coverInfoBox: {
-    backgroundColor: BRAND.lightGray,
-    borderRadius: 4,
-    padding: 16,
+  accentBar: {
+    width: "100%",
+    height: 3,
+    backgroundColor: B.red,
+    marginTop: 12,
+    marginBottom: 16,
   },
-  coverInfoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  coverInfoLabel: {
-    fontSize: 8,
-    color: BRAND.gray,
-  },
-  coverInfoValue: {
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    color: BRAND.navy,
-  },
-  // Sections
+  // Section
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
-    marginTop: 16,
-    borderBottom: `2px solid ${BRAND.red}`,
-    paddingBottom: 6,
+    marginTop: 14,
+    borderBottomWidth: 2,
+    borderBottomColor: B.red,
+    paddingBottom: 5,
   },
   sectionTitle: {
     fontSize: 13,
     fontFamily: "Helvetica-Bold",
-    color: BRAND.navy,
+    color: B.navy,
   },
   // Itinerary
   itineraryDay: {
     flexDirection: "row",
-    marginBottom: 8,
+    marginBottom: 10,
     gap: 10,
   },
-  dayNumber: {
-    width: 40,
-    minWidth: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: BRAND.red,
+  dayBadge: {
+    width: 36,
+    minWidth: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: B.red,
     justifyContent: "center",
     alignItems: "center",
   },
-  dayNumberText: {
+  dayBadgeText: {
     fontSize: 11,
     fontFamily: "Helvetica-Bold",
-    color: BRAND.white,
+    color: B.white,
   },
-  dayContent: {
-    flex: 1,
-    paddingTop: 2,
-  },
+  dayContent: { flex: 1, paddingTop: 1 },
   dayLocality: {
     fontSize: 10,
     fontFamily: "Helvetica-Bold",
-    color: BRAND.navy,
+    color: B.navy,
     marginBottom: 2,
   },
-  dayDesc: {
-    fontSize: 8.5,
-    lineHeight: 1.4,
-    color: BRAND.textLight,
+  dayDate: {
+    fontSize: 8,
+    color: B.red,
+    fontFamily: "Helvetica-Bold",
   },
-  // Map
-  mapImage: {
-    width: "100%",
-    height: 200,
-    objectFit: "cover",
-    borderRadius: 4,
-    marginTop: 8,
-    marginBottom: 8,
-  },
+  dayDesc: { fontSize: 8.5, lineHeight: 1.45, color: B.textLight },
   // Tables
-  table: {
-    marginBottom: 8,
-  },
   tableHeaderRow: {
     flexDirection: "row",
-    backgroundColor: BRAND.navy,
+    backgroundColor: B.navy,
     paddingVertical: 5,
     paddingHorizontal: 6,
     borderRadius: 2,
@@ -198,119 +153,67 @@ const s = StyleSheet.create({
   tableHeaderCell: {
     fontSize: 7.5,
     fontFamily: "Helvetica-Bold",
-    color: BRAND.white,
+    color: B.white,
   },
   tableRow: {
     flexDirection: "row",
     paddingVertical: 5,
     paddingHorizontal: 6,
-    borderBottom: `0.5px solid ${BRAND.border}`,
+    borderBottomWidth: 0.5,
+    borderBottomColor: B.border,
   },
-  tableRowAlt: {
-    backgroundColor: BRAND.lightGray,
-  },
-  tableCell: {
-    fontSize: 8,
-  },
+  tableRowAlt: { backgroundColor: B.lightGray },
+  tableCell: { fontSize: 8 },
   // Hotels
-  hotelStars: {
-    color: "#F59E0B",
-    fontSize: 8,
-  },
-  // Inclusions
-  inclusionRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 4,
-    gap: 6,
-  },
-  checkMark: {
-    fontSize: 10,
-    color: "#16A34A",
-    fontFamily: "Helvetica-Bold",
-    width: 14,
-  },
-  crossMark: {
-    fontSize: 10,
-    color: BRAND.red,
-    fontFamily: "Helvetica-Bold",
-    width: 14,
-  },
-  inclusionText: {
-    fontSize: 8.5,
-    flex: 1,
-    lineHeight: 1.4,
-  },
-  // Offer highlight box
-  offerBox: {
-    backgroundColor: "#FEF3C7",
-    borderRadius: 4,
-    border: `1px solid #F59E0B`,
-    padding: 14,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  offerPrice: {
-    fontSize: 20,
-    fontFamily: "Helvetica-Bold",
-    color: BRAND.red,
-    marginBottom: 4,
-  },
-  offerLabel: {
-    fontSize: 8,
-    color: BRAND.gray,
-    marginBottom: 2,
-  },
-  offerValue: {
-    fontSize: 9,
-    marginBottom: 4,
-  },
-  // Conditions
-  conditionItem: {
-    fontSize: 8,
-    lineHeight: 1.5,
-    marginBottom: 3,
-    color: BRAND.textLight,
-  },
-  // Final page
-  finalBox: {
-    backgroundColor: BRAND.navy,
-    borderRadius: 4,
-    padding: 20,
-    marginTop: 20,
-    alignItems: "center",
-  },
-  finalLogo: {
-    width: 140,
-    marginBottom: 12,
-  },
-  finalText: {
-    fontSize: 8,
-    color: BRAND.white,
-    textAlign: "center",
-    marginBottom: 3,
-  },
-  finalBold: {
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    color: BRAND.white,
-    textAlign: "center",
-    marginBottom: 3,
-  },
-  // Ship info
-  shipBox: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 10,
-  },
+  hotelStars: { color: "#F59E0B", fontSize: 8 },
+  // Ship
+  shipBox: { flexDirection: "row", gap: 12, marginBottom: 10 },
   shipImage: {
-    width: 120,
-    height: 80,
+    width: 140,
+    height: 95,
     objectFit: "cover",
     borderRadius: 4,
   },
-  shipInfo: {
-    flex: 1,
+  // Offer box (new elegant design)
+  offerHeader: {
+    backgroundColor: B.navy,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    padding: 10,
+  },
+  offerBody: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: B.border,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    borderTopWidth: 0,
+  },
+  offerDetailRow: {
+    flexDirection: "row",
+    marginBottom: 6,
+  },
+  offerDetailLabel: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    color: B.navy,
+    width: 100,
+  },
+  offerDetailValue: { fontSize: 8, color: B.text, flex: 1 },
+  // Colored info boxes
+  infoBox: {
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+  },
+  // Final page
+  finalBox: {
+    backgroundColor: B.navy,
+    borderRadius: 6,
+    padding: 24,
+    marginTop: 20,
+    alignItems: "center",
   },
 });
 
@@ -318,7 +221,6 @@ const s = StyleSheet.create({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Strip HTML tags from string */
 function stripHtml(html: string): string {
   return html
     .replace(/<br\s*\/?>/gi, "\n")
@@ -358,6 +260,18 @@ function formatDate(dateStr: string): string {
   }
 }
 
+function formatShortDate(dateStr: string): string {
+  try {
+    return new Date(dateStr + "T00:00:00").toLocaleDateString("it-IT", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 function formatPrice(value: string | number | null): string {
   if (value == null) return "-";
   const num = typeof value === "string" ? parseFloat(value) : value;
@@ -374,14 +288,14 @@ function stars(n: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Header / Footer wrappers
+// Shared page wrappers
 // ---------------------------------------------------------------------------
 
 function PageHeader({ logoUrl }: { logoUrl: string }) {
   return (
     <View style={s.pageHeader} fixed>
       <Image src={logoUrl} style={{ width: 80 }} />
-      <Text style={s.pageHeaderText}>www.mishatravel.com</Text>
+      <Text style={s.footerText}>www.mishatravel.com</Text>
     </View>
   );
 }
@@ -389,11 +303,11 @@ function PageHeader({ logoUrl }: { logoUrl: string }) {
 function PageFooterBlock({ quoteId }: { quoteId: string }) {
   return (
     <View style={s.pageFooter} fixed>
-      <Text style={s.pageFooterText}>
-        MishaTravel S.r.l. | info@mishatravel.com | +39 06 XXX XXXX
+      <Text style={s.footerText}>
+        MishaTravel S.r.l. | info@mishatravel.com
       </Text>
       <Text
-        style={s.pageFooterText}
+        style={s.footerText}
         render={({ pageNumber, totalPages }) =>
           `Rif. #${quoteId.slice(0, 8).toUpperCase()} | Pag. ${pageNumber}/${totalPages}`
         }
@@ -401,10 +315,6 @@ function PageFooterBlock({ quoteId }: { quoteId: string }) {
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Section header helper
-// ---------------------------------------------------------------------------
 
 function SectionHeader({ title }: { title: string }) {
   return (
@@ -415,19 +325,27 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// Main Document Component
+// Props
 // ---------------------------------------------------------------------------
 
 interface QuotePdfDocumentProps {
   data: QuotePdfPayload;
-  mapImageBase64: string | null;
   logoUrl: string;
+  coverImageBase64: string | null;
+  shipImageBase64: string | null;
+  cabinImagesBase64: Record<string, string>;
 }
+
+// ---------------------------------------------------------------------------
+// Main Document
+// ---------------------------------------------------------------------------
 
 export default function QuotePdfDocument({
   data,
-  mapImageBase64,
   logoUrl,
+  coverImageBase64,
+  shipImageBase64,
+  cabinImagesBase64,
 }: QuotePdfDocumentProps) {
   const pensioneMap: Record<string, string> = {
     no: "Senza pasti",
@@ -440,13 +358,20 @@ export default function QuotePdfDocument({
   const included = data.inclusions.filter((i) => i.is_included);
   const excluded = data.inclusions.filter((i) => !i.is_included);
 
-  // Collect all unique price labels from departures for table header
   const priceLabels: string[] = [];
   for (const dep of data.departures) {
     for (const p of dep.prices) {
       if (!priceLabels.includes(p.label)) priceLabels.push(p.label);
     }
   }
+
+  // Find the selected departure for highlighting
+  const selectedDep = data.selectedDepartureDate
+    ? data.departures.find((d) => d.data_partenza === data.selectedDepartureDate)
+    : null;
+  const otherDeps = data.departures.filter(
+    (d) => d.data_partenza !== data.selectedDepartureDate
+  );
 
   return (
     <Document
@@ -455,82 +380,140 @@ export default function QuotePdfDocument({
       subject={`Preventivo per ${data.agency.business_name}`}
     >
       {/* ================================================================= */}
-      {/* PAGE 1: COVER */}
+      {/* PAGE 1: COVER                                                     */}
       {/* ================================================================= */}
       <Page size="A4" style={s.coverPage}>
-        <View>
-          <Image src={logoUrl} style={s.coverLogo} />
-          <Text style={s.coverTitle}>PREVENTIVO</Text>
-          <Text style={s.coverProductName}>{data.title}</Text>
-          <Text style={s.coverSubtitle}>
-            {[data.destinationName, data.durataNotti ? `${data.durataNotti} notti` : null]
-              .filter(Boolean)
-              .join("  \u2022  ")}
-          </Text>
+        {/* Logo */}
+        <Image src={logoUrl} style={{ width: 160, marginBottom: 16 }} />
 
-          {data.coverImageUrl && (
-            <Image src={data.coverImageUrl} style={s.coverImage} />
-          )}
-        </View>
+        {/* Cover Image */}
+        {coverImageBase64 && (
+          <Image src={coverImageBase64} style={s.coverImage} />
+        )}
 
-        <View style={s.coverInfoBox}>
-          <View style={s.coverInfoRow}>
-            <Text style={s.coverInfoLabel}>Per</Text>
-            <Text style={s.coverInfoValue}>
-              {data.agency.business_name}
-              {data.agency.city ? ` - ${data.agency.city}` : ""}
-            </Text>
+        {/* Accent bar */}
+        <View style={s.accentBar} />
+
+        {/* Title block */}
+        <Text
+          style={{
+            fontSize: 10,
+            fontFamily: "Helvetica-Bold",
+            color: B.red,
+            letterSpacing: 3,
+            marginBottom: 6,
+          }}
+        >
+          PREVENTIVO
+        </Text>
+        <Text
+          style={{
+            fontSize: 22,
+            fontFamily: "Helvetica-Bold",
+            color: B.navy,
+            marginBottom: 4,
+          }}
+        >
+          {data.title}
+        </Text>
+        <Text
+          style={{ fontSize: 11, color: B.textLight, marginBottom: 20 }}
+        >
+          {[
+            data.destinationName,
+            data.durataNotti ? `${data.durataNotti} notti` : null,
+            data.requestType === "tour" ? "Tour" : "Crociera Fluviale",
+          ]
+            .filter(Boolean)
+            .join("  \u2022  ")}
+        </Text>
+
+        {/* Info grid — 2 columns */}
+        <View
+          style={{
+            backgroundColor: B.lightGray,
+            borderRadius: 6,
+            padding: 16,
+          }}
+        >
+          <View style={{ flexDirection: "row", gap: 20 }}>
+            {/* Left column */}
+            <View style={{ flex: 1 }}>
+              <CoverInfoItem
+                label="Per"
+                value={`${data.agency.business_name}${data.agency.city ? ` - ${data.agency.city}` : ""}`}
+              />
+              <CoverInfoItem
+                label="Partecipanti"
+                value={`${data.participantsAdults} adulti${data.participantsChildren > 0 ? `, ${data.participantsChildren} bambini` : ""}`}
+              />
+              {data.cabinType && (
+                <CoverInfoItem label="Cabina" value={data.cabinType} />
+              )}
+              {pensioneLabel && (
+                <CoverInfoItem label="Trattamento" value={pensioneLabel} />
+              )}
+            </View>
+            {/* Right column */}
+            <View style={{ flex: 1 }}>
+              {data.selectedDepartureDate && (
+                <CoverInfoItem
+                  label="Data partenza"
+                  value={formatShortDate(data.selectedDepartureDate)}
+                />
+              )}
+              {data.selectedDepartureCity && (
+                <CoverInfoItem
+                  label="Partenza da"
+                  value={data.selectedDepartureCity}
+                />
+              )}
+              {data.tipoVoli && (
+                <CoverInfoItem label="Voli" value={data.tipoVoli} />
+              )}
+              <CoverInfoItem
+                label="Data preventivo"
+                value={formatDate(data.quoteCreatedAt)}
+              />
+              <CoverInfoItem
+                label="Riferimento"
+                value={`#${data.quoteId.slice(0, 8).toUpperCase()}`}
+              />
+            </View>
           </View>
-          <View style={s.coverInfoRow}>
-            <Text style={s.coverInfoLabel}>Tipo</Text>
-            <Text style={s.coverInfoValue}>
-              {data.requestType === "tour" ? "Tour" : "Crociera Fluviale"}
-            </Text>
-          </View>
-          <View style={s.coverInfoRow}>
-            <Text style={s.coverInfoLabel}>Partecipanti</Text>
-            <Text style={s.coverInfoValue}>
-              {data.participantsAdults} adulti
-              {data.participantsChildren > 0
-                ? `, ${data.participantsChildren} bambini`
-                : ""}
-            </Text>
-          </View>
-          {data.cabinType && (
-            <View style={s.coverInfoRow}>
-              <Text style={s.coverInfoLabel}>Tipo Cabina</Text>
-              <Text style={s.coverInfoValue}>{data.cabinType}</Text>
+
+          {/* Price badge (if offer exists) */}
+          {data.offer?.total_price != null && (
+            <View
+              style={{
+                backgroundColor: B.red,
+                borderRadius: 4,
+                padding: 10,
+                marginTop: 12,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 7, color: B.white, opacity: 0.85, marginBottom: 2 }}
+              >
+                PREZZO TOTALE OFFERTA
+              </Text>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontFamily: "Helvetica-Bold",
+                  color: B.white,
+                }}
+              >
+                {formatPrice(data.offer.total_price)}
+              </Text>
             </View>
           )}
-          {pensioneLabel && (
-            <View style={s.coverInfoRow}>
-              <Text style={s.coverInfoLabel}>Trattamento</Text>
-              <Text style={s.coverInfoValue}>{pensioneLabel}</Text>
-            </View>
-          )}
-          {data.tipoVoli && (
-            <View style={s.coverInfoRow}>
-              <Text style={s.coverInfoLabel}>Voli</Text>
-              <Text style={s.coverInfoValue}>{data.tipoVoli}</Text>
-            </View>
-          )}
-          <View style={s.coverInfoRow}>
-            <Text style={s.coverInfoLabel}>Data preventivo</Text>
-            <Text style={s.coverInfoValue}>
-              {formatDate(data.quoteCreatedAt)}
-            </Text>
-          </View>
-          <View style={s.coverInfoRow}>
-            <Text style={s.coverInfoLabel}>Riferimento</Text>
-            <Text style={s.coverInfoValue}>
-              #{data.quoteId.slice(0, 8).toUpperCase()}
-            </Text>
-          </View>
         </View>
       </Page>
 
       {/* ================================================================= */}
-      {/* PAGE 2+: ITINERARY */}
+      {/* PAGE 2+: ITINERARY                                                */}
       {/* ================================================================= */}
       {data.itinerary.length > 0 && (
         <Page size="A4" style={s.page} wrap>
@@ -539,42 +522,74 @@ export default function QuotePdfDocument({
 
           <SectionHeader title="Programma Dettagliato" />
 
-          {data.itinerary.map((day, idx) => (
+          {/* Location route overview */}
+          {data.locations.length > 0 && (
             <View
-              key={idx}
-              style={s.itineraryDay}
-              wrap={false}
+              style={{
+                backgroundColor: B.lightGray,
+                borderRadius: 4,
+                padding: 8,
+                marginBottom: 12,
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
             >
-              <View style={s.dayNumber}>
-                <Text style={s.dayNumberText}>{day.numero_giorno}</Text>
+              {data.locations.map((loc, idx) => (
+                <React.Fragment key={idx}>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      fontFamily: "Helvetica-Bold",
+                      color: B.navy,
+                    }}
+                  >
+                    {loc.nome}
+                  </Text>
+                  {idx < data.locations.length - 1 && (
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        color: B.red,
+                        marginHorizontal: 4,
+                      }}
+                    >
+                      {"\u2192"}
+                    </Text>
+                  )}
+                </React.Fragment>
+              ))}
+            </View>
+          )}
+
+          {data.itinerary.map((day, idx) => (
+            <View key={idx} style={s.itineraryDay} wrap={false}>
+              <View style={s.dayBadge}>
+                <Text style={s.dayBadgeText}>{day.numero_giorno}</Text>
               </View>
               <View style={s.dayContent}>
-                <Text style={s.dayLocality}>{day.localita}</Text>
-                <Text style={s.dayDesc}>
-                  {stripHtml(day.descrizione)}
-                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 2,
+                  }}
+                >
+                  <Text style={s.dayLocality}>{day.localita}</Text>
+                  {day.date && (
+                    <Text style={s.dayDate}>{formatShortDate(day.date)}</Text>
+                  )}
+                </View>
+                <Text style={s.dayDesc}>{stripHtml(day.descrizione)}</Text>
               </View>
             </View>
           ))}
-
-          {/* Static Map */}
-          {mapImageBase64 && (
-            <View wrap={false}>
-              <SectionHeader title="Mappa del Percorso" />
-              <Image
-                src={`data:image/png;base64,${mapImageBase64}`}
-                style={s.mapImage}
-              />
-              <Text style={{ fontSize: 7, color: BRAND.gray, textAlign: "center" }}>
-                {data.locations.map((l) => l.nome).join("  \u2192  ")}
-              </Text>
-            </View>
-          )}
         </Page>
       )}
 
       {/* ================================================================= */}
-      {/* PAGE: HOTELS / SHIP */}
+      {/* PAGE: HOTELS / SHIP                                               */}
       {/* ================================================================= */}
       {(data.hotels.length > 0 || data.ship) && (
         <Page size="A4" style={s.page} wrap>
@@ -585,19 +600,28 @@ export default function QuotePdfDocument({
           {data.hotels.length > 0 && (
             <>
               <SectionHeader title="Alloggi" />
-              <View style={s.table}>
+              <View style={{ marginBottom: 8 }}>
                 <View style={s.tableHeaderRow}>
-                  <Text style={[s.tableHeaderCell, { flex: 2 }]}>Localita</Text>
+                  <Text style={[s.tableHeaderCell, { flex: 2 }]}>
+                    Localita
+                  </Text>
                   <Text style={[s.tableHeaderCell, { flex: 3 }]}>Hotel</Text>
                   <Text style={[s.tableHeaderCell, { flex: 1 }]}>Cat.</Text>
                 </View>
                 {data.hotels.map((h, idx) => (
                   <View
                     key={idx}
-                    style={[s.tableRow, idx % 2 === 1 ? s.tableRowAlt : {}]}
+                    style={[
+                      s.tableRow,
+                      idx % 2 === 1 ? s.tableRowAlt : {},
+                    ]}
                   >
-                    <Text style={[s.tableCell, { flex: 2 }]}>{h.localita}</Text>
-                    <Text style={[s.tableCell, { flex: 3 }]}>{h.nome_albergo}</Text>
+                    <Text style={[s.tableCell, { flex: 2 }]}>
+                      {h.localita}
+                    </Text>
+                    <Text style={[s.tableCell, { flex: 3 }]}>
+                      {h.nome_albergo}
+                    </Text>
                     <Text style={[s.hotelStars, { flex: 1 }]}>
                       {stars(h.stelle)}
                     </Text>
@@ -607,69 +631,350 @@ export default function QuotePdfDocument({
             </>
           )}
 
-          {/* Ship info (cruise) */}
+          {/* Ship info (cruise) — expanded */}
           {data.ship && (
             <>
               <SectionHeader title="La Nave" />
+
+              {/* Ship header */}
               <View style={s.shipBox}>
-                {data.ship.cover_image_url && (
-                  <Image src={data.ship.cover_image_url} style={s.shipImage} />
+                {shipImageBase64 && (
+                  <Image src={shipImageBase64} style={s.shipImage} />
                 )}
-                <View style={s.shipInfo}>
+                <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      fontSize: 14,
+                      fontSize: 16,
                       fontFamily: "Helvetica-Bold",
-                      color: BRAND.navy,
+                      color: B.navy,
                       marginBottom: 4,
                     }}
                   >
                     {data.ship.name}
                   </Text>
                   {data.cabinType && (
-                    <Text style={{ fontSize: 9, color: BRAND.textLight }}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        color: B.textLight,
+                        marginBottom: 2,
+                      }}
+                    >
                       Cabina richiesta: {data.cabinType}
                     </Text>
                   )}
                   {data.numCabins && (
-                    <Text style={{ fontSize: 9, color: BRAND.textLight }}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        color: B.textLight,
+                        marginBottom: 2,
+                      }}
+                    >
                       Numero cabine: {data.numCabins}
                     </Text>
                   )}
                 </View>
               </View>
+
+              {/* Ship description */}
+              {data.ship.description && (
+                <Text
+                  style={{
+                    fontSize: 8.5,
+                    lineHeight: 1.45,
+                    color: B.textLight,
+                    marginBottom: 10,
+                  }}
+                >
+                  {stripHtml(data.ship.description)}
+                </Text>
+              )}
+
+              {/* Services */}
+              {data.ship.services.length > 0 && (
+                <View wrap={false} style={{ marginBottom: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "Helvetica-Bold",
+                      color: B.navy,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Servizi a bordo
+                  </Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                    {data.ship.services.map((svc, idx) => (
+                      <View
+                        key={idx}
+                        style={{
+                          width: "50%",
+                          flexDirection: "row",
+                          marginBottom: 3,
+                          paddingRight: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 8,
+                            color: B.green,
+                            marginRight: 4,
+                            fontFamily: "Helvetica-Bold",
+                          }}
+                        >
+                          {"\u2713"}
+                        </Text>
+                        <Text style={{ fontSize: 8, color: B.textLight }}>
+                          {svc}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Activities */}
+              {data.ship.activities.length > 0 && (
+                <View wrap={false} style={{ marginBottom: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "Helvetica-Bold",
+                      color: B.navy,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Attivita a bordo
+                  </Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                    {data.ship.activities.map((act, idx) => (
+                      <View
+                        key={idx}
+                        style={{
+                          width: "50%",
+                          flexDirection: "row",
+                          marginBottom: 3,
+                          paddingRight: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 8,
+                            color: B.red,
+                            marginRight: 4,
+                          }}
+                        >
+                          {"\u2022"}
+                        </Text>
+                        <Text style={{ fontSize: 8, color: B.textLight }}>
+                          {act}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Cabin details */}
+              {data.shipCabinDetails.length > 0 && (
+                <View style={{ marginTop: 6 }}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "Helvetica-Bold",
+                      color: B.navy,
+                      marginBottom: 6,
+                    }}
+                  >
+                    Tipologie di Cabina
+                  </Text>
+                  {data.shipCabinDetails.map((cabin, idx) => (
+                    <View
+                      key={idx}
+                      wrap={false}
+                      style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        marginBottom: 8,
+                        borderBottomWidth: 0.5,
+                        borderBottomColor: B.border,
+                        paddingBottom: 8,
+                      }}
+                    >
+                      {cabinImagesBase64[cabin.titolo] && (
+                        <Image
+                          src={cabinImagesBase64[cabin.titolo]}
+                          style={{
+                            width: 100,
+                            height: 70,
+                            objectFit: "cover",
+                            borderRadius: 3,
+                          }}
+                        />
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontSize: 9,
+                            fontFamily: "Helvetica-Bold",
+                            color: B.navy,
+                            marginBottom: 2,
+                          }}
+                        >
+                          {cabin.titolo}
+                        </Text>
+                        {cabin.tipologia && (
+                          <Text
+                            style={{
+                              fontSize: 7.5,
+                              color: B.gray,
+                              marginBottom: 2,
+                            }}
+                          >
+                            {cabin.tipologia}
+                          </Text>
+                        )}
+                        {cabin.descrizione && (
+                          <Text
+                            style={{
+                              fontSize: 8,
+                              color: B.textLight,
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {stripHtml(cabin.descrizione)}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
             </>
           )}
         </Page>
       )}
 
       {/* ================================================================= */}
-      {/* PAGE: DATES, PRICES, SUPPLEMENTS */}
+      {/* PAGE: DATES, PRICES, SUPPLEMENTS, OFFER                           */}
       {/* ================================================================= */}
       <Page size="A4" style={s.page} wrap>
         <PageHeader logoUrl={logoUrl} />
         <PageFooterBlock quoteId={data.quoteId} />
 
-        {/* Departures table */}
-        {data.departures.length > 0 && (
+        {/* Selected departure highlight */}
+        {selectedDep && (
           <>
-            <SectionHeader title="Date di Partenza e Prezzi" />
-            <View style={s.table}>
+            <SectionHeader title="La Tua Partenza" />
+            <View
+              wrap={false}
+              style={{
+                backgroundColor: B.lightGray,
+                borderRadius: 4,
+                borderLeftWidth: 3,
+                borderLeftColor: B.red,
+                padding: 12,
+                marginBottom: 10,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginBottom: 6,
+                }}
+              >
+                <View>
+                  <Text
+                    style={{ fontSize: 7.5, color: B.gray, marginBottom: 2 }}
+                  >
+                    Data di partenza
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontFamily: "Helvetica-Bold",
+                      color: B.navy,
+                    }}
+                  >
+                    {formatDate(selectedDep.data_partenza)}
+                  </Text>
+                </View>
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text
+                    style={{ fontSize: 7.5, color: B.gray, marginBottom: 2 }}
+                  >
+                    Partenza da
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontFamily: "Helvetica-Bold",
+                      color: B.navy,
+                    }}
+                  >
+                    {selectedDep.from_city}
+                  </Text>
+                </View>
+              </View>
+              {selectedDep.prices.length > 0 && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 16,
+                    borderTopWidth: 0.5,
+                    borderTopColor: B.border,
+                    paddingTop: 6,
+                  }}
+                >
+                  {selectedDep.prices.map((p) => (
+                    <View key={p.label}>
+                      <Text style={{ fontSize: 7, color: B.gray }}>
+                        {p.label}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          fontFamily: "Helvetica-Bold",
+                          color: B.red,
+                        }}
+                      >
+                        {formatPrice(p.value)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          </>
+        )}
+
+        {/* Other departures table */}
+        {otherDeps.length > 0 && (
+          <>
+            <SectionHeader
+              title={
+                selectedDep ? "Altre Date Disponibili" : "Date di Partenza e Prezzi"
+              }
+            />
+            <View style={{ marginBottom: 8 }}>
               <View style={s.tableHeaderRow}>
-                <Text style={[s.tableHeaderCell, { flex: 2 }]}>
-                  Partenza
-                </Text>
+                <Text style={[s.tableHeaderCell, { flex: 2 }]}>Partenza</Text>
                 <Text style={[s.tableHeaderCell, { flex: 2 }]}>Data</Text>
                 {priceLabels.map((label) => (
                   <Text
                     key={label}
-                    style={[s.tableHeaderCell, { flex: 2, textAlign: "right" }]}
+                    style={[
+                      s.tableHeaderCell,
+                      { flex: 2, textAlign: "right" },
+                    ]}
                   >
                     {label}
                   </Text>
                 ))}
               </View>
-              {data.departures.map((dep, idx) => (
+              {otherDeps.map((dep, idx) => (
                 <View
                   key={idx}
                   style={[s.tableRow, idx % 2 === 1 ? s.tableRowAlt : {}]}
@@ -708,7 +1013,7 @@ export default function QuotePdfDocument({
         {data.supplements.length > 0 && (
           <>
             <SectionHeader title="Supplementi" />
-            <View style={s.table}>
+            <View style={{ marginBottom: 8 }}>
               <View style={s.tableHeaderRow}>
                 <Text style={[s.tableHeaderCell, { flex: 4 }]}>
                   Supplemento
@@ -746,11 +1051,11 @@ export default function QuotePdfDocument({
           </>
         )}
 
-        {/* Optional excursions (tour only) */}
+        {/* Optional excursions */}
         {data.excursions.length > 0 && (
           <>
             <SectionHeader title="Escursioni Opzionali" />
-            <View style={s.table}>
+            <View style={{ marginBottom: 8 }}>
               <View style={s.tableHeaderRow}>
                 <Text style={[s.tableHeaderCell, { flex: 4 }]}>
                   Escursione
@@ -788,93 +1093,260 @@ export default function QuotePdfDocument({
           </>
         )}
 
-        {/* Offer highlight */}
+        {/* Offer — elegant card design */}
         {data.offer && (
-          <View style={s.offerBox} wrap={false}>
-            <Text
-              style={{
-                fontSize: 8,
-                fontFamily: "Helvetica-Bold",
-                color: BRAND.navy,
-                marginBottom: 6,
-              }}
-            >
-              OFFERTA PER {data.agency.business_name.toUpperCase()}
-            </Text>
-            {data.offer.total_price != null && (
-              <Text style={s.offerPrice}>
-                {formatPrice(data.offer.total_price)}
+          <View wrap={false} style={{ marginTop: 12, marginBottom: 10 }}>
+            <View style={s.offerHeader}>
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontFamily: "Helvetica-Bold",
+                  color: B.white,
+                  textAlign: "center",
+                }}
+              >
+                OFFERTA PER {data.agency.business_name.toUpperCase()}
               </Text>
-            )}
-            {data.offer.offer_expiry && (
-              <>
-                <Text style={s.offerLabel}>Validita offerta</Text>
-                <Text style={s.offerValue}>
-                  Fino al {formatDate(data.offer.offer_expiry)}
+            </View>
+
+            {/* Price highlight */}
+            {data.offer.total_price != null && (
+              <View
+                style={{
+                  backgroundColor: B.lightGray,
+                  padding: 14,
+                  alignItems: "center",
+                  borderLeftWidth: 1,
+                  borderRightWidth: 1,
+                  borderColor: B.border,
+                }}
+              >
+                <Text
+                  style={{ fontSize: 8, color: B.gray, marginBottom: 2 }}
+                >
+                  Prezzo totale
                 </Text>
-              </>
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontFamily: "Helvetica-Bold",
+                    color: B.red,
+                  }}
+                >
+                  {formatPrice(data.offer.total_price)}
+                </Text>
+              </View>
             )}
-            {data.offer.conditions && (
-              <>
-                <Text style={s.offerLabel}>Condizioni</Text>
-                <Text style={s.offerValue}>{data.offer.conditions}</Text>
-              </>
-            )}
-            {data.offer.payment_terms && (
-              <>
-                <Text style={s.offerLabel}>Termini di pagamento</Text>
-                <Text style={s.offerValue}>{data.offer.payment_terms}</Text>
-              </>
-            )}
-            {data.offer.notes && (
-              <>
-                <Text style={s.offerLabel}>Note</Text>
-                <Text style={s.offerValue}>{data.offer.notes}</Text>
-              </>
-            )}
+
+            {/* Details */}
+            <View style={s.offerBody}>
+              {data.offer.offer_expiry && (
+                <View style={s.offerDetailRow}>
+                  <Text style={s.offerDetailLabel}>Validita offerta</Text>
+                  <Text style={s.offerDetailValue}>
+                    Fino al {formatDate(data.offer.offer_expiry)}
+                  </Text>
+                </View>
+              )}
+              {data.offer.payment_terms && (
+                <View style={s.offerDetailRow}>
+                  <Text style={s.offerDetailLabel}>Pagamento</Text>
+                  <Text style={s.offerDetailValue}>
+                    {data.offer.payment_terms}
+                  </Text>
+                </View>
+              )}
+              {data.offer.conditions && (
+                <View style={s.offerDetailRow}>
+                  <Text style={s.offerDetailLabel}>Condizioni</Text>
+                  <Text style={s.offerDetailValue}>
+                    {data.offer.conditions}
+                  </Text>
+                </View>
+              )}
+              {data.offer.notes && (
+                <View
+                  style={{
+                    backgroundColor: B.lightGray,
+                    borderRadius: 3,
+                    padding: 8,
+                    marginTop: 4,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 7.5,
+                      fontFamily: "Helvetica-Bold",
+                      color: B.navy,
+                      marginBottom: 2,
+                    }}
+                  >
+                    Note
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      color: B.textLight,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {data.offer.notes}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
       </Page>
 
       {/* ================================================================= */}
-      {/* PAGE: INCLUSIONS + CONDITIONS */}
+      {/* PAGE: INCLUSIONS + CONDITIONS                                     */}
       {/* ================================================================= */}
       <Page size="A4" style={s.page} wrap>
         <PageHeader logoUrl={logoUrl} />
         <PageFooterBlock quoteId={data.quoteId} />
 
-        {/* Included */}
+        {/* Included — green box */}
         {included.length > 0 && (
-          <>
-            <SectionHeader title="La Quota Include" />
+          <View
+            style={[
+              s.infoBox,
+              {
+                backgroundColor: B.greenBg,
+                borderLeftColor: B.green,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: "Helvetica-Bold",
+                color: B.greenDark,
+                marginBottom: 6,
+              }}
+            >
+              La Quota Include
+            </Text>
             {included.map((item, idx) => (
-              <View key={idx} style={s.inclusionRow}>
-                <Text style={s.checkMark}>{"\u2713"}</Text>
-                <Text style={s.inclusionText}>{item.titolo}</Text>
+              <View
+                key={idx}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  marginBottom: 3,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 9,
+                    color: B.green,
+                    fontFamily: "Helvetica-Bold",
+                    width: 14,
+                  }}
+                >
+                  {"\u2713"}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 8.5,
+                    flex: 1,
+                    lineHeight: 1.4,
+                    color: B.text,
+                  }}
+                >
+                  {item.titolo}
+                </Text>
               </View>
             ))}
-          </>
+          </View>
         )}
 
-        {/* Excluded */}
+        {/* Excluded — red box */}
         {excluded.length > 0 && (
-          <>
-            <SectionHeader title="La Quota Non Include" />
+          <View
+            style={[
+              s.infoBox,
+              {
+                backgroundColor: B.redBg,
+                borderLeftColor: B.red,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: "Helvetica-Bold",
+                color: B.redDark,
+                marginBottom: 6,
+              }}
+            >
+              La Quota Non Include
+            </Text>
             {excluded.map((item, idx) => (
-              <View key={idx} style={s.inclusionRow}>
-                <Text style={s.crossMark}>{"\u2717"}</Text>
-                <Text style={s.inclusionText}>{item.titolo}</Text>
+              <View
+                key={idx}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  marginBottom: 3,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 9,
+                    color: B.red,
+                    fontFamily: "Helvetica-Bold",
+                    width: 14,
+                  }}
+                >
+                  {"\u2717"}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 8.5,
+                    flex: 1,
+                    lineHeight: 1.4,
+                    color: B.text,
+                  }}
+                >
+                  {item.titolo}
+                </Text>
               </View>
             ))}
-          </>
+          </View>
         )}
 
-        {/* Important notes */}
+        {/* Important notes — amber box */}
         {data.noteImportanti && (
-          <>
-            <SectionHeader title="Note Importanti" />
-            <Text style={s.conditionItem}>{stripHtml(data.noteImportanti)}</Text>
-          </>
+          <View
+            style={[
+              s.infoBox,
+              {
+                backgroundColor: B.amberBg,
+                borderLeftColor: B.amberBorder,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: "Helvetica-Bold",
+                color: B.amberDark,
+                marginBottom: 4,
+              }}
+            >
+              Note Importanti
+            </Text>
+            <Text
+              style={{
+                fontSize: 8.5,
+                lineHeight: 1.5,
+                color: B.text,
+              }}
+            >
+              {stripHtml(data.noteImportanti)}
+            </Text>
+          </View>
         )}
 
         {/* Terms */}
@@ -882,7 +1354,15 @@ export default function QuotePdfDocument({
           <>
             <SectionHeader title="Condizioni Generali" />
             {data.terms.map((t, idx) => (
-              <Text key={idx} style={s.conditionItem}>
+              <Text
+                key={idx}
+                style={{
+                  fontSize: 8,
+                  lineHeight: 1.5,
+                  marginBottom: 3,
+                  color: B.textLight,
+                }}
+              >
                 {"\u2022"} {t}
               </Text>
             ))}
@@ -894,7 +1374,15 @@ export default function QuotePdfDocument({
           <>
             <SectionHeader title="Penali di Cancellazione" />
             {data.penalties.map((p, idx) => (
-              <Text key={idx} style={s.conditionItem}>
+              <Text
+                key={idx}
+                style={{
+                  fontSize: 8,
+                  lineHeight: 1.5,
+                  marginBottom: 3,
+                  color: B.textLight,
+                }}
+              >
                 {"\u2022"} {p}
               </Text>
             ))}
@@ -905,23 +1393,60 @@ export default function QuotePdfDocument({
         {data.notes && (
           <>
             <SectionHeader title="Note dell'Agenzia" />
-            <Text style={s.conditionItem}>{data.notes}</Text>
+            <Text
+              style={{
+                fontSize: 8.5,
+                lineHeight: 1.5,
+                color: B.textLight,
+              }}
+            >
+              {data.notes}
+            </Text>
           </>
         )}
 
         {/* Final branding block */}
         <View style={s.finalBox} wrap={false}>
-          <Image src={logoUrl} style={s.finalLogo} />
-          <Text style={s.finalBold}>MishaTravel S.r.l.</Text>
-          <Text style={s.finalText}>
-            Tour operator specializzato in Russia e paesi ex-URSS
+          <Image src={logoUrl} style={{ width: 140, marginBottom: 12 }} />
+          <Text
+            style={{
+              fontSize: 9,
+              fontFamily: "Helvetica-Bold",
+              color: B.white,
+              textAlign: "center",
+              marginBottom: 3,
+            }}
+          >
+            MishaTravel S.r.l.
           </Text>
-          <Text style={s.finalText}>
+          <Text
+            style={{
+              fontSize: 8,
+              color: B.white,
+              textAlign: "center",
+              marginBottom: 3,
+            }}
+          >
+            Il tuo tour operator di fiducia
+          </Text>
+          <Text
+            style={{
+              fontSize: 8,
+              color: B.white,
+              textAlign: "center",
+            }}
+          >
             www.mishatravel.com | info@mishatravel.com
           </Text>
           {data.offer?.offer_expiry && (
             <Text
-              style={[s.finalBold, { marginTop: 8, fontSize: 8 }]}
+              style={{
+                fontSize: 8,
+                fontFamily: "Helvetica-Bold",
+                color: B.white,
+                textAlign: "center",
+                marginTop: 10,
+              }}
             >
               Questo preventivo e valido fino al{" "}
               {formatDate(data.offer.offer_expiry)}
@@ -930,5 +1455,32 @@ export default function QuotePdfDocument({
         </View>
       </Page>
     </Document>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Small helper components
+// ---------------------------------------------------------------------------
+
+function CoverInfoItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <View style={{ marginBottom: 6 }}>
+      <Text style={{ fontSize: 7.5, color: B.gray }}>{label}</Text>
+      <Text
+        style={{
+          fontSize: 9,
+          fontFamily: "Helvetica-Bold",
+          color: B.navy,
+        }}
+      >
+        {value}
+      </Text>
+    </View>
   );
 }
