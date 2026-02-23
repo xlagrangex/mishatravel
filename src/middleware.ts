@@ -133,6 +133,17 @@ export async function middleware(request: NextRequest) {
       // If sectionSlug is not in SECTION_MAP (e.g. /admin or /admin/unknown),
       // allow access -- dashboard is available to all admin roles
     }
+
+    // Settings page: super_admin only
+    if (userRole !== 'super_admin') {
+      const segments = pathname.split('/').filter(Boolean)
+      if (segments[1] === 'impostazioni') {
+        const adminUrl = request.nextUrl.clone()
+        adminUrl.pathname = '/admin'
+        adminUrl.searchParams.set('error', 'no_permission')
+        return NextResponse.redirect(adminUrl)
+      }
+    }
   }
 
   // --- /agenzia/* route checks ---

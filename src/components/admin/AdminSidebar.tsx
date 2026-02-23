@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -48,6 +49,8 @@ const navItems = [
   { label: "Preventivi", href: "/admin/preventivi", icon: FileText, pathSegment: "preventivi" },
   { label: "Estratti Conto", href: "/admin/estratti-conto", icon: FileSpreadsheet, pathSegment: "estratti-conto" },
   { label: "Utenti", href: "/admin/utenti", icon: UserCog, pathSegment: "utenti" },
+  { type: "separator" as const, label: "Sistema" },
+  { label: "Impostazioni", href: "/admin/impostazioni", icon: Settings, pathSegment: "impostazioni" },
 ];
 
 interface AdminSidebarProps {
@@ -57,13 +60,15 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { canAccess } = useUserPermissions();
+  const { canAccess, role } = useUserPermissions();
 
   // Filter nav items based on permissions
   const visibleItems = navItems.filter((item) => {
     // Separators are always included initially; we'll prune empty sections below
     if ("type" in item && item.type === "separator") return true;
     const navItem = item as { pathSegment: string };
+    // Settings: only visible to super_admin
+    if (navItem.pathSegment === "impostazioni") return role === "super_admin";
     return canAccess(navItem.pathSegment);
   });
 

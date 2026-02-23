@@ -2,7 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUser } from '@/lib/supabase/auth'
-import { sendTransactionalEmail } from '@/lib/email/brevo'
+import { sendAdminNotification } from '@/lib/email/brevo'
 import { adminDocumentUploadedEmail } from '@/lib/email/templates'
 import { revalidatePath } from 'next/cache'
 
@@ -53,15 +53,11 @@ export async function saveAgencyDocument(
       )
     }
 
-    // Email notification
-    const adminEmail = process.env.BREVO_ADMIN_EMAIL
-    if (adminEmail) {
-      await sendTransactionalEmail(
-        { email: adminEmail, name: 'Admin MishaTravel' },
-        `Visura camerale caricata: ${agency.business_name}`,
-        adminDocumentUploadedEmail(agency.business_name, agencyId)
-      )
-    }
+    // Email notification (reads admin emails from site_settings)
+    await sendAdminNotification(
+      `Visura camerale caricata: ${agency.business_name}`,
+      adminDocumentUploadedEmail(agency.business_name, agencyId)
+    )
   } catch (e) {
     console.error('Error notifying admin about document upload:', e)
   }

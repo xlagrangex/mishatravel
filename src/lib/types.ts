@@ -409,6 +409,24 @@ export interface AgencyDocument {
   notes: string | null;
 }
 
+// -----------------------------------------------------------------------------
+// Site Settings
+// -----------------------------------------------------------------------------
+
+export interface SiteSetting {
+  key: string;
+  value: string;
+  updated_at: string;
+}
+
+export type SiteSettingKey =
+  | 'admin_notification_emails'
+  | 'sender_email'
+  | 'sender_name'
+  | 'company_phone'
+  | 'company_address'
+  | 'company_website';
+
 export type AccountStatementStato = 'Bozza' | 'Inviato via Mail';
 
 export interface AccountStatement {

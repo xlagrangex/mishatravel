@@ -4,22 +4,51 @@
  * Uses the Brevo HTTP API v3 directly with fetch (no SDK required).
  * All email sending is non-blocking: errors are logged but never thrown
  * so that the calling server action is not interrupted.
+ *
+ * Email settings (sender, admin email) are read from the `site_settings`
+ * DB table at runtime, with environment variables as fallback.
  */
 
-const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+import { getSettingsMap } from '@/lib/supabase/queries/settings'
 
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 const BREVO_API_KEY = process.env.BREVO_API_KEY ?? "";
-const SENDER_EMAIL =
+
+// Environment variable fallbacks (used when DB has no value)
+const ENV_SENDER_EMAIL =
   process.env.BREVO_SENDER_EMAIL ?? "noreply@mishatravel.com";
-const SENDER_NAME = process.env.BREVO_SENDER_NAME ?? "MishaTravel";
-const ADMIN_EMAIL =
+const ENV_SENDER_NAME = process.env.BREVO_SENDER_NAME ?? "MishaTravel";
+const ENV_ADMIN_EMAIL =
   process.env.BREVO_ADMIN_EMAIL ?? "info@mishatravel.com";
+
+// Backward-compatible exports (static fallback values)
+export const ADMIN_EMAIL = ENV_ADMIN_EMAIL;
+export const SENDER_EMAIL = ENV_SENDER_EMAIL;
+
+// ---------------------------------------------------------------------------
+// Dynamic settings loader
+// ---------------------------------------------------------------------------
+
+async function getEmailSettings() {
+  try {
+    const settings = await getSettingsMap();
+    return {
+      senderEmail: settings.sender_email || ENV_SENDER_EMAIL,
+      senderName: settings.sender_name || ENV_SENDER_NAME,
+      adminEmails: settings.admin_notification_emails || ENV_ADMIN_EMAIL,
+    };
+  } catch {
+    return {
+      senderEmail: ENV_SENDER_EMAIL,
+      senderName: ENV_SENDER_NAME,
+      adminEmails: ENV_ADMIN_EMAIL,
+    };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Public helpers
 // ---------------------------------------------------------------------------
-
-export { ADMIN_EMAIL, SENDER_EMAIL };
 
 export interface EmailRecipient {
   email: string;
@@ -44,6 +73,7 @@ export async function sendTransactionalEmail(
     return false;
   }
 
+  const { senderEmail, senderName } = await getEmailSettings();
   const recipients = Array.isArray(to) ? to : [to];
 
   try {
@@ -55,7 +85,7 @@ export async function sendTransactionalEmail(
         "api-key": BREVO_API_KEY,
       },
       body: JSON.stringify({
-        sender: { name: SENDER_NAME, email: SENDER_EMAIL },
+        sender: { name: senderName, email: senderEmail },
         to: recipients.map((r) => ({
           email: r.email,
           ...(r.name ? { name: r.name } : {}),
@@ -88,15 +118,21 @@ export async function sendTransactionalEmail(
 }
 
 /**
- * Convenience: send an email to the admin address.
+ * Convenience: send an email to the admin address(es).
+ * Reads admin emails from site_settings (supports comma-separated addresses).
  */
 export async function sendAdminNotification(
   subject: string,
   htmlContent: string
 ): Promise<boolean> {
-  return sendTransactionalEmail(
-    { email: ADMIN_EMAIL, name: "MishaTravel Admin" },
-    subject,
-    htmlContent
-  );
+  const { adminEmails } = await getEmailSettings();
+  const emails = adminEmails
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  const recipients = emails.map((email) => ({
+    email,
+    name: "MishaTravel Admin",
+  }));
+  return sendTransactionalEmail(recipients, subject, htmlContent);
 }
