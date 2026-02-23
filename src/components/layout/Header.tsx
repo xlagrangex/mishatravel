@@ -121,7 +121,7 @@ export default function Header({ destinationsByArea }: Props) {
                                   </li>
                                 ) : (
                                   <li key={dest.slug} className="relative group/disabled">
-                                    <span className="flex items-center text-sm text-gray-300 py-0.5 cursor-default italic">
+                                    <span className="flex items-center text-sm text-gray-300 py-0.5 cursor-default">
                                       {dest.name}
                                     </span>
                                     <span className="absolute left-0 -top-6 hidden group-hover/disabled:block bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
@@ -235,7 +235,7 @@ export default function Header({ destinationsByArea }: Props) {
                                   ) : (
                                     <span
                                       key={dest.slug}
-                                      className="text-sm text-gray-300 italic cursor-default"
+                                      className="text-sm text-gray-300 cursor-default"
                                     >
                                       {dest.name}
                                     </span>
