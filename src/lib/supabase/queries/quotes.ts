@@ -6,6 +6,8 @@ import type {
   QuotePayment,
   QuoteTimeline,
   QuoteRequestExtra,
+  QuoteParticipant,
+  QuoteDocument,
 } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
@@ -29,6 +31,8 @@ export type QuoteDetail = QuoteRequest & {
   extras: QuoteRequestExtra[]
   offers: QuoteOffer[]
   payments: QuotePayment[]
+  participants: QuoteParticipant[]
+  documents: QuoteDocument[]
   timeline: QuoteTimeline[]
 }
 
@@ -134,6 +138,8 @@ export async function getQuoteById(id: string): Promise<QuoteDetail | null> {
       extras:quote_request_extras(*),
       offers:quote_offers(*),
       payments:quote_payments(*),
+      participants:quote_participants(*),
+      documents:quote_documents(*),
       timeline:quote_timeline(*)
     `
     )
@@ -244,7 +250,7 @@ export async function acceptOffer(
       return { success: false, error: 'Richiesta non trovata.' }
     }
 
-    if (request.status !== 'offer_sent') {
+    if (request.status !== 'offered' && request.status !== 'offer_sent') {
       return { success: false, error: 'Lo stato della richiesta non permette questa azione.' }
     }
 
@@ -298,7 +304,7 @@ export async function declineOffer(
       return { success: false, error: 'Richiesta non trovata.' }
     }
 
-    if (request.status !== 'offer_sent') {
+    if (request.status !== 'offered' && request.status !== 'offer_sent') {
       return { success: false, error: 'Lo stato della richiesta non permette questa azione.' }
     }
 
