@@ -178,12 +178,12 @@ export async function acceptOfferWithParticipants(
           await sendTransactionalEmail(
             { email: ctx.agencyEmail, name: ctx.agencyName },
             "Offerta accettata - MishaTravel",
-            offerAcceptedConfirmationEmail(ctx.agencyName, ctx.productName)
+            offerAcceptedConfirmationEmail(ctx.agencyName, ctx.productName, participantCount)
           );
         }
         await sendAdminNotification(
           `Offerta accettata da ${ctx.agencyName}`,
-          adminOfferAcceptedEmail(ctx.agencyName, ctx.productName, requestId)
+          adminOfferAcceptedEmail(ctx.agencyName, ctx.productName, requestId, participantCount)
         );
       }
     } catch (emailErr) {

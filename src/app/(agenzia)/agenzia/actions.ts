@@ -199,7 +199,7 @@ export async function createQuoteRequest(
         await sendTransactionalEmail(
           { email: agEmail, name: agName },
           "Richiesta preventivo inviata - MishaTravel",
-          quoteRequestSubmittedEmail(agName, productName, validated.request_type, quoteId)
+          quoteRequestSubmittedEmail(agName, productName, validated.request_type, quoteId, validated.preview_price_label)
         );
       }
 
@@ -212,7 +212,8 @@ export async function createQuoteRequest(
           validated.request_type,
           quoteId,
           validated.participants_adults,
-          validated.participants_children
+          validated.participants_children,
+          validated.preview_price_label
         )
       );
     } catch (emailErr) {

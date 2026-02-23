@@ -224,9 +224,16 @@ export function quoteRequestSubmittedEmail(
   agencyName: string,
   productName: string,
   requestType: string,
-  quoteId: string
+  quoteId: string,
+  previewPriceLabel?: string | null
 ): string {
   const typeLabel = requestType === "tour" ? "tour" : "crociera";
+  const priceBlock = previewPriceLabel
+    ? `<tr>
+        <td style="padding:8px 16px;font-size:13px;color:#64748b;">Prezzo indicativo</td>
+        <td style="padding:8px 16px;font-size:14px;color:#333333;font-weight:600;">${previewPriceLabel}</td>
+      </tr>`
+    : "";
   return baseTemplate(`
     <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Richiesta preventivo inviata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
@@ -235,13 +242,12 @@ export function quoteRequestSubmittedEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       La tua richiesta di preventivo per il ${typeLabel} <strong>&ldquo;${productName}&rdquo;</strong> &egrave; stata ricevuta con successo.
     </p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;width:100%;border:1px solid #e2e8f0;border-radius:6px;">
       <tr>
-        <td style="background-color:#f1f5f9;border-radius:6px;padding:16px;">
-          <p style="margin:0;font-size:13px;color:#64748b;">Numero richiesta</p>
-          <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#333333;">${quoteId.slice(0, 8).toUpperCase()}</p>
-        </td>
+        <td style="padding:8px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;width:140px;">Numero richiesta</td>
+        <td style="padding:8px 16px;border-bottom:1px solid #e2e8f0;font-size:16px;font-weight:600;color:#333333;">${quoteId.slice(0, 8).toUpperCase()}</td>
       </tr>
+      ${priceBlock}
     </table>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Il nostro team esaminer&agrave; la tua richiesta e ti invieremo un&rsquo;offerta il prima possibile.
@@ -293,8 +299,14 @@ export function newOfferReceivedEmail(
  */
 export function offerAcceptedConfirmationEmail(
   agencyName: string,
-  productName: string
+  productName: string,
+  participantCount?: number
 ): string {
+  const participantNote = participantCount && participantCount > 0
+    ? `<p style="color:#334155;font-size:15px;line-height:1.7;">
+        I dati dei <strong>${participantCount} partecipanti</strong> sono stati registrati correttamente.
+      </p>`
+    : "";
   return baseTemplate(`
     <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Offerta accettata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
@@ -303,8 +315,9 @@ export function offerAcceptedConfirmationEmail(
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       La tua accettazione dell&rsquo;offerta per <strong>&ldquo;${productName}&rdquo;</strong> &egrave; stata registrata con successo.
     </p>
+    ${participantNote}
     <p style="color:#334155;font-size:15px;line-height:1.7;">
-      A breve riceverai gli estremi per effettuare il pagamento. Controlla la tua area riservata per aggiornamenti.
+      A breve riceverai il contratto e le coordinate bancarie per effettuare il pagamento. Controlla la tua area riservata per aggiornamenti.
     </p>
     ${ctaButton("Vedi le tue richieste", `${SITE_URL}/agenzia/richieste`)}
   `);
@@ -458,9 +471,16 @@ export function adminNewQuoteRequestEmail(
   requestType: string,
   quoteId: string,
   adults: number,
-  children: number
+  children: number,
+  previewPriceLabel?: string | null
 ): string {
   const typeLabel = requestType === "tour" ? "Tour" : "Crociera";
+  const priceRow = previewPriceLabel
+    ? `<tr>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Prezzo visto</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;font-weight:600;">${previewPriceLabel}</td>
+      </tr>`
+    : "";
   return baseTemplate(`
     <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova richiesta preventivo</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
@@ -479,6 +499,7 @@ export function adminNewQuoteRequestEmail(
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Partecipanti</td>
         <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#333333;">${adults} adulti, ${children} bambini</td>
       </tr>
+      ${priceRow}
       <tr>
         <td style="padding:12px 16px;font-size:13px;color:#64748b;">ID Richiesta</td>
         <td style="padding:12px 16px;font-size:14px;color:#333333;font-family:monospace;">${quoteId.slice(0, 8).toUpperCase()}</td>
@@ -494,15 +515,22 @@ export function adminNewQuoteRequestEmail(
 export function adminOfferAcceptedEmail(
   agencyName: string,
   productName: string,
-  quoteId: string
+  quoteId: string,
+  participantCount?: number
 ): string {
+  const participantNote = participantCount && participantCount > 0
+    ? `<p style="color:#334155;font-size:15px;line-height:1.7;">
+        Sono stati registrati <strong>${participantCount} partecipanti</strong> con i relativi documenti.
+      </p>`
+    : "";
   return baseTemplate(`
     <h2 style="margin:0 0 16px;color:#16a34a;font-size:22px;">Offerta accettata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       L&rsquo;agenzia <strong>${agencyName}</strong> ha accettato l&rsquo;offerta per <strong>&ldquo;${productName}&rdquo;</strong>.
     </p>
+    ${participantNote}
     <p style="color:#334155;font-size:15px;line-height:1.7;">
-      Procedi con l&rsquo;invio degli estremi di pagamento.
+      Procedi con l&rsquo;invio del contratto e dell&rsquo;IBAN.
     </p>
     ${ctaButton("Gestisci il preventivo", `${SITE_URL}/admin/preventivi/${quoteId}`)}
   `);
