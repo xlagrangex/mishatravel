@@ -781,7 +781,101 @@ export async function sendReminder(formData: unknown): Promise<ActionResult> {
 }
 
 // ---------------------------------------------------------------------------
-// 9. Revoke Offer
+// 9. Bulk Actions
+// ---------------------------------------------------------------------------
+
+const VALID_STATUSES = [
+  'sent',
+  'in_review',
+  'offer_sent',
+  'accepted',
+  'declined',
+  'payment_sent',
+  'confirmed',
+  'rejected',
+  'archived',
+]
+
+export async function bulkUpdateStatus(
+  requestIds: string[],
+  newStatus: string
+): Promise<ActionResult> {
+  if (!requestIds.length) {
+    return { success: false, error: 'Nessun preventivo selezionato' }
+  }
+  if (!VALID_STATUSES.includes(newStatus)) {
+    return { success: false, error: `Stato non valido: ${newStatus}` }
+  }
+
+  const supabase = createAdminClient()
+
+  try {
+    const { error } = await supabase
+      .from('quote_requests')
+      .update({ status: newStatus })
+      .in('id', requestIds)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    // Add timeline entry for each request (batch insert)
+    const timelineRows = requestIds.map((id) => ({
+      request_id: id,
+      action: `Stato aggiornato in massa a "${newStatus}"`,
+      details: `${requestIds.length} preventivi aggiornati`,
+      actor: 'admin' as const,
+    }))
+
+    await supabase.from('quote_timeline').insert(timelineRows)
+
+    revalidatePath('/admin/preventivi')
+    return { success: true }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+export async function bulkArchive(
+  requestIds: string[]
+): Promise<ActionResult> {
+  return bulkUpdateStatus(requestIds, 'archived')
+}
+
+export async function bulkDelete(
+  requestIds: string[]
+): Promise<ActionResult> {
+  if (!requestIds.length) {
+    return { success: false, error: 'Nessun preventivo selezionato' }
+  }
+
+  const supabase = createAdminClient()
+
+  try {
+    const { error } = await supabase
+      .from('quote_requests')
+      .delete()
+      .in('id', requestIds)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    revalidatePath('/admin/preventivi')
+    return { success: true }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 10. Revoke Offer
 // ---------------------------------------------------------------------------
 
 export async function revokeOffer(requestId: string): Promise<ActionResult> {

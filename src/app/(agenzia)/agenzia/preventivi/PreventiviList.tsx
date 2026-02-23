@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { Eye, FileText } from "lucide-react";
+import { Eye, FileText, Search, Archive, X, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -14,6 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { agencyBulkArchive } from "./actions";
 import type { QuoteListItem } from "@/lib/supabase/queries/quotes";
 
 // ---------------------------------------------------------------------------
@@ -61,6 +65,10 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
     label: "Respinta",
     className: "bg-red-100 text-red-800 border-red-200",
   },
+  archived: {
+    label: "Archiviato",
+    className: "bg-gray-100 text-gray-500 border-gray-300",
+  },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -76,10 +84,16 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// Terminal statuses (can be archived by agency)
+// ---------------------------------------------------------------------------
+
+const TERMINAL_STATUSES = ["confirmed", "declined", "rejected"];
+
+// ---------------------------------------------------------------------------
 // Tab definitions
 // ---------------------------------------------------------------------------
 
-type TabKey = "all" | "pending" | "offer" | "accepted" | "declined";
+type TabKey = "all" | "pending" | "offer" | "accepted" | "declined" | "archived";
 
 const TABS: { key: TabKey; label: string; statuses: string[] | null }[] = [
   { key: "all", label: "Tutti", statuses: null },
@@ -103,6 +117,11 @@ const TABS: { key: TabKey; label: string; statuses: string[] | null }[] = [
     label: "Rifiutati",
     statuses: ["declined", "rejected"],
   },
+  {
+    key: "archived",
+    label: "Archiviati",
+    statuses: ["archived"],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -111,19 +130,91 @@ const TABS: { key: TabKey; label: string; statuses: string[] | null }[] = [
 
 export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
 
-  const filtered =
-    activeTab === "all"
-      ? quotes
-      : quotes.filter((q) => {
-          const tab = TABS.find((t) => t.key === activeTab);
-          return tab?.statuses?.includes(q.status);
-        });
+  const filtered = useMemo(() => {
+    let result = quotes;
+
+    // Tab filter — "all" excludes archived
+    if (activeTab === "all") {
+      result = result.filter((q) => q.status !== "archived");
+    } else {
+      const tab = TABS.find((t) => t.key === activeTab);
+      if (tab?.statuses) {
+        result = result.filter((q) => tab.statuses!.includes(q.status));
+      }
+    }
+
+    // Text search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (r) =>
+          (r.tour_title ?? "").toLowerCase().includes(q) ||
+          (r.cruise_title ?? "").toLowerCase().includes(q) ||
+          r.id.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [quotes, activeTab, searchQuery]);
 
   const getCount = (key: TabKey) => {
-    if (key === "all") return quotes.length;
+    if (key === "all") return quotes.filter((q) => q.status !== "archived").length;
     const tab = TABS.find((t) => t.key === key);
     return quotes.filter((q) => tab?.statuses?.includes(q.status)).length;
+  };
+
+  // Selection helpers
+  const filteredIds = useMemo(() => new Set(filtered.map((q) => q.id)), [filtered]);
+
+  const visibleSelectedIds = useMemo(
+    () => new Set([...selectedIds].filter((id) => filteredIds.has(id))),
+    [selectedIds, filteredIds]
+  );
+
+  const allVisibleSelected =
+    filtered.length > 0 && visibleSelectedIds.size === filtered.length;
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((q) => q.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  // Only allow archiving quotes with terminal statuses
+  const canArchiveSelection = useMemo(() => {
+    if (visibleSelectedIds.size === 0) return false;
+    return [...visibleSelectedIds].every((id) => {
+      const q = quotes.find((quote) => quote.id === id);
+      return q && TERMINAL_STATUSES.includes(q.status);
+    });
+  }, [visibleSelectedIds, quotes]);
+
+  const handleBulkArchive = () => {
+    if (visibleSelectedIds.size === 0) return;
+    startTransition(async () => {
+      await agencyBulkArchive([...visibleSelectedIds]);
+      clearSelection();
+    });
   };
 
   return (
@@ -131,8 +222,20 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <FileText className="h-5 w-5" />
-          Preventivi ({quotes.length})
+          Preventivi ({quotes.filter((q) => q.status !== "archived").length})
         </CardTitle>
+
+        {/* Search bar */}
+        <div className="relative max-w-sm pt-2">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 translate-y-[-25%] text-muted-foreground" />
+          <Input
+            placeholder="Cerca tour, crociera..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
         {/* Tab filters */}
         <div className="flex flex-wrap gap-2 pt-2">
           {TABS.map((tab) => {
@@ -141,7 +244,10 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
             return (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => {
+                  setActiveTab(tab.key);
+                  clearSelection();
+                }}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-primary text-white"
@@ -170,7 +276,7 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="mb-4 h-12 w-12 text-muted-foreground/30" />
             <p className="text-muted-foreground">
-              {activeTab === "all"
+              {activeTab === "all" && !searchQuery
                 ? "Non hai ancora inviato richieste di preventivo."
                 : "Nessun preventivo in questa categoria."}
             </p>
@@ -179,6 +285,13 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={allVisibleSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Seleziona tutti"
+                  />
+                </TableHead>
                 <TableHead>N.</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead>Tipo</TableHead>
@@ -190,7 +303,19 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
             </TableHeader>
             <TableBody>
               {filtered.map((q, idx) => (
-                <TableRow key={q.id}>
+                <TableRow
+                  key={q.id}
+                  className={cn(
+                    visibleSelectedIds.has(q.id) && "bg-muted/50"
+                  )}
+                >
+                  <TableCell>
+                    <Checkbox
+                      checked={visibleSelectedIds.has(q.id)}
+                      onCheckedChange={() => toggleSelect(q.id)}
+                      aria-label={`Seleziona ${q.id}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     {filtered.length - idx}
                   </TableCell>
@@ -231,6 +356,41 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
           </Table>
         )}
       </CardContent>
+
+      {/* Bulk Actions Toolbar (floating bar) */}
+      {visibleSelectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border bg-white px-5 py-3 shadow-lg">
+          <span className="text-sm font-medium">
+            {visibleSelectedIds.size} selezionat{visibleSelectedIds.size === 1 ? "o" : "i"}
+          </span>
+
+          <div className="h-5 w-px bg-border" />
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBulkArchive}
+            disabled={isPending || !canArchiveSelection}
+            title={
+              canArchiveSelection
+                ? "Archivia i preventivi selezionati"
+                : "Puoi archiviare solo preventivi completati (confermati, rifiutati, respinti)"
+            }
+          >
+            {isPending ? (
+              <RefreshCw className="mr-1 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Archive className="mr-1 h-3.5 w-3.5" />
+            )}
+            Archivia
+          </Button>
+
+          <Button variant="ghost" size="sm" onClick={clearSelection}>
+            <X className="mr-1 h-3.5 w-3.5" />
+            Deseleziona
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }

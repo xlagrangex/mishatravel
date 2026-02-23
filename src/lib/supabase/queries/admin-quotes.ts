@@ -32,6 +32,7 @@ export type QuoteStats = {
   payment_sent: number
   confirmed: number
   rejected: number
+  archived: number
 }
 
 export type QuoteDetailData = {
@@ -169,6 +170,9 @@ export async function getAllQuotes(
 
   if (filters?.status && filters.status !== 'all') {
     query = query.eq('status', filters.status)
+  } else {
+    // By default, exclude archived quotes
+    query = query.neq('status', 'archived')
   }
   if (filters?.request_type && filters.request_type !== 'all') {
     query = query.eq('request_type', filters.request_type)
@@ -223,7 +227,7 @@ export async function getQuoteStats(): Promise<QuoteStats> {
 
   const rows = data ?? []
   const stats: QuoteStats = {
-    total: rows.length,
+    total: 0,
     sent: 0,
     in_review: 0,
     offer_sent: 0,
@@ -232,6 +236,7 @@ export async function getQuoteStats(): Promise<QuoteStats> {
     payment_sent: 0,
     confirmed: 0,
     rejected: 0,
+    archived: 0,
   }
 
   for (const row of rows) {
@@ -240,6 +245,9 @@ export async function getQuoteStats(): Promise<QuoteStats> {
       stats[s]++
     }
   }
+
+  // total excludes archived
+  stats.total = rows.length - stats.archived
 
   return stats
 }

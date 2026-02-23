@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { acceptOffer, declineOffer } from "@/lib/supabase/queries/quotes";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -224,4 +225,93 @@ export async function declineOfferAction(
   }
 
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// agencyBulkArchive
+// ---------------------------------------------------------------------------
+
+const TERMINAL_STATUSES = ["confirmed", "declined", "rejected"];
+
+export async function agencyBulkArchive(
+  requestIds: string[]
+): Promise<{ success: boolean; error?: string }> {
+  if (!requestIds.length) {
+    return { success: false, error: "Nessun preventivo selezionato." };
+  }
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Non autenticato." };
+    }
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!agency) {
+      return { success: false, error: "Nessuna agenzia associata." };
+    }
+
+    const admin = createAdminClient();
+
+    // Verify all requests belong to this agency and are in terminal status
+    const { data: requests, error: fetchError } = await admin
+      .from("quote_requests")
+      .select("id, agency_id, status")
+      .in("id", requestIds);
+
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+
+    const invalid = (requests ?? []).filter(
+      (r) =>
+        r.agency_id !== agency.id ||
+        !TERMINAL_STATUSES.includes(r.status)
+    );
+
+    if (invalid.length > 0) {
+      return {
+        success: false,
+        error:
+          "Puoi archiviare solo preventivi completati (confermati, rifiutati, respinti) della tua agenzia.",
+      };
+    }
+
+    // Update status
+    const { error: updateError } = await admin
+      .from("quote_requests")
+      .update({ status: "archived" })
+      .in("id", requestIds);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    // Timeline entries
+    const timelineRows = requestIds.map((id) => ({
+      request_id: id,
+      action: "Preventivo archiviato dall'agenzia",
+      details: null,
+      actor: "agency" as const,
+    }));
+
+    await admin.from("quote_timeline").insert(timelineRows);
+
+    revalidatePath("/agenzia/preventivi");
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Errore imprevisto.",
+    };
+  }
 }

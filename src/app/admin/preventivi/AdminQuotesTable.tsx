@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import Link from 'next/link'
 import {
   FileText,
@@ -15,11 +15,16 @@ import {
   ArrowUpDown,
   Ship,
   Map,
+  Archive,
+  Trash2,
+  X,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -35,7 +40,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
+import { bulkUpdateStatus, bulkArchive, bulkDelete } from './actions'
 import type {
   QuoteListItem,
   QuoteStats,
@@ -88,6 +105,11 @@ const STATUS_CONFIG: Record<
     label: 'Rifiutato',
     color: 'border-red-200 bg-red-50 text-red-700',
     icon: XCircle,
+  },
+  archived: {
+    label: 'Archiviato',
+    color: 'border-gray-300 bg-gray-100 text-gray-500',
+    icon: Archive,
   },
 }
 
@@ -146,10 +168,16 @@ function StatCards({ stats }: { stats: QuoteStats }) {
       icon: CheckCircle,
       bg: 'bg-emerald-100 text-emerald-700',
     },
+    {
+      label: 'Archiviati',
+      value: stats.archived,
+      icon: Archive,
+      bg: 'bg-gray-100 text-gray-500',
+    },
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
       {cards.map((stat) => (
         <Card key={stat.label}>
           <CardContent className="flex items-center gap-3 p-4">
@@ -192,8 +220,14 @@ export default function AdminQuotesTable({
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
+  const [agencyFilter, setAgencyFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('created_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [isPending, startTransition] = useTransition()
+  const [bulkStatusValue, setBulkStatusValue] = useState('')
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -219,14 +253,33 @@ export default function AdminQuotesTable({
       )
     }
 
-    // Status filter
+    // Status filter — "all" excludes archived; specific status shows only that
     if (statusFilter !== 'all') {
       result = result.filter((r) => r.status === statusFilter)
+    } else {
+      result = result.filter((r) => r.status !== 'archived')
     }
 
     // Type filter
     if (typeFilter !== 'all') {
       result = result.filter((r) => r.request_type === typeFilter)
+    }
+
+    // Agency filter
+    if (agencyFilter !== 'all') {
+      result = result.filter(
+        (r) => (r.agency_business_name ?? '') === agencyFilter
+      )
+    }
+
+    // Date range filter
+    if (dateFrom) {
+      const from = new Date(dateFrom)
+      result = result.filter((r) => new Date(r.created_at) >= from)
+    }
+    if (dateTo) {
+      const to = new Date(dateTo + 'T23:59:59')
+      result = result.filter((r) => new Date(r.created_at) <= to)
     }
 
     // Sorting
@@ -256,7 +309,65 @@ export default function AdminQuotesTable({
     })
 
     return result
-  }, [quotes, searchQuery, statusFilter, typeFilter, sortKey, sortDir])
+  }, [quotes, searchQuery, statusFilter, typeFilter, agencyFilter, dateFrom, dateTo, sortKey, sortDir])
+
+  // Clean up selectedIds when filters change (remove IDs no longer visible)
+  const filteredIds = useMemo(() => new Set(filtered.map((q) => q.id)), [filtered])
+
+  const visibleSelectedIds = useMemo(
+    () => new Set([...selectedIds].filter((id) => filteredIds.has(id))),
+    [selectedIds, filteredIds]
+  )
+
+  const allVisibleSelected =
+    filtered.length > 0 && visibleSelectedIds.size === filtered.length
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map((q) => q.id)))
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const handleBulkStatusChange = (newStatus: string) => {
+    if (!newStatus || visibleSelectedIds.size === 0) return
+    startTransition(async () => {
+      await bulkUpdateStatus([...visibleSelectedIds], newStatus)
+      clearSelection()
+      setBulkStatusValue('')
+    })
+  }
+
+  const handleBulkArchive = () => {
+    if (visibleSelectedIds.size === 0) return
+    startTransition(async () => {
+      await bulkArchive([...visibleSelectedIds])
+      clearSelection()
+    })
+  }
+
+  const handleBulkDelete = () => {
+    if (visibleSelectedIds.size === 0) return
+    startTransition(async () => {
+      await bulkDelete([...visibleSelectedIds])
+      clearSelection()
+    })
+  }
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('it-IT', {
@@ -343,6 +454,55 @@ export default function AdminQuotesTable({
             <SelectItem value="cruise">Crociera</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select value={agencyFilter} onValueChange={setAgencyFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Agenzia" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte le agenzie</SelectItem>
+            {agencies.map((a) => (
+              <SelectItem key={a.id} value={a.business_name}>
+                {a.business_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Date range filter */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Da:</span>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-[160px]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">A:</span>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-[160px]"
+          />
+        </div>
+        {(dateFrom || dateTo) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setDateFrom('')
+              setDateTo('')
+            }}
+          >
+            <X className="mr-1 h-3 w-3" />
+            Cancella date
+          </Button>
+        )}
       </div>
 
       {/* Table */}
@@ -353,7 +513,7 @@ export default function AdminQuotesTable({
             Nessun preventivo trovato
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
+            {searchQuery || statusFilter !== 'all' || typeFilter !== 'all' || agencyFilter !== 'all' || dateFrom || dateTo
               ? 'Prova a modificare i filtri.'
               : 'Le richieste di preventivo dalle agenzie appariranno qui.'}
           </p>
@@ -363,6 +523,13 @@ export default function AdminQuotesTable({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={allVisibleSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Seleziona tutti"
+                  />
+                </TableHead>
                 <TableHead>
                   <SortButton column="created_at">Data</SortButton>
                 </TableHead>
@@ -382,7 +549,19 @@ export default function AdminQuotesTable({
             </TableHeader>
             <TableBody>
               {filtered.map((quote) => (
-                <TableRow key={quote.id} className="group">
+                <TableRow
+                  key={quote.id}
+                  className={cn('group', visibleSelectedIds.has(quote.id) && 'bg-muted/50')}
+                >
+                  {/* Checkbox */}
+                  <TableCell>
+                    <Checkbox
+                      checked={visibleSelectedIds.has(quote.id)}
+                      onCheckedChange={() => toggleSelect(quote.id)}
+                      aria-label={`Seleziona ${quote.id}`}
+                    />
+                  </TableCell>
+
                   {/* Date */}
                   <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                     {formatDate(quote.created_at)}
@@ -463,6 +642,94 @@ export default function AdminQuotesTable({
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Bulk Actions Toolbar (floating bar) */}
+      {visibleSelectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border bg-white px-5 py-3 shadow-lg">
+          <span className="text-sm font-medium">
+            {visibleSelectedIds.size} selezionat{visibleSelectedIds.size === 1 ? 'o' : 'i'}
+          </span>
+
+          <div className="h-5 w-px bg-border" />
+
+          {/* Bulk status change */}
+          <Select
+            value={bulkStatusValue}
+            onValueChange={handleBulkStatusChange}
+          >
+            <SelectTrigger className="h-8 w-[170px] text-xs">
+              <SelectValue placeholder="Cambia stato..." />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(STATUS_CONFIG)
+                .filter(([key]) => key !== 'archived')
+                .map(([key, cfg]) => (
+                  <SelectItem key={key} value={key}>
+                    {cfg.label}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+
+          {/* Archive */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBulkArchive}
+            disabled={isPending}
+          >
+            {isPending ? (
+              <RefreshCw className="mr-1 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Archive className="mr-1 h-3.5 w-3.5" />
+            )}
+            Archivia
+          </Button>
+
+          {/* Delete with confirmation */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                disabled={isPending}
+              >
+                <Trash2 className="mr-1 h-3.5 w-3.5" />
+                Elimina
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Stai per eliminare definitivamente{' '}
+                  <strong>{visibleSelectedIds.size}</strong> preventiv
+                  {visibleSelectedIds.size === 1 ? 'o' : 'i'}. Questa azione
+                  non puo essere annullata.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleBulkDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Elimina definitivamente
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <div className="h-5 w-px bg-border" />
+
+          {/* Deselect */}
+          <Button variant="ghost" size="sm" onClick={clearSelection}>
+            <X className="mr-1 h-3.5 w-3.5" />
+            Deseleziona
+          </Button>
         </div>
       )}
     </div>
