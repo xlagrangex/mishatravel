@@ -74,6 +74,26 @@ export function getNextDeparture<T extends { data_partenza: string }>(departures
   return future[0] ?? null;
 }
 
+/**
+ * Check whether a departure's active period overlaps a user-selected date range.
+ * Active period = [data_partenza, data_partenza + durataNotti].
+ * Overlap condition: depStart <= filterTo AND depEnd >= filterFrom.
+ */
+export function departureOverlapsRange(
+  dataPartenza: string,
+  durataNotti: number,
+  filterFrom: string,
+  filterTo: string,
+): boolean {
+  const depStart = dataPartenza; // "YYYY-MM-DD"
+  // Calculate end date: departure + durataNotti days
+  const startDate = new Date(dataPartenza + "T00:00:00");
+  startDate.setDate(startDate.getDate() + durataNotti);
+  const depEnd = startDate.toISOString().slice(0, 10);
+
+  return depStart <= filterTo && depEnd >= filterFrom;
+}
+
 // Sort comparators
 export type SortOption = "prezzo-asc" | "prezzo-desc" | "durata" | "prossima-partenza";
 

@@ -15,13 +15,12 @@ import TourResultCard from "@/components/cards/TourResultCard";
 import DepartureTimeline from "@/components/shared/DepartureTimeline";
 import TrustSection from "@/components/shared/TrustSection";
 import {
-  getSeason,
   parseDurationNights,
   durationInRange,
   getNextDeparture,
+  departureOverlapsRange,
+  formatDateIT,
   type SortOption,
-  type Season,
-  SEASON_LABELS,
 } from "@/lib/filters";
 import type { TourListItemEnriched } from "@/lib/supabase/queries/tours";
 
@@ -35,8 +34,7 @@ interface ToursPageClientProps {
 type FilterState = {
   macroAreas: string[];
   destinations: string[];
-  seasons: Season[];
-  exactDate: string | null;
+  dateRange: [string, string];
   durations: string[];
   priceRange: [number, number];
   availabilityOnly: boolean;
@@ -52,8 +50,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
   const [filters, setFilters] = useState<FilterState>({
     macroAreas: [],
     destinations: [],
-    seasons: [],
-    exactDate: null,
+    dateRange: ["", ""],
     durations: [],
     priceRange: [priceBounds.min, priceBounds.max],
     availabilityOnly: false,
@@ -104,19 +101,31 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
       result = result.filter((t) => filters.destinations.includes(t.destination_name ?? ""));
     }
 
-    // Season filter
-    if (filters.seasons.length > 0) {
-      result = result.filter((t) => {
-        const seasons = t.departures.map((d) => getSeason(d.data_partenza));
-        return filters.seasons.some((s) => seasons.includes(s));
-      });
-    }
-
-    // Exact date filter (match departures in same month)
-    if (filters.exactDate) {
-      const targetMonth = filters.exactDate.slice(0, 7); // "YYYY-MM"
+    // Date range filter
+    if (filters.dateRange[0] && filters.dateRange[1]) {
       result = result.filter((t) =>
-        t.departures.some((d) => d.data_partenza.startsWith(targetMonth))
+        t.departures.some((d) =>
+          departureOverlapsRange(
+            d.data_partenza,
+            parseDurationNights(t.durata_notti),
+            filters.dateRange[0],
+            filters.dateRange[1],
+          )
+        )
+      );
+    } else if (filters.dateRange[0]) {
+      // Only "from" date set: show tours with departures on or after that date
+      result = result.filter((t) =>
+        t.departures.some((d) => {
+          const endDate = new Date(d.data_partenza + "T00:00:00");
+          endDate.setDate(endDate.getDate() + parseDurationNights(t.durata_notti));
+          return endDate.toISOString().slice(0, 10) >= filters.dateRange[0];
+        })
+      );
+    } else if (filters.dateRange[1]) {
+      // Only "to" date set: show tours with departures on or before that date
+      result = result.filter((t) =>
+        t.departures.some((d) => d.data_partenza <= filters.dateRange[1])
       );
     }
 
@@ -204,13 +213,9 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
         }]
       : []),
     {
-      key: "seasons",
+      key: "dateRange",
       label: "Periodo",
-      type: "checkbox" as const,
-      options: (["primavera", "estate", "autunno", "inverno"] as Season[]).map((s) => ({
-        value: s,
-        label: SEASON_LABELS[s],
-      })),
+      type: "dateRange" as const,
     },
     {
       key: "durations",
@@ -240,7 +245,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
   const sidebarState: Record<string, string[] | [number, number] | boolean> = {
     macroAreas: filters.macroAreas,
     destinations: filters.destinations,
-    seasons: filters.seasons,
+    dateRange: filters.dateRange,
     durations: filters.durations,
     priceRange: filters.priceRange,
     availabilityOnly: filters.availabilityOnly,
@@ -254,8 +259,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
     setFilters({
       macroAreas: [],
       destinations: [],
-      seasons: [],
-      exactDate: null,
+      dateRange: ["", ""],
       durations: [],
       priceRange: [priceBounds.min, priceBounds.max],
       availabilityOnly: false,
@@ -263,13 +267,11 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
     });
   }, [priceBounds]);
 
-  const handleHeroSearch = useCallback((query: { dove: string; quando: string; durata: string }) => {
-    const isDate = /^\d{4}-\d{2}-\d{2}$/.test(query.quando);
+  const handleHeroSearch = useCallback((query: { dove: string; dateFrom: string; dateTo: string; durata: string }) => {
     setFilters((prev) => ({
       ...prev,
       macroAreas: query.dove ? [query.dove] : [],
-      seasons: isDate ? [] : query.quando ? [query.quando as Season] : [],
-      exactDate: isDate ? query.quando : null,
+      dateRange: [query.dateFrom || "", query.dateTo || ""] as [string, string],
       durations: query.durata ? [query.durata] : [],
     }));
     document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -289,11 +291,10 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
     const c: { key: string; label: string; value: string }[] = [];
     filters.macroAreas.forEach((a) => c.push({ key: "macroAreas", label: a, value: a }));
     filters.destinations.forEach((d) => c.push({ key: "destinations", label: d, value: d }));
-    filters.seasons.forEach((s) => c.push({ key: "seasons", label: SEASON_LABELS[s], value: s }));
-    if (filters.exactDate) {
-      const d = new Date(filters.exactDate + "T00:00:00");
-      const label = d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
-      c.push({ key: "exactDate", label: label.charAt(0).toUpperCase() + label.slice(1), value: filters.exactDate });
+    if (filters.dateRange[0] || filters.dateRange[1]) {
+      const from = filters.dateRange[0] ? formatDateIT(filters.dateRange[0]) : "...";
+      const to = filters.dateRange[1] ? formatDateIT(filters.dateRange[1]) : "...";
+      c.push({ key: "dateRange", label: `${from} – ${to}`, value: "dateRange" });
     }
     filters.durations.forEach((d) => c.push({ key: "durations", label: d + " giorni", value: d }));
     return c;
@@ -301,8 +302,8 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
 
   const handleChipRemove = useCallback((key: string, value: string) => {
     setFilters((prev) => {
-      if (key === "exactDate") {
-        return { ...prev, exactDate: null };
+      if (key === "dateRange") {
+        return { ...prev, dateRange: ["", ""] as [string, string] };
       }
       const arr = prev[key as keyof FilterState];
       if (Array.isArray(arr) && typeof arr[0] === "string") {

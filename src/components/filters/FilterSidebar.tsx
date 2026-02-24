@@ -14,7 +14,7 @@ export interface FilterOption {
 export interface FilterGroup {
   key: string;
   label: string;
-  type: "checkbox" | "range" | "toggle";
+  type: "checkbox" | "range" | "toggle" | "dateRange";
   options?: FilterOption[];
   rangeMin?: number;
   rangeMax?: number;
@@ -92,6 +92,35 @@ export default function FilterSidebar({ groups, state, onChange, onReset, classN
                 <div className="flex justify-between text-xs text-gray-500 mt-2">
                   <span>{((state[group.key] as [number, number]) ?? [group.rangeMin ?? 0])[0]}€</span>
                   <span>{((state[group.key] as [number, number]) ?? [0, group.rangeMax ?? 10000])[1]}€</span>
+                </div>
+              </div>
+            )}
+
+            {group.type === "dateRange" && (
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">Da</label>
+                  <input
+                    type="date"
+                    value={((state[group.key] as string[]) ?? ["", ""])[0] || ""}
+                    onChange={(e) => {
+                      const current = (state[group.key] as string[]) ?? ["", ""];
+                      onChange(group.key, [e.target.value, current[1] || ""]);
+                    }}
+                    className="w-full rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C41E2F]/30 focus:border-[#C41E2F]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">A</label>
+                  <input
+                    type="date"
+                    value={((state[group.key] as string[]) ?? ["", ""])[1] || ""}
+                    onChange={(e) => {
+                      const current = (state[group.key] as string[]) ?? ["", ""];
+                      onChange(group.key, [current[0] || "", e.target.value]);
+                    }}
+                    className="w-full rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C41E2F]/30 focus:border-[#C41E2F]"
+                  />
                 </div>
               </div>
             )}

@@ -16,13 +16,12 @@ import FleetStrip from "@/components/shared/FleetStrip";
 import DepartureTimeline from "@/components/shared/DepartureTimeline";
 import FAQSection from "@/components/shared/FAQSection";
 import {
-  getSeason,
   parseDurationNights,
   durationInRange,
   getNextDeparture,
+  departureOverlapsRange,
+  formatDateIT,
   type SortOption,
-  type Season,
-  SEASON_LABELS,
 } from "@/lib/filters";
 import type { CruiseListItemEnriched } from "@/lib/supabase/queries/cruises";
 
@@ -52,8 +51,7 @@ interface CrocierePageClientProps {
 
 type FilterState = {
   rivers: string[];
-  seasons: Season[];
-  exactDate: string | null;
+  dateRange: [string, string];
   durations: string[];
   priceRange: [number, number];
   ship: string[];
@@ -70,8 +68,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
 
   const [filters, setFilters] = useState<FilterState>({
     rivers: [],
-    seasons: [],
-    exactDate: null,
+    dateRange: ["", ""],
     durations: [],
     priceRange: [priceBounds.min, priceBounds.max],
     ship: [],
@@ -115,19 +112,29 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
       result = result.filter((c) => filters.rivers.includes(c.destination_name ?? ""));
     }
 
-    // Season filter
-    if (filters.seasons.length > 0) {
-      result = result.filter((c) => {
-        const seasons = c.departures.map((d) => getSeason(d.data_partenza));
-        return filters.seasons.some((s) => seasons.includes(s));
-      });
-    }
-
-    // Exact date filter (match departures in same month)
-    if (filters.exactDate) {
-      const targetMonth = filters.exactDate.slice(0, 7); // "YYYY-MM"
+    // Date range filter
+    if (filters.dateRange[0] && filters.dateRange[1]) {
       result = result.filter((c) =>
-        c.departures.some((d) => d.data_partenza.startsWith(targetMonth))
+        c.departures.some((d) =>
+          departureOverlapsRange(
+            d.data_partenza,
+            parseDurationNights(c.durata_notti),
+            filters.dateRange[0],
+            filters.dateRange[1],
+          )
+        )
+      );
+    } else if (filters.dateRange[0]) {
+      result = result.filter((c) =>
+        c.departures.some((d) => {
+          const endDate = new Date(d.data_partenza + "T00:00:00");
+          endDate.setDate(endDate.getDate() + parseDurationNights(c.durata_notti));
+          return endDate.toISOString().slice(0, 10) >= filters.dateRange[0];
+        })
+      );
+    } else if (filters.dateRange[1]) {
+      result = result.filter((c) =>
+        c.departures.some((d) => d.data_partenza <= filters.dateRange[1])
       );
     }
 
@@ -208,13 +215,9 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
       options: riverInfos.map((r) => ({ value: r.name, label: r.name, count: r.cruiseCount })),
     },
     {
-      key: "seasons",
+      key: "dateRange",
       label: "Periodo",
-      type: "checkbox" as const,
-      options: (["primavera", "estate", "autunno", "inverno"] as Season[]).map((s) => ({
-        value: s,
-        label: SEASON_LABELS[s],
-      })),
+      type: "dateRange" as const,
     },
     {
       key: "durations",
@@ -252,7 +255,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
   // Filter state for sidebar (cast to expected type)
   const sidebarState: Record<string, string[] | [number, number] | boolean> = {
     rivers: filters.rivers,
-    seasons: filters.seasons,
+    dateRange: filters.dateRange,
     durations: filters.durations,
     priceRange: filters.priceRange,
     ship: filters.ship,
@@ -266,8 +269,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
   const handleReset = useCallback(() => {
     setFilters({
       rivers: [],
-      seasons: [],
-      exactDate: null,
+      dateRange: ["", ""],
       durations: [],
       priceRange: [priceBounds.min, priceBounds.max],
       ship: [],
@@ -276,16 +278,13 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
     });
   }, [priceBounds]);
 
-  const handleHeroSearch = useCallback((query: { dove: string; quando: string; durata: string }) => {
-    const isDate = /^\d{4}-\d{2}-\d{2}$/.test(query.quando);
+  const handleHeroSearch = useCallback((query: { dove: string; dateFrom: string; dateTo: string; durata: string }) => {
     setFilters((prev) => ({
       ...prev,
       rivers: query.dove ? [query.dove] : [],
-      seasons: isDate ? [] : query.quando ? [query.quando as Season] : [],
-      exactDate: isDate ? query.quando : null,
+      dateRange: [query.dateFrom || "", query.dateTo || ""] as [string, string],
       durations: query.durata ? [query.durata] : [],
     }));
-    // Scroll to results
     document.getElementById("cruise-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
@@ -301,11 +300,10 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
   const chips = useMemo(() => {
     const c: { key: string; label: string; value: string }[] = [];
     filters.rivers.forEach((r) => c.push({ key: "rivers", label: r, value: r }));
-    filters.seasons.forEach((s) => c.push({ key: "seasons", label: SEASON_LABELS[s], value: s }));
-    if (filters.exactDate) {
-      const d = new Date(filters.exactDate + "T00:00:00");
-      const label = d.toLocaleDateString("it-IT", { month: "long", year: "numeric" });
-      c.push({ key: "exactDate", label: label.charAt(0).toUpperCase() + label.slice(1), value: filters.exactDate });
+    if (filters.dateRange[0] || filters.dateRange[1]) {
+      const from = filters.dateRange[0] ? formatDateIT(filters.dateRange[0]) : "...";
+      const to = filters.dateRange[1] ? formatDateIT(filters.dateRange[1]) : "...";
+      c.push({ key: "dateRange", label: `${from} – ${to}`, value: "dateRange" });
     }
     filters.durations.forEach((d) => c.push({ key: "durations", label: d + " notti", value: d }));
     filters.ship.forEach((s) => c.push({ key: "ship", label: s, value: s }));
@@ -314,8 +312,8 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
 
   const handleChipRemove = useCallback((key: string, value: string) => {
     setFilters((prev) => {
-      if (key === "exactDate") {
-        return { ...prev, exactDate: null };
+      if (key === "dateRange") {
+        return { ...prev, dateRange: ["", ""] as [string, string] };
       }
       const arr = prev[key as keyof FilterState];
       if (Array.isArray(arr) && typeof arr[0] === "string") {
