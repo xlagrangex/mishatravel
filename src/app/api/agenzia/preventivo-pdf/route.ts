@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import os from "os";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getQuotePdfData } from "@/lib/pdf/quote-pdf-data";
 import QuotePdfDocument from "@/lib/pdf/QuotePdfDocument";
 import type { LocationPoint } from "@/lib/pdf/quote-pdf-data";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
+
+// ---------------------------------------------------------------------------
+// Cache helpers
+// ---------------------------------------------------------------------------
+
+function computeCacheKey(parts: string[]): string {
+  return crypto
+    .createHash("md5")
+    .update(parts.join("|"))
+    .digest("hex")
+    .slice(0, 12);
+}
 
 // ---------------------------------------------------------------------------
 // Image pre-fetching utility
@@ -29,7 +43,6 @@ async function fetchImageAsBase64(
     clearTimeout(timer);
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
-    // Skip images larger than 3MB to keep PDF size reasonable
     if (buf.byteLength > 3_000_000) return null;
     const ct = res.headers.get("content-type") ?? "image/jpeg";
     return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
@@ -56,7 +69,6 @@ async function generateMapBase64(
     .map((l) => {
       const parts = l.coordinate!.split(",").map((s) => parseFloat(s.trim()));
       if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
-      // DB stores "lat,lng", staticmaps needs [lng, lat]
       return [parts[1], parts[0]] as [number, number];
     })
     .filter((c): c is [number, number] => c !== null);
@@ -66,7 +78,6 @@ async function generateMapBase64(
   try {
     const StaticMaps = (await import("staticmaps")).default;
 
-    // Write SVG marker to temp file
     const markerPath = path.join(os.tmpdir(), "mt-map-pin.svg");
     fs.writeFileSync(markerPath, MARKER_SVG);
 
@@ -76,24 +87,12 @@ async function generateMapBase64(
       tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     });
 
-    // Draw route line
-    map.addLine({
-      coords,
-      color: "#C41E2FBB",
-      width: 2,
-    });
+    map.addLine({ coords, color: "#C41E2FBB", width: 2 });
 
-    // Add pin markers
     for (const coord of coords) {
-      map.addMarker({
-        coord,
-        img: markerPath,
-        height: 28,
-        width: 20,
-      });
+      map.addMarker({ coord, img: markerPath, height: 28, width: 20 });
     }
 
-    // Render with timeout
     await Promise.race([
       map.render(),
       new Promise<never>((_, reject) =>
@@ -117,6 +116,7 @@ export async function GET(request: NextRequest) {
     // 1. Get quote ID from query params
     const { searchParams } = new URL(request.url);
     const quoteId = searchParams.get("id");
+    const forceRefresh = searchParams.get("refresh") === "1";
 
     if (!quoteId) {
       return NextResponse.json(
@@ -165,7 +165,56 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 4. Fetch all data for the PDF
+    const admin = createAdminClient();
+    const filename = `preventivo-${quoteId.slice(0, 8)}.pdf`;
+
+    // 4. Compute cache key from quote + latest offer timestamps
+    let cacheKey = "";
+    try {
+      let cacheQuery = admin
+        .from("quote_requests")
+        .select("updated_at, offers:quote_offers(created_at)")
+        .eq("id", quoteId);
+
+      if (agencyId) cacheQuery = cacheQuery.eq("agency_id", agencyId);
+
+      const { data: cacheInfo } = await cacheQuery.single();
+
+      if (cacheInfo) {
+        const offerTimestamps = ((cacheInfo.offers as any[]) ?? [])
+          .map((o: any) => o.created_at)
+          .sort()
+          .join(",");
+        cacheKey = computeCacheKey([cacheInfo.updated_at, offerTimestamps]);
+      }
+    } catch {
+      // If cache key computation fails, proceed without cache
+    }
+
+    // 5. Try to serve cached PDF
+    if (cacheKey && !forceRefresh) {
+      try {
+        const cachedPath = `${quoteId}/${cacheKey}.pdf`;
+        const { data: cachedFile } = await admin.storage
+          .from("quote-pdfs")
+          .download(cachedPath);
+
+        if (cachedFile) {
+          const arrayBuf = await cachedFile.arrayBuffer();
+          return new Response(new Uint8Array(arrayBuf), {
+            headers: {
+              "Content-Type": "application/pdf",
+              "Content-Disposition": `inline; filename="${filename}"`,
+              "Cache-Control": "private, max-age=300",
+            },
+          });
+        }
+      } catch {
+        // Cache miss — proceed to generate
+      }
+    }
+
+    // 5. Fetch all data for the PDF
     const data = await getQuotePdfData(quoteId, agencyId);
 
     if (!data) {
@@ -175,7 +224,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 5. Load logo from filesystem as base64
+    // 6. Load logo from filesystem as base64
     let logoUrl = "";
     try {
       const logoPath = path.join(process.cwd(), "public/images/logo/logo.png");
@@ -189,12 +238,11 @@ export async function GET(request: NextRequest) {
       logoUrl = `${origin}/images/logo/logo.png`;
     }
 
-    // 6. Pre-fetch images + map in parallel with a total budget
+    // 7. Pre-fetch images + map in parallel with a total budget
     const IMAGE_BUDGET_MS = 8000;
 
     const imagePromises: Promise<{ key: string; base64: string | null }>[] = [];
 
-    // Cover image
     if (data.coverImageUrl) {
       imagePromises.push(
         fetchImageAsBase64(data.coverImageUrl, 4000).then((b) => ({
@@ -204,7 +252,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Ship image
     if (data.ship?.cover_image_url) {
       imagePromises.push(
         fetchImageAsBase64(data.ship.cover_image_url, 4000).then((b) => ({
@@ -214,7 +261,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Cabin images (max 4)
     for (const cabin of data.shipCabinDetails.slice(0, 4)) {
       if (cabin.immagine_url) {
         imagePromises.push(
@@ -226,7 +272,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Map image from location coordinates
     if (data.locations.length >= 2) {
       imagePromises.push(
         generateMapBase64(data.locations, 5000).then((b) => ({
@@ -236,7 +281,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Race all images against budget
     let imageResults: { key: string; base64: string | null }[] = [];
     if (imagePromises.length > 0) {
       imageResults = await Promise.race([
@@ -260,7 +304,7 @@ export async function GET(request: NextRequest) {
       else cabinImagesBase64[r.key] = r.base64;
     }
 
-    // 7. Generate QR codes
+    // 8. Generate QR codes
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL ?? "https://mishatravel.com";
 
@@ -286,7 +330,7 @@ export async function GET(request: NextRequest) {
         : Promise.resolve(null),
     ]);
 
-    // 8. Render PDF to buffer
+    // 9. Render PDF to buffer
     const pdfBuffer = await renderToBuffer(
       React.createElement(QuotePdfDocument, {
         data,
@@ -303,9 +347,37 @@ export async function GET(request: NextRequest) {
       }) as any
     );
 
-    // 8. Return PDF response
-    const filename = `preventivo-${quoteId.slice(0, 8)}.pdf`;
+    // 10. Save to Supabase Storage for caching (non-blocking)
+    if (cacheKey) {
+      const cachedPath = `${quoteId}/${cacheKey}.pdf`;
 
+      // Clean old versions first (fire and forget)
+      admin.storage
+        .from("quote-pdfs")
+        .list(quoteId)
+        .then(({ data: files }) => {
+          if (files && files.length > 0) {
+            const toDelete = files
+              .map((f) => `${quoteId}/${f.name}`)
+              .filter((p) => p !== cachedPath);
+            if (toDelete.length > 0) {
+              admin.storage.from("quote-pdfs").remove(toDelete);
+            }
+          }
+        })
+        .catch(() => {});
+
+      // Upload new version
+      admin.storage
+        .from("quote-pdfs")
+        .upload(cachedPath, new Uint8Array(pdfBuffer), {
+          contentType: "application/pdf",
+          upsert: true,
+        })
+        .catch(() => {});
+    }
+
+    // 11. Return PDF response
     return new Response(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",

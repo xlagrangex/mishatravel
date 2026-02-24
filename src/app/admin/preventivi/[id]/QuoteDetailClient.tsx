@@ -48,6 +48,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import DownloadPdfButton from '@/app/(agenzia)/agenzia/preventivi/[id]/DownloadPdfButton'
 import type { QuoteDetailData, BankingPreset } from '@/lib/supabase/queries/admin-quotes'
 import {
   createOffer,
@@ -1308,14 +1309,7 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
         {/* Action buttons based on current status */}
         <div className="flex flex-wrap items-center gap-2">
           {/* PDF Download */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(`/api/agenzia/preventivo-pdf?id=${quote.id}`, '_blank')}
-          >
-            <Download className="h-4 w-4" />
-            Scarica PDF
-          </Button>
+          <DownloadPdfButton quoteId={quote.id} variant="compact" />
 
           {/* requested/sent/in_review → Create Offer */}
           {(normalized === 'requested') && (
