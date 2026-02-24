@@ -48,6 +48,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { getAdminStatusAction } from '@/lib/quote-status-config'
+import { ActionIndicator } from '@/components/ActionIndicator'
 import DownloadPdfButton from '@/app/(agenzia)/agenzia/preventivi/[id]/DownloadPdfButton'
 import type { QuoteDetailData, BankingPreset } from '@/lib/supabase/queries/admin-quotes'
 import {
@@ -1357,6 +1359,13 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
           )}
         </div>
       </div>
+
+      {/* Action Indicator Banner */}
+      <ActionIndicator
+        variant="banner"
+        status={quote.status}
+        {...getAdminStatusAction(quote.status)}
+      />
 
       {/* Workflow Timeline */}
       <Card>

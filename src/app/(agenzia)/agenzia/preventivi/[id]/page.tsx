@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getQuoteById } from "@/lib/supabase/queries/quotes";
+import { getAgencyStatusAction } from "@/lib/quote-status-config";
+import { ActionIndicator } from "@/components/ActionIndicator";
 import QuoteActions from "./QuoteActions";
 import DownloadPdfButton from "./DownloadPdfButton";
 
@@ -126,6 +128,13 @@ export default async function PreventivoDetailPage({
         </div>
         <StatusBadge status={quote.status} />
       </div>
+
+      {/* Action Indicator Banner */}
+      <ActionIndicator
+        variant="banner"
+        status={quote.status}
+        {...getAgencyStatusAction(quote.status)}
+      />
 
       {/* Prominent PDF Download */}
       <DownloadPdfButton quoteId={id} />

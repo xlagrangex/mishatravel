@@ -52,6 +52,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
+import { getAdminStatusAction } from '@/lib/quote-status-config'
+import { ActionIndicator } from '@/components/ActionIndicator'
 import { bulkUpdateStatus, bulkArchive, bulkDelete } from './actions'
 import type {
   QuoteListItem,
@@ -544,6 +546,7 @@ export default function AdminQuotesTable({
                 <TableHead>
                   <SortButton column="status">Stato</SortButton>
                 </TableHead>
+                <TableHead>Prossima azione</TableHead>
                 <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
@@ -627,6 +630,14 @@ export default function AdminQuotesTable({
                   {/* Status */}
                   <TableCell>
                     <StatusBadge status={quote.status} />
+                  </TableCell>
+
+                  {/* Action indicator */}
+                  <TableCell className="max-w-[220px]">
+                    <ActionIndicator
+                      status={quote.status}
+                      {...getAdminStatusAction(quote.status)}
+                    />
                   </TableCell>
 
                   {/* Actions */}

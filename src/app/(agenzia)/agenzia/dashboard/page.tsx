@@ -19,6 +19,8 @@ import {
   getRecentNotifications,
 } from "@/lib/supabase/queries/agency-dashboard";
 import { getAgencyDocuments } from "@/lib/supabase/queries/agency-documents";
+import { getAgencyStatusAction } from "@/lib/quote-status-config";
+import { ActionIndicator } from "@/components/ActionIndicator";
 import type { QuoteRequestStatus } from "@/lib/types";
 import DocumentUploadBanner from "./DocumentUploadBanner";
 import DocumentStatusCard from "./DocumentStatusCard";
@@ -204,8 +206,12 @@ export default async function AgenziaDashboard() {
                             `, ${req.participants_children} bambini`}
                         </p>
                       </div>
-                      <div className="ml-3 shrink-0">
+                      <div className="ml-3 shrink-0 flex flex-col items-end gap-1">
                         {statusBadge(req.status)}
+                        <ActionIndicator
+                          status={req.status}
+                          {...getAgencyStatusAction(req.status)}
+                        />
                       </div>
                     </li>
                   );

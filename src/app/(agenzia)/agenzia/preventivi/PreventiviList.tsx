@@ -17,6 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { getAgencyStatusAction } from "@/lib/quote-status-config";
+import { ActionIndicator } from "@/components/ActionIndicator";
 import { agencyBulkArchive } from "./actions";
 import type { QuoteListItem } from "@/lib/supabase/queries/quotes";
 
@@ -298,6 +300,7 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
                 <TableHead>Tour / Crociera</TableHead>
                 <TableHead>Partecipanti</TableHead>
                 <TableHead>Stato</TableHead>
+                <TableHead>Prossima azione</TableHead>
                 <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
@@ -341,6 +344,12 @@ export default function PreventiviList({ quotes }: { quotes: QuoteListItem[] }) 
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={q.status} />
+                  </TableCell>
+                  <TableCell className="max-w-[220px]">
+                    <ActionIndicator
+                      status={q.status}
+                      {...getAgencyStatusAction(q.status)}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <Button asChild variant="ghost" size="sm">

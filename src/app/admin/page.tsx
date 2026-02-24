@@ -17,6 +17,8 @@ import { getAllDepartures } from "@/lib/supabase/queries/departures";
 import { getPendingDocuments } from "@/lib/supabase/queries/agency-documents";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/supabase/auth";
+import { getAdminStatusAction } from "@/lib/quote-status-config";
+import { ActionIndicator } from "@/components/ActionIndicator";
 import PendingAgenciesWidget from "./PendingAgenciesWidget";
 import PendingDocumentsWidget from "./PendingDocumentsWidget";
 
@@ -209,12 +211,18 @@ export default async function AdminDashboard() {
                         })}
                       </p>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className={`ml-2 shrink-0 text-xs ${STATUS_COLORS[q.status] ?? ""}`}
-                    >
-                      {STATUS_LABELS[q.status] ?? q.status}
-                    </Badge>
+                    <div className="ml-2 shrink-0 flex flex-col items-end gap-1">
+                      <Badge
+                        variant="secondary"
+                        className={`text-xs ${STATUS_COLORS[q.status] ?? ""}`}
+                      >
+                        {STATUS_LABELS[q.status] ?? q.status}
+                      </Badge>
+                      <ActionIndicator
+                        status={q.status}
+                        {...getAdminStatusAction(q.status)}
+                      />
+                    </div>
                   </Link>
                 ))}
               </div>
