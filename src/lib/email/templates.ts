@@ -6,12 +6,20 @@
  *
  * Brand colours:
  *   Primary (red)  : #C41E2F
+ *   Secondary (navy): #1B2D4F
  *   Text (dark gray): #333333
+ *
+ * Font strategy (progressive enhancement):
+ *   Heading: Poppins (Apple Mail, iOS Mail) → Arial (Gmail, Outlook, others)
+ *   Body:    Arial, Helvetica, sans-serif (universal, modern, clean)
  */
 
 // ---------------------------------------------------------------------------
 // Base wrapper
 // ---------------------------------------------------------------------------
+
+const HEADING_FONT = "'Poppins', Arial, Helvetica, sans-serif";
+const BODY_FONT = "Arial, Helvetica, sans-serif";
 
 function baseTemplate(body: string): string {
   return `<!DOCTYPE html>
@@ -20,21 +28,24 @@ function baseTemplate(body: string): string {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MishaTravel</title>
+  <!--[if !mso]><!-->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
+  <!--<![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:${BODY_FONT};-webkit-font-smoothing:antialiased;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;">
     <tr>
-      <td align="center" style="padding:24px 16px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
           <!-- Header -->
           <tr>
-            <td style="background-color:#ffffff;padding:24px 32px;text-align:center;border-bottom:2px solid #C41E2F;">
-              <img src="${SITE_URL}/images/logo/logo-logo.png" alt="MishaTravel - Tour Operator" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
+            <td style="background-color:#ffffff;padding:28px 32px;text-align:center;border-bottom:3px solid #C41E2F;">
+              <img src="${SITE_URL}/images/logo/logo-logo.png" alt="MishaTravel - Tour Operator" width="180" style="display:block;margin:0 auto;max-width:180px;height:auto;" />
             </td>
           </tr>
           <!-- Body -->
           <tr>
-            <td style="padding:32px;">
+            <td style="padding:36px 32px 32px;">
               ${body}
             </td>
           </tr>
@@ -43,14 +54,14 @@ function baseTemplate(body: string): string {
             <td style="background-color:#f8fafc;padding:24px 32px;border-top:1px solid #e2e8f0;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="font-size:12px;color:#64748b;line-height:1.6;">
+                  <td style="font-family:${BODY_FONT};font-size:12px;color:#64748b;line-height:1.7;">
                     <strong style="color:#C41E2F;">MishaTravel S.r.l.</strong><br/>
                     Tel: +39 02 1234567 | Email: info@mishatravel.com<br/>
-                    www.mishatravel.com
+                    <a href="${SITE_URL}" style="color:#C41E2F;text-decoration:none;">www.mishatravel.com</a>
                   </td>
                 </tr>
                 <tr>
-                  <td style="font-size:11px;color:#94a3b8;padding-top:12px;">
+                  <td style="font-family:${BODY_FONT};font-size:11px;color:#94a3b8;padding-top:12px;">
                     Questa email &egrave; stata inviata automaticamente. Per assistenza contattaci a info@mishatravel.com.
                   </td>
                 </tr>
@@ -67,10 +78,10 @@ function baseTemplate(body: string): string {
 
 /** A styled CTA button */
 function ctaButton(label: string, url: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;">
   <tr>
-    <td style="background-color:#C41E2F;border-radius:6px;">
-      <a href="${url}" target="_blank" style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">
+    <td style="background-color:#C41E2F;border-radius:8px;">
+      <a href="${url}" target="_blank" style="display:inline-block;padding:14px 32px;color:#ffffff;font-family:${HEADING_FONT};font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">
         ${label}
       </a>
     </td>
@@ -89,7 +100,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mishatravel.com";
  */
 export function signupConfirmationEmail(agencyName: string, confirmLink: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Conferma il tuo account</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Conferma il tuo account</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -115,7 +126,7 @@ export function signupConfirmationEmail(agencyName: string, confirmLink: string)
  */
 export function welcomeAgencyEmail(agencyName: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Benvenuto su MishaTravel!</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Benvenuto su MishaTravel!</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -141,7 +152,7 @@ export function welcomeAgencyEmail(agencyName: string): string {
  */
 export function agencyApprovedEmail(agencyName: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Account approvato!</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Account approvato!</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -163,7 +174,7 @@ export function agencyApprovedEmail(agencyName: string): string {
  */
 export function agencyCreatedByAdminEmail(agencyName: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Il tuo account MishaTravel</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Il tuo account MishaTravel</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -185,7 +196,7 @@ export function agencyCreatedByAdminEmail(agencyName: string): string {
  */
 export function adminDocumentUploadedEmail(agencyName: string, agencyId: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Documento caricato</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Documento caricato</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       L&rsquo;agenzia <strong>${agencyName}</strong> ha caricato la visura camerale.
     </p>
@@ -201,7 +212,7 @@ export function adminDocumentUploadedEmail(agencyName: string, agencyId: string)
  */
 export function agencyDocumentVerifiedEmail(agencyName: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Visura camerale verificata</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Visura camerale verificata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -223,7 +234,7 @@ export function agencyDocumentVerifiedEmail(agencyName: string): string {
  */
 export function accountExpiredEmail(agencyName: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Account eliminato</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Account eliminato</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -243,7 +254,7 @@ export function accountExpiredEmail(agencyName: string): string {
  */
 export function passwordResetEmail(resetLink: string): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Recupera la tua password</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Recupera la tua password</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Hai richiesto il recupero della password per il tuo account MishaTravel.
     </p>
@@ -283,7 +294,7 @@ export function quoteRequestSubmittedEmail(
       </tr>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Richiesta preventivo inviata</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Richiesta preventivo inviata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -319,7 +330,7 @@ export function newOfferReceivedEmail(
       </p>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova offerta ricevuta</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Nuova offerta ricevuta</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -356,7 +367,7 @@ export function offerAcceptedConfirmationEmail(
       </p>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Offerta accettata</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Offerta accettata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -382,7 +393,7 @@ export function paymentDetailsSentEmail(
   reference: string
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Estremi di pagamento</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Estremi di pagamento</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -464,7 +475,7 @@ export function contractSentEmail(
     : "";
 
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Contratto e dati di pagamento</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Contratto e dati di pagamento</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -494,7 +505,7 @@ export function quoteRejectedEmail(
   motivation: string
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#C41E2F;font-size:22px;">Richiesta non confermata</h2>
+    <h2 style="margin:0 0 20px;color:#C41E2F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Richiesta non confermata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -524,7 +535,7 @@ export function offerRevokedEmail(
   productName: string
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#C41E2F;font-size:22px;">Offerta revocata</h2>
+    <h2 style="margin:0 0 20px;color:#C41E2F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Offerta revocata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -559,7 +570,7 @@ export function reminderEmail(
     </table>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Promemoria</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Promemoria</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -585,7 +596,7 @@ export function documentUploadedToAgencyEmail(
   const typeLabel = documentType === 'fattura' ? 'una fattura' :
     documentType === 'contratto' ? 'un contratto' : `un documento (${documentType})`;
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuovo documento disponibile</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Nuovo documento disponibile</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Gentile <strong>${agencyName}</strong>,
     </p>
@@ -613,7 +624,7 @@ export function adminNewAgencyEmail(
   city: string | null
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova agenzia registrata</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Nuova agenzia registrata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Una nuova agenzia si &egrave; registrata sulla piattaforma e richiede l&rsquo;approvazione.
     </p>
@@ -659,7 +670,7 @@ export function adminNewQuoteRequestEmail(
       </tr>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova richiesta preventivo</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Nuova richiesta preventivo</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       L&rsquo;agenzia <strong>${agencyName}</strong> ha inviato una nuova richiesta di preventivo.
     </p>
@@ -701,7 +712,7 @@ export function adminOfferAcceptedEmail(
       </p>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#16a34a;font-size:22px;">Offerta accettata</h2>
+    <h2 style="margin:0 0 20px;color:#16a34a;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Offerta accettata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       L&rsquo;agenzia <strong>${agencyName}</strong> ha accettato l&rsquo;offerta per <strong>&ldquo;${productName}&rdquo;</strong>.
     </p>
@@ -733,7 +744,7 @@ export function adminOfferDeclinedEmail(
     </table>`
     : "";
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#C41E2F;font-size:22px;">Offerta rifiutata</h2>
+    <h2 style="margin:0 0 20px;color:#C41E2F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Offerta rifiutata</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       L&rsquo;agenzia <strong>${agencyName}</strong> ha rifiutato l&rsquo;offerta per <strong>&ldquo;${productName}&rdquo;</strong>.
     </p>
@@ -758,7 +769,7 @@ export function adminNewContactFormEmail(
   telefono?: string | null
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuovo messaggio dal form contatti</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Nuovo messaggio dal form contatti</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Hai ricevuto un nuovo messaggio dal sito web.
     </p>
@@ -799,7 +810,7 @@ export function adminNewPartnerInquiryEmail(
   telefono?: string | null
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#333333;font-size:22px;">Nuova richiesta di partnership</h2>
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Nuova richiesta di partnership</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       Un&rsquo;agenzia ha compilato il form &ldquo;Diventa Partner&rdquo;.
     </p>
@@ -843,7 +854,7 @@ export function adminNewComplaintEmail(
   destinazione?: string | null
 ): string {
   return baseTemplate(`
-    <h2 style="margin:0 0 16px;color:#C41E2F;font-size:22px;">Nuovo reclamo ricevuto</h2>
+    <h2 style="margin:0 0 20px;color:#C41E2F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Nuovo reclamo ricevuto</h2>
     <p style="color:#334155;font-size:15px;line-height:1.7;">
       &Egrave; stato ricevuto un nuovo reclamo dal sito web.
     </p>
