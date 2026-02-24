@@ -94,6 +94,12 @@ export function departureOverlapsRange(
   return depStart <= filterTo && depEnd >= filterFrom;
 }
 
+// Check if an entity has at least one future departure (or no departures at all)
+export function hasFutureDeparture(departures: { data_partenza: string }[]): boolean {
+  if (departures.length === 0) return true;
+  return getNextDeparture(departures) !== null;
+}
+
 // Sort comparators
 export type SortOption = "prezzo-asc" | "prezzo-desc" | "durata" | "prossima-partenza";
 

@@ -133,7 +133,8 @@ export async function getDestinationWithTours(
         prezzo_su_richiesta,
         status,
         created_at,
-        destination:destinations(name)
+        destination:destinations(name),
+        departures:tour_departures(data_partenza)
       `
       )
       .eq('destination_id', dest.id)
@@ -155,7 +156,8 @@ export async function getDestinationWithTours(
         status,
         created_at,
         ship:ships(name),
-        destination:destinations(name)
+        destination:destinations(name),
+        departures:cruise_departures(data_partenza)
       `
       )
       .eq('destination_id', dest.id)
@@ -170,33 +172,55 @@ export async function getDestinationWithTours(
     throw new Error(`Errore caricamento crociere per destinazione: ${cruisesResult.error.message}`)
   }
 
-  const tours: TourListItem[] = (toursResult.data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    status: row.status,
-    created_at: row.created_at,
-    destination_name: row.destination?.name ?? null,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
 
-  const cruises: CruiseListItem[] = (cruisesResult.data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    tipo_crociera: row.tipo_crociera,
-    status: row.status,
-    created_at: row.created_at,
-    ship_name: row.ship?.name ?? null,
-    destination_name: row.destination?.name ?? null,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-  }))
+  const tours: TourListItem[] = (toursResult.data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      status: row.status,
+      created_at: row.created_at,
+      destination_name: row.destination?.name ?? null,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
+
+  const cruises: CruiseListItem[] = (cruisesResult.data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      tipo_crociera: row.tipo_crociera,
+      status: row.status,
+      created_at: row.created_at,
+      ship_name: row.ship?.name ?? null,
+      destination_name: row.destination?.name ?? null,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 
   return { destination: dest, tours, cruises }
 }

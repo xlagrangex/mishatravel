@@ -428,3 +428,194 @@ export async function getShipCabinsAndDecks(shipId: string) {
     decks: decksResult.data ?? [],
   }
 }
+
+export async function duplicateCruiseAction(id: string): Promise<ActionResult> {
+  const { getCruiseById } = await import('@/lib/supabase/queries/cruises')
+  const supabase = createAdminClient()
+
+  // 1. Fetch full cruise
+  const cruise = await getCruiseById(id)
+  if (!cruise) return { success: false, error: 'Crociera non trovata' }
+
+  // 2. Generate unique slug
+  let newSlug = `${cruise.slug}-copia`
+  const { data: existing } = await supabase
+    .from('cruises')
+    .select('slug')
+    .like('slug', `${cruise.slug}-copia%`)
+  const existingSlugs = new Set((existing ?? []).map((r: any) => r.slug))
+  if (existingSlugs.has(newSlug)) {
+    let counter = 2
+    while (existingSlugs.has(`${cruise.slug}-copia-${counter}`)) counter++
+    newSlug = `${cruise.slug}-copia-${counter}`
+  }
+
+  try {
+    // 3. Insert new cruise as draft
+    const { data: inserted, error: insertError } = await supabase
+      .from('cruises')
+      .insert({
+        title: `${cruise.title} (copia)`,
+        slug: newSlug,
+        ship_id: cruise.ship_id,
+        destination_id: cruise.destination_id,
+        tipo_crociera: cruise.tipo_crociera,
+        content: cruise.content,
+        cover_image_url: cruise.cover_image_url,
+        durata_notti: cruise.durata_notti,
+        a_partire_da: cruise.a_partire_da,
+        prezzo_su_richiesta: cruise.prezzo_su_richiesta,
+        numero_minimo_persone: cruise.numero_minimo_persone,
+        pensione: cruise.pensione,
+        tipo_voli: cruise.tipo_voli,
+        note_importanti: cruise.note_importanti,
+        nota_penali: cruise.nota_penali,
+        programma_pdf_url: cruise.programma_pdf_url,
+        meta_title: null,
+        meta_description: null,
+        status: 'draft',
+      })
+      .select('id')
+      .single()
+
+    if (insertError) return { success: false, error: insertError.message }
+    const newId = inserted.id
+
+    // 4. Copy sub-tables
+    await syncSubTable(supabase, 'cruise_itinerary_days', newId,
+      (cruise.itinerary_days ?? []).map((d: any) => ({
+        numero_giorno: d.numero_giorno,
+        localita: d.localita,
+        descrizione: d.descrizione,
+      }))
+    )
+
+    await syncSubTable(supabase, 'cruise_locations', newId,
+      (cruise.locations ?? []).map((l: any) => ({
+        nome: l.nome,
+        coordinate: l.coordinate,
+      }))
+    )
+
+    // 5. Departures (without prices first)
+    const oldDepartures = cruise.departures ?? []
+    await syncSubTable(supabase, 'cruise_departures', newId,
+      oldDepartures.map((d: any) => ({
+        from_city: d.from_city,
+        data_partenza: d.data_partenza,
+      }))
+    )
+
+    // 6. Fetch new departure IDs
+    const { data: newDepartures } = await supabase
+      .from('cruise_departures')
+      .select('id, sort_order')
+      .eq('cruise_id', newId)
+      .order('sort_order')
+
+    // 7. Copy departure prices (map old departure sort_order to new departure IDs)
+    // The cruise object from getCruiseById has departure_prices as a flat array
+    // Each price has departure_id - we need to map from old to new
+    if (cruise.departure_prices && cruise.departure_prices.length > 0 && newDepartures) {
+      // Build mapping: old departure ID -> sort_order
+      const oldDepSortMap = new Map<string, number>()
+      for (let i = 0; i < oldDepartures.length; i++) {
+        oldDepSortMap.set(oldDepartures[i].id, oldDepartures[i].sort_order ?? i)
+      }
+
+      const priceRows: Record<string, unknown>[] = []
+      for (const price of cruise.departure_prices) {
+        const oldSortOrder = oldDepSortMap.get(price.departure_id)
+        if (oldSortOrder === undefined) continue
+        const newDep = newDepartures.find((d: any) => d.sort_order === oldSortOrder)
+        if (!newDep) continue
+        priceRows.push({
+          departure_id: newDep.id,
+          cabin_id: price.cabin_id,
+          prezzo: price.prezzo,
+          sort_order: price.sort_order,
+        })
+      }
+
+      if (priceRows.length > 0) {
+        const { error: priceError } = await supabase
+          .from('cruise_departure_prices')
+          .insert(priceRows)
+        if (priceError) throw new Error(`Failed to copy departure prices: ${priceError.message}`)
+      }
+    }
+
+    // 8. Copy remaining sub-tables
+    await syncSubTable(supabase, 'cruise_supplements', newId,
+      (cruise.supplements ?? []).map((s: any) => ({
+        titolo: s.titolo,
+        prezzo: s.prezzo,
+      }))
+    )
+
+    await syncSubTable(supabase, 'cruise_inclusions', newId,
+      (cruise.inclusions ?? []).map((i: any) => ({
+        titolo: i.titolo,
+        is_included: i.is_included,
+      }))
+    )
+
+    await syncSubTable(supabase, 'cruise_terms', newId,
+      (cruise.terms ?? []).map((t: any) => ({ titolo: t.titolo }))
+    )
+
+    await syncSubTable(supabase, 'cruise_penalties', newId,
+      (cruise.penalties ?? []).map((p: any) => ({ titolo: p.titolo }))
+    )
+
+    await syncSubTable(supabase, 'cruise_gallery', newId,
+      (cruise.gallery ?? []).map((g: any) => ({
+        image_url: g.image_url,
+        caption: g.caption,
+      }))
+    )
+
+    revalidatePath('/admin/crociere')
+    return { success: true, id: newId }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Errore durante la duplicazione'
+    return { success: false, error: message }
+  }
+}
+
+export async function bulkSetCruiseStatus(
+  ids: string[],
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessuna crociera selezionata' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('cruises')
+    .update({ status: newStatus })
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/crociere')
+  revalidatePath('/crociere')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
+export async function bulkDeleteCruises(ids: string[]): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessuna crociera selezionata' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('cruises')
+    .delete()
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/crociere')
+  revalidatePath('/crociere')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}

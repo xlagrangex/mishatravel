@@ -15,6 +15,7 @@ export type TourListItem = {
   status: string
   created_at: string
   destination_name: string | null
+  next_departure_date: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -40,7 +41,8 @@ export async function getTours(): Promise<TourListItem[]> {
       prezzo_su_richiesta,
       status,
       created_at,
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:tour_departures(data_partenza)
     `
     )
     .order('created_at', { ascending: false })
@@ -49,18 +51,27 @@ export async function getTours(): Promise<TourListItem[]> {
     throw new Error(`Failed to fetch tours: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    status: row.status,
-    created_at: row.created_at,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? []).map((row: any) => {
+    const futureDeps = (row.departures ?? [])
+      .filter((d: any) => d.data_partenza >= today)
+      .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))
+
+    return {
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      status: row.status,
+      created_at: row.created_at,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: futureDeps[0]?.data_partenza ?? null,
+    }
+  })
 }
 
 /**
@@ -160,22 +171,34 @@ export async function getPublishedToursWithDepartures(): Promise<TourListItemEnr
     throw new Error(`Failed to fetch enriched tours: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    status: row.status,
-    created_at: row.created_at,
-    destination_id: row.destination_id,
-    destination_name: row.destination?.name ?? null,
-    destination_slug: row.destination?.slug ?? null,
-    destination_macro_area: row.destination?.macro_area ?? null,
-    departures: row.departures ?? [],
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      status: row.status,
+      created_at: row.created_at,
+      destination_id: row.destination_id,
+      destination_name: row.destination?.name ?? null,
+      destination_slug: row.destination?.slug ?? null,
+      destination_macro_area: row.destination?.macro_area ?? null,
+      departures: row.departures ?? [],
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }
 
 /**
@@ -198,6 +221,7 @@ export async function deleteTour(id: string) {
 
 /**
  * Published tours for the public listing page, with destination name.
+ * Excludes tours where all departures are in the past.
  */
 export async function getPublishedTours(): Promise<TourListItem[]> {
   const supabase = createAdminClient()
@@ -215,7 +239,8 @@ export async function getPublishedTours(): Promise<TourListItem[]> {
       prezzo_su_richiesta,
       status,
       created_at,
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:tour_departures(data_partenza)
     `
     )
     .eq('status', 'published')
@@ -225,18 +250,30 @@ export async function getPublishedTours(): Promise<TourListItem[]> {
     throw new Error(`Failed to fetch published tours: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    status: row.status,
-    created_at: row.created_at,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      status: row.status,
+      created_at: row.created_at,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }
 
 /**
@@ -295,6 +332,7 @@ export async function getTourBySlug(slug: string) {
 
 /**
  * Published tours filtered by destination ID.
+ * Excludes tours where all departures are in the past.
  */
 export async function getToursForDestination(destinationId: string): Promise<TourListItem[]> {
   const supabase = createAdminClient()
@@ -312,7 +350,8 @@ export async function getToursForDestination(destinationId: string): Promise<Tou
       prezzo_su_richiesta,
       status,
       created_at,
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:tour_departures(data_partenza)
     `
     )
     .eq('destination_id', destinationId)
@@ -323,18 +362,30 @@ export async function getToursForDestination(destinationId: string): Promise<Tou
     throw new Error(`Failed to fetch tours for destination: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    status: row.status,
-    created_at: row.created_at,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      status: row.status,
+      created_at: row.created_at,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }
 
 /**
@@ -369,29 +420,42 @@ export async function getRelatedTours(
       prezzo_su_richiesta,
       status,
       created_at,
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:tour_departures(data_partenza)
     `
     )
     .eq('destination_id', current.destination_id)
     .eq('status', 'published')
     .neq('id', current.id)
     .order('created_at', { ascending: false })
-    .limit(limit)
 
   if (error) {
     throw new Error(`Failed to fetch related tours: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    status: row.status,
-    created_at: row.created_at,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .slice(0, limit)
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      status: row.status,
+      created_at: row.created_at,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }

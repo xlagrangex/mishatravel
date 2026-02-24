@@ -18,6 +18,7 @@ export type CruiseListItem = {
   created_at: string
   ship_name: string | null
   destination_name: string | null
+  next_departure_date: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -45,7 +46,8 @@ export async function getCruises(): Promise<CruiseListItem[]> {
       status,
       created_at,
       ship:ships(name),
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:cruise_departures(data_partenza)
     `
     )
     .order('created_at', { ascending: false })
@@ -54,20 +56,29 @@ export async function getCruises(): Promise<CruiseListItem[]> {
     throw new Error(`Failed to fetch cruises: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    tipo_crociera: row.tipo_crociera,
-    status: row.status,
-    created_at: row.created_at,
-    ship_name: row.ship?.name ?? null,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? []).map((row: any) => {
+    const futureDeps = (row.departures ?? [])
+      .filter((d: any) => d.data_partenza >= today)
+      .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))
+
+    return {
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      tipo_crociera: row.tipo_crociera,
+      status: row.status,
+      created_at: row.created_at,
+      ship_name: row.ship?.name ?? null,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: futureDeps[0]?.data_partenza ?? null,
+    }
+  })
 }
 
 /**
@@ -91,7 +102,8 @@ export async function getPublishedCruises(): Promise<CruiseListItem[]> {
       status,
       created_at,
       ship:ships(name),
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:cruise_departures(data_partenza)
     `
     )
     .eq('status', 'published')
@@ -101,20 +113,32 @@ export async function getPublishedCruises(): Promise<CruiseListItem[]> {
     throw new Error(`Failed to fetch published cruises: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    tipo_crociera: row.tipo_crociera,
-    status: row.status,
-    created_at: row.created_at,
-    ship_name: row.ship?.name ?? null,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      tipo_crociera: row.tipo_crociera,
+      status: row.status,
+      created_at: row.created_at,
+      ship_name: row.ship?.name ?? null,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }
 
 /**
@@ -217,7 +241,8 @@ export async function getCruisesForDestination(destinationId: string): Promise<C
       status,
       created_at,
       ship:ships(name),
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:cruise_departures(data_partenza)
     `
     )
     .eq('destination_id', destinationId)
@@ -228,20 +253,32 @@ export async function getCruisesForDestination(destinationId: string): Promise<C
     throw new Error(`Failed to fetch cruises for destination: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    tipo_crociera: row.tipo_crociera,
-    status: row.status,
-    created_at: row.created_at,
-    ship_name: row.ship?.name ?? null,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      tipo_crociera: row.tipo_crociera,
+      status: row.status,
+      created_at: row.created_at,
+      ship_name: row.ship?.name ?? null,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }
 
 /**
@@ -265,7 +302,8 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
       status,
       created_at,
       ship:ships(name),
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:cruise_departures(data_partenza)
     `
     )
     .eq('ship_id', shipId)
@@ -276,20 +314,32 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
     throw new Error(`Failed to fetch cruises for ship: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    tipo_crociera: row.tipo_crociera,
-    status: row.status,
-    created_at: row.created_at,
-    ship_name: row.ship?.name ?? null,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      tipo_crociera: row.tipo_crociera,
+      status: row.status,
+      created_at: row.created_at,
+      ship_name: row.ship?.name ?? null,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -337,24 +387,36 @@ export async function getPublishedCruisesWithDepartures(): Promise<CruiseListIte
     throw new Error(`Failed to fetch enriched cruises: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    tipo_crociera: row.tipo_crociera,
-    status: row.status,
-    created_at: row.created_at,
-    ship_id: row.ship_id,
-    destination_id: row.destination_id,
-    ship_name: row.ship?.name ?? null,
-    destination_name: row.destination?.name ?? null,
-    destination_macro_area: row.destination?.macro_area ?? null,
-    departures: row.departures ?? [],
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      tipo_crociera: row.tipo_crociera,
+      status: row.status,
+      created_at: row.created_at,
+      ship_id: row.ship_id,
+      destination_id: row.destination_id,
+      ship_name: row.ship?.name ?? null,
+      destination_name: row.destination?.name ?? null,
+      destination_macro_area: row.destination?.macro_area ?? null,
+      departures: row.departures ?? [],
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -490,31 +552,44 @@ export async function getRelatedCruises(
       status,
       created_at,
       ship:ships(name),
-      destination:destinations(name)
+      destination:destinations(name),
+      departures:cruise_departures(data_partenza)
     `
     )
     .eq('destination_id', current.destination_id)
     .eq('status', 'published')
     .neq('id', current.id)
     .order('created_at', { ascending: false })
-    .limit(limit)
 
   if (error) {
     throw new Error(`Failed to fetch related cruises: ${error.message}`)
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    slug: row.slug,
-    cover_image_url: row.cover_image_url,
-    durata_notti: row.durata_notti,
-    a_partire_da: row.a_partire_da,
-    prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
-    tipo_crociera: row.tipo_crociera,
-    status: row.status,
-    created_at: row.created_at,
-    ship_name: row.ship?.name ?? null,
-    destination_name: row.destination?.name ?? null,
-  }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  return (data ?? [])
+    .filter((row: any) => {
+      const deps = row.departures ?? []
+      if (deps.length === 0) return true
+      return deps.some((d: any) => d.data_partenza >= today)
+    })
+    .slice(0, limit)
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      cover_image_url: row.cover_image_url,
+      durata_notti: row.durata_notti,
+      a_partire_da: row.a_partire_da,
+      prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      tipo_crociera: row.tipo_crociera,
+      status: row.status,
+      created_at: row.created_at,
+      ship_name: row.ship?.name ?? null,
+      destination_name: row.destination?.name ?? null,
+      next_departure_date: (row.departures ?? [])
+        .filter((d: any) => d.data_partenza >= today)
+        .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
+        ?.data_partenza ?? null,
+    }))
 }

@@ -400,3 +400,165 @@ export async function toggleTourStatus(
 
   return { success: true, id }
 }
+
+export async function duplicateTourAction(id: string): Promise<ActionResult> {
+  const { getTourById } = await import('@/lib/supabase/queries/tours')
+  const supabase = createAdminClient()
+
+  // 1. Fetch full tour
+  const tour = await getTourById(id)
+  if (!tour) return { success: false, error: 'Tour non trovato' }
+
+  // 2. Generate unique slug
+  let newSlug = `${tour.slug}-copia`
+  const { data: existing } = await supabase
+    .from('tours')
+    .select('slug')
+    .like('slug', `${tour.slug}-copia%`)
+  const existingSlugs = new Set((existing ?? []).map((r: any) => r.slug))
+  if (existingSlugs.has(newSlug)) {
+    let counter = 2
+    while (existingSlugs.has(`${tour.slug}-copia-${counter}`)) counter++
+    newSlug = `${tour.slug}-copia-${counter}`
+  }
+
+  try {
+    // 3. Insert new tour as draft
+    const { data: inserted, error: insertError } = await supabase
+      .from('tours')
+      .insert({
+        title: `${tour.title} (copia)`,
+        slug: newSlug,
+        destination_id: tour.destination_id,
+        a_partire_da: tour.a_partire_da,
+        prezzo_su_richiesta: tour.prezzo_su_richiesta,
+        numero_persone: tour.numero_persone,
+        durata_notti: tour.durata_notti,
+        pensione: tour.pensione,
+        tipo_voli: tour.tipo_voli,
+        note_importanti: tour.note_importanti,
+        nota_penali: tour.nota_penali,
+        programma_pdf_url: tour.programma_pdf_url,
+        meta_title: null,
+        meta_description: null,
+        content: tour.content,
+        cover_image_url: tour.cover_image_url,
+        status: 'draft',
+      })
+      .select('id')
+      .single()
+
+    if (insertError) return { success: false, error: insertError.message }
+    const newId = inserted.id
+
+    // 4. Copy all sub-tables using syncSubTable
+    await syncSubTable(supabase, 'tour_itinerary_days', newId,
+      (tour.itinerary_days ?? []).map((d: any) => ({
+        numero_giorno: d.numero_giorno,
+        localita: d.localita,
+        descrizione: d.descrizione,
+      }))
+    )
+
+    await syncSubTable(supabase, 'tour_locations', newId,
+      (tour.locations ?? []).map((l: any) => ({
+        nome: l.nome,
+        coordinate: l.coordinate,
+      }))
+    )
+
+    await syncSubTable(supabase, 'tour_hotels', newId,
+      (tour.hotels ?? []).map((h: any) => ({
+        localita: h.localita,
+        nome_albergo: h.nome_albergo,
+        stelle: h.stelle,
+      }))
+    )
+
+    await syncSubTable(supabase, 'tour_departures', newId,
+      (tour.departures ?? []).map((d: any) => ({
+        from_city: d.from_city,
+        data_partenza: d.data_partenza,
+        prezzo_3_stelle: d.prezzo_3_stelle,
+        prezzo_4_stelle: d.prezzo_4_stelle,
+      }))
+    )
+
+    await syncSubTable(supabase, 'tour_supplements', newId,
+      (tour.supplements ?? []).map((s: any) => ({
+        titolo: s.titolo,
+        prezzo: s.prezzo,
+      }))
+    )
+
+    await syncSubTable(supabase, 'tour_inclusions', newId,
+      (tour.inclusions ?? []).map((i: any) => ({
+        titolo: i.titolo,
+        is_included: i.is_included,
+      }))
+    )
+
+    await syncSubTable(supabase, 'tour_terms', newId,
+      (tour.terms ?? []).map((t: any) => ({ titolo: t.titolo }))
+    )
+
+    await syncSubTable(supabase, 'tour_penalties', newId,
+      (tour.penalties ?? []).map((p: any) => ({ titolo: p.titolo }))
+    )
+
+    await syncSubTable(supabase, 'tour_gallery', newId,
+      (tour.gallery ?? []).map((g: any) => ({ image_url: g.image_url }))
+    )
+
+    await syncSubTable(supabase, 'tour_optional_excursions', newId,
+      (tour.optional_excursions ?? []).map((e: any) => ({
+        titolo: e.titolo,
+        descrizione: e.descrizione,
+        prezzo: e.prezzo,
+      }))
+    )
+
+    revalidatePath('/admin/tours')
+    return { success: true, id: newId }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Errore durante la duplicazione'
+    return { success: false, error: message }
+  }
+}
+
+export async function bulkSetTourStatus(
+  ids: string[],
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessun tour selezionato' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('tours')
+    .update({ status: newStatus })
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/tours')
+  revalidatePath('/tours')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
+export async function bulkDeleteTours(ids: string[]): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessun tour selezionato' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('tours')
+    .delete()
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/tours')
+  revalidatePath('/tours')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
