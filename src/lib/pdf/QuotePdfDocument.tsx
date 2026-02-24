@@ -284,7 +284,7 @@ function formatPrice(value: string | number | null): string {
 }
 
 function stars(n: number): string {
-  return "\u2605".repeat(n);
+  return "*".repeat(n);
 }
 
 // ---------------------------------------------------------------------------
@@ -711,21 +711,22 @@ export default function QuotePdfDocument({
                         style={{
                           width: "50%",
                           flexDirection: "row",
+                          alignItems: "flex-start",
                           marginBottom: 3,
                           paddingRight: 8,
                         }}
                       >
-                        <Text
+                        <View
                           style={{
-                            fontSize: 8,
-                            color: B.green,
+                            width: 7,
+                            height: 7,
+                            borderRadius: 1,
+                            backgroundColor: B.green,
                             marginRight: 4,
-                            fontFamily: "Helvetica-Bold",
+                            marginTop: 1,
                           }}
-                        >
-                          {"\u2713"}
-                        </Text>
-                        <Text style={{ fontSize: 8, color: B.textLight }}>
+                        />
+                        <Text style={{ fontSize: 8, color: B.textLight, flex: 1 }}>
                           {svc}
                         </Text>
                       </View>
@@ -1236,16 +1237,29 @@ export default function QuotePdfDocument({
                   marginBottom: 3,
                 }}
               >
-                <Text
+                <View
                   style={{
-                    fontSize: 9,
-                    color: B.green,
-                    fontFamily: "Helvetica-Bold",
-                    width: 14,
+                    width: 10,
+                    height: 10,
+                    borderRadius: 2,
+                    backgroundColor: B.green,
+                    marginRight: 6,
+                    marginTop: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {"\u2713"}
-                </Text>
+                  <View
+                    style={{
+                      width: 4,
+                      height: 2,
+                      borderBottomWidth: 1.5,
+                      borderLeftWidth: 1.5,
+                      borderColor: B.white,
+                      transform: "rotate(-45deg)",
+                    }}
+                  />
+                </View>
                 <Text
                   style={{
                     fontSize: 8.5,
@@ -1291,16 +1305,26 @@ export default function QuotePdfDocument({
                   marginBottom: 3,
                 }}
               >
-                <Text
+                <View
                   style={{
-                    fontSize: 9,
-                    color: B.red,
-                    fontFamily: "Helvetica-Bold",
-                    width: 14,
+                    width: 10,
+                    height: 10,
+                    borderRadius: 2,
+                    backgroundColor: B.red,
+                    marginRight: 6,
+                    marginTop: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {"\u2717"}
-                </Text>
+                  <View
+                    style={{
+                      width: 6,
+                      height: 1.5,
+                      backgroundColor: B.white,
+                    }}
+                  />
+                </View>
                 <Text
                   style={{
                     fontSize: 8.5,

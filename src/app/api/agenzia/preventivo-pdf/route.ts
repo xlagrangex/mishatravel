@@ -26,8 +26,8 @@ async function fetchImageAsBase64(
     clearTimeout(timer);
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
-    // Skip images larger than 800KB to keep PDF size reasonable
-    if (buf.byteLength > 800_000) return null;
+    // Skip images larger than 3MB to keep PDF size reasonable
+    if (buf.byteLength > 3_000_000) return null;
     const ct = res.headers.get("content-type") ?? "image/jpeg";
     return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
   } catch {
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         .single();
 
       const role = roleData?.role;
-      if (role !== "admin" && role !== "operator") {
+      if (role !== "super_admin" && role !== "admin" && role !== "operator") {
         return NextResponse.json(
           { error: "Accesso non autorizzato." },
           { status: 403 }
