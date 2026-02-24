@@ -47,6 +47,8 @@ export interface Tour {
   programma_pdf_url: string | null;
   meta_title: string | null;
   meta_description: string | null;
+  price_label_1: string;
+  price_label_2: string;
   status: TourStatus;
   created_at: string;
   updated_at: string;

@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Save,
   ArrowLeft,
+  Tag,
 } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 import FileUpload from "@/components/admin/FileUpload";
@@ -44,6 +45,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import DestinationSelect from "@/components/admin/DestinationSelect";
+import EditPriceLabelsDialog from "@/components/admin/forms/EditPriceLabelsDialog";
 
 import type { PensioneType, TourWithRelations } from "@/lib/types";
 
@@ -109,6 +111,8 @@ const tourFormSchema = z.object({
   hotel_groups: z.array(hotelGroupSchema),
 
   // Tab 4: Partenze
+  price_label_1: z.string().min(1),
+  price_label_2: z.string().min(1),
   departures: z.array(departureSchema),
 
   // Tab 5: Supplementi & Extra
@@ -176,6 +180,8 @@ export default function TourForm({ initialData, destinations = [], localities = 
         pensione: initialData.pensione,
         tipo_voli: initialData.tipo_voli,
         status: initialData.status,
+        price_label_1: initialData.price_label_1 ?? "Comfort",
+        price_label_2: initialData.price_label_2 ?? "Deluxe",
         itinerary_days: initialData.itinerary_days.map((d) => ({
           numero_giorno: d.numero_giorno,
           localita: d.localita,
@@ -221,6 +227,8 @@ export default function TourForm({ initialData, destinations = [], localities = 
         pensione: [],
         tipo_voli: null,
         status: "draft",
+        price_label_1: "Comfort",
+        price_label_2: "Deluxe",
         itinerary_days: [],
         hotel_groups: [],
         departures: [],
@@ -252,6 +260,11 @@ export default function TourForm({ initialData, destinations = [], localities = 
   const title = watch("title");
   const status = watch("status");
   const pensione = watch("pensione");
+  const priceLabel1 = watch("price_label_1");
+  const priceLabel2 = watch("price_label_2");
+
+  // Dialog state for price labels
+  const [priceLabelsDialogOpen, setPriceLabelsDialogOpen] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Field Arrays
@@ -372,6 +385,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
   // ---------------------------------------------------------------------------
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-6">
       <Tabs defaultValue="info-base">
         {/* Tabs Navigation */}
@@ -800,22 +814,35 @@ export default function TourForm({ initialData, destinations = [], localities = 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Partenze</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  departures.append({
-                    from_city: "",
-                    data_partenza: "",
-                    prezzo_3_stelle: null,
-                    prezzo_4_stelle: null,
-                  })
-                }
-              >
-                <Plus className="mr-2 size-4" />
-                Aggiungi Partenza
-              </Button>
+              <div className="flex items-center gap-2">
+                {initialData?.id && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPriceLabelsDialogOpen(true)}
+                  >
+                    <Tag className="mr-2 size-4" />
+                    Modifica Etichette Prezzo
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    departures.append({
+                      from_city: "",
+                      data_partenza: "",
+                      prezzo_3_stelle: null,
+                      prezzo_4_stelle: null,
+                    })
+                  }
+                >
+                  <Plus className="mr-2 size-4" />
+                  Aggiungi Partenza
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {departures.fields.length === 0 ? (
@@ -831,10 +858,10 @@ export default function TourForm({ initialData, destinations = [], localities = 
                       Data Partenza
                     </Label>
                     <Label className="text-xs text-muted-foreground">
-                      Prezzo 3 Stelle
+                      Prezzo {priceLabel1}
                     </Label>
                     <Label className="text-xs text-muted-foreground">
-                      Prezzo 4 Stelle
+                      Prezzo {priceLabel2}
                     </Label>
                     <div className="w-8" />
                   </div>
@@ -862,7 +889,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
                       </div>
                       <div className="space-y-1 sm:space-y-0">
                         <Label className="text-xs sm:hidden">
-                          Prezzo 3 Stelle
+                          Prezzo {priceLabel1}
                         </Label>
                         <div className="relative">
                           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
@@ -881,7 +908,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
                       </div>
                       <div className="space-y-1 sm:space-y-0">
                         <Label className="text-xs sm:hidden">
-                          Prezzo 4 Stelle
+                          Prezzo {priceLabel2}
                         </Label>
                         <div className="relative">
                           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
@@ -1362,6 +1389,22 @@ export default function TourForm({ initialData, destinations = [], localities = 
         </Button>
       </div>
     </form>
+
+    {/* Price Labels Dialog */}
+    {initialData?.id && (
+      <EditPriceLabelsDialog
+        tourId={initialData.id}
+        currentLabel1={priceLabel1}
+        currentLabel2={priceLabel2}
+        open={priceLabelsDialogOpen}
+        onOpenChange={setPriceLabelsDialogOpen}
+        onSaved={(l1, l2) => {
+          setValue("price_label_1", l1);
+          setValue("price_label_2", l2);
+        }}
+      />
+    )}
+    </>
   );
 }
 

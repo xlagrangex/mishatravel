@@ -276,8 +276,8 @@ export async function getQuotePdfData(
         from_city: d.from_city,
         data_partenza: d.data_partenza,
         prices: [
-          { label: "3 Stelle", value: d.prezzo_3_stelle },
-          { label: "4 Stelle", value: d.prezzo_4_stelle },
+          { label: tour.price_label_1 ?? "Comfort", value: d.prezzo_3_stelle },
+          { label: tour.price_label_2 ?? "Deluxe", value: d.prezzo_4_stelle },
         ].filter((p) => p.value != null),
       })),
       supplements: (tour.supplements ?? []).map((s: any) => ({

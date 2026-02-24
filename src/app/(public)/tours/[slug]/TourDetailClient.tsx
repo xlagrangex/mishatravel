@@ -359,6 +359,8 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                 type="tour"
                 departures={tour.departures ?? []}
                 onRequestQuote={(depId) => openConfigurator(depId)}
+                priceLabel1={tour.price_label_1}
+                priceLabel2={tour.price_label_2}
               />
             </TabsContent>
 
@@ -420,6 +422,8 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
         open={configuratorOpen}
         onOpenChange={setConfiguratorOpen}
         preselectedDepartureId={preselectedDepId}
+        priceLabel1={tour.price_label_1}
+        priceLabel2={tour.price_label_2}
       />
     </>
   );

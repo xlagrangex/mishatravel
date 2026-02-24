@@ -17,6 +17,7 @@ import {
   ImagePlus,
   Loader2,
   Ship,
+  Settings,
 } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 import FileUpload from "@/components/admin/FileUpload";
@@ -47,6 +48,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import DestinationSelect from "@/components/admin/DestinationSelect";
+import EditShipCabinsDialog from "@/components/admin/forms/EditShipCabinsDialog";
 
 import type {
   PensioneType,
@@ -204,6 +206,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
     initialData?.ship_decks ?? []
   );
   const [loadingCabins, setLoadingCabins] = useState(false);
+  const [cabinsDialogOpen, setCabinsDialogOpen] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Form setup
@@ -473,6 +476,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
   // ---------------------------------------------------------------------------
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Tabs defaultValue="info-base">
         {/* Tabs Navigation */}
@@ -942,24 +946,37 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Partenze &amp; Prezzi per Cabina</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  departures.append({
-                    from_city: "",
-                    data_partenza: "",
-                    prices: shipCabins.map((c) => ({
-                      cabin_id: c.id,
-                      prezzo: null,
-                    })),
-                  })
-                }
-              >
-                <Plus className="mr-2 size-4" />
-                Aggiungi Partenza
-              </Button>
+              <div className="flex items-center gap-2">
+                {watchedShipId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCabinsDialogOpen(true)}
+                  >
+                    <Settings className="mr-2 size-4" />
+                    Modifica Ponti &amp; Cabine di {ships.find((s) => s.id === watchedShipId)?.name ?? "nave"}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    departures.append({
+                      from_city: "",
+                      data_partenza: "",
+                      prices: shipCabins.map((c) => ({
+                        cabin_id: c.id,
+                        prezzo: null,
+                      })),
+                    })
+                  }
+                >
+                  <Plus className="mr-2 size-4" />
+                  Aggiungi Partenza
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Warning if no ship selected */}
@@ -1544,5 +1561,37 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         </Button>
       </div>
     </form>
+
+    {/* Ship Cabins Dialog */}
+    {watchedShipId && (
+      <EditShipCabinsDialog
+        shipId={watchedShipId}
+        shipName={ships.find((s) => s.id === watchedShipId)?.name ?? "nave"}
+        open={cabinsDialogOpen}
+        onOpenChange={setCabinsDialogOpen}
+        onSaved={() => {
+          // Refresh cabin data
+          setLoadingCabins(true);
+          getShipCabinsAndDecks(watchedShipId).then(({ cabins, decks }) => {
+            setShipCabins(cabins as ShipCabinDetail[]);
+            setShipDecks(decks as ShipDeck[]);
+            setLoadingCabins(false);
+
+            // Rebuild prices for all existing departures with new cabin structure
+            const currentDeps = getValues("departures");
+            for (let i = 0; i < currentDeps.length; i++) {
+              setValue(
+                `departures.${i}.prices`,
+                (cabins as ShipCabinDetail[]).map((c) => ({
+                  cabin_id: c.id,
+                  prezzo: null,
+                }))
+              );
+            }
+          });
+        }}
+      />
+    )}
+    </>
   );
 }

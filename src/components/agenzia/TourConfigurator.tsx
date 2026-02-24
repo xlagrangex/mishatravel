@@ -55,6 +55,9 @@ interface TourConfiguratorProps {
   onOpenChange: (open: boolean) => void;
   /** If provided, this departure is pre-selected */
   preselectedDepartureId?: string;
+  /** Custom price labels for hotel categories */
+  priceLabel1?: string;
+  priceLabel2?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +107,8 @@ export default function TourConfigurator({
   open,
   onOpenChange,
   preselectedDepartureId,
+  priceLabel1 = "Comfort",
+  priceLabel2 = "Deluxe",
 }: TourConfiguratorProps) {
   const [step, setStep] = useState<Step>("form");
   const [isPending, startTransition] = useTransition();
@@ -263,8 +268,8 @@ export default function TourConfigurator({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="3">Hotel 3 stelle</SelectItem>
-                      <SelectItem value="4">Hotel 4 stelle</SelectItem>
+                      <SelectItem value="3">{priceLabel1}</SelectItem>
+                      <SelectItem value="4">{priceLabel2}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

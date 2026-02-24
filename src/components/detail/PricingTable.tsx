@@ -25,6 +25,8 @@ interface TourPricingTableProps {
   type: "tour";
   departures: TourDepartureRow[];
   onRequestQuote: (departureId: string) => void;
+  priceLabel1?: string;
+  priceLabel2?: string;
   cabins?: never;
   shipDecks?: never;
   departurePrices?: never;
@@ -116,8 +118,8 @@ export default function PricingTable(props: PricingTableProps) {
             <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
             {type === "tour" ? (
               <>
-                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">3 Stelle</th>
-                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">4 Stelle</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{props.priceLabel1 || "Comfort"}</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{props.priceLabel2 || "Deluxe"}</th>
               </>
             ) : (
               cabinColumns.map(({ cabin, deck }) => (
