@@ -4,6 +4,7 @@ import React from "react";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { getQuotePdfData } from "@/lib/pdf/quote-pdf-data";
 import QuotePdfDocument from "@/lib/pdf/QuotePdfDocument";
@@ -259,7 +260,33 @@ export async function GET(request: NextRequest) {
       else cabinImagesBase64[r.key] = r.base64;
     }
 
-    // 7. Render PDF to buffer
+    // 7. Generate QR codes
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ?? "https://mishatravel.com";
+
+    const qrOpts: QRCode.QRCodeToDataURLOptions = {
+      width: 120,
+      margin: 1,
+      color: { dark: "#1B2D4F", light: "#FFFFFF" },
+    };
+
+    const productPath =
+      data.requestType === "tour"
+        ? `/tours/${data.slug}`
+        : `/crociere/${data.slug}`;
+
+    const [qrWebsite, qrProduct, qrShip] = await Promise.all([
+      QRCode.toDataURL(siteUrl, qrOpts).catch(() => null),
+      QRCode.toDataURL(`${siteUrl}${productPath}`, qrOpts).catch(() => null),
+      data.ship?.slug
+        ? QRCode.toDataURL(
+            `${siteUrl}/flotta/${data.ship.slug}`,
+            qrOpts
+          ).catch(() => null)
+        : Promise.resolve(null),
+    ]);
+
+    // 8. Render PDF to buffer
     const pdfBuffer = await renderToBuffer(
       React.createElement(QuotePdfDocument, {
         data,
@@ -268,6 +295,11 @@ export async function GET(request: NextRequest) {
         shipImageBase64,
         cabinImagesBase64,
         mapImageBase64,
+        qrCodes: {
+          website: qrWebsite,
+          product: qrProduct,
+          ship: qrShip,
+        },
       }) as any
     );
 

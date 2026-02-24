@@ -68,6 +68,7 @@ export interface ExcursionInfo {
 
 export interface ShipInfo {
   name: string;
+  slug: string | null;
   cover_image_url: string | null;
   description: string | null;
   services: string[];
@@ -99,6 +100,7 @@ export interface QuotePdfPayload {
 
   // Product details
   title: string;
+  slug: string;
   coverImageUrl: string | null;
   destinationName: string | null;
   durataNotti: string | null;
@@ -246,6 +248,7 @@ export async function getQuotePdfData(
       selectedDepartureDate,
       selectedDepartureCity,
       title: tour.title,
+      slug: tour.slug,
       coverImageUrl: tour.cover_image_url,
       destinationName: tour.destination?.name ?? null,
       durataNotti: tour.durata_notti,
@@ -343,6 +346,7 @@ export async function getQuotePdfData(
       selectedDepartureDate,
       selectedDepartureCity,
       title: cruise.title,
+      slug: cruise.slug,
       coverImageUrl: cruise.cover_image_url,
       destinationName: cruise.destination?.name ?? null,
       durataNotti: cruise.durata_notti,
@@ -390,6 +394,7 @@ export async function getQuotePdfData(
       ship: cruise.ship
         ? {
             name: cruise.ship.name,
+            slug: cruise.ship.slug ?? null,
             cover_image_url: cruise.ship.cover_image_url ?? null,
             description: shipDescription,
             services: shipServices,

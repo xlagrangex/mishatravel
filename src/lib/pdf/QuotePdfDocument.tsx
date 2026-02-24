@@ -328,6 +328,12 @@ function SectionHeader({ title }: { title: string }) {
 // Props
 // ---------------------------------------------------------------------------
 
+interface QrCodes {
+  website: string | null;
+  product: string | null;
+  ship: string | null;
+}
+
 interface QuotePdfDocumentProps {
   data: QuotePdfPayload;
   logoUrl: string;
@@ -335,6 +341,7 @@ interface QuotePdfDocumentProps {
   shipImageBase64: string | null;
   cabinImagesBase64: Record<string, string>;
   mapImageBase64: string | null;
+  qrCodes: QrCodes;
 }
 
 // ---------------------------------------------------------------------------
@@ -348,6 +355,7 @@ export default function QuotePdfDocument({
   shipImageBase64,
   cabinImagesBase64,
   mapImageBase64,
+  qrCodes,
 }: QuotePdfDocumentProps) {
   const pensioneMap: Record<string, string> = {
     no: "Senza pasti",
@@ -1443,6 +1451,91 @@ export default function QuotePdfDocument({
               {data.notes}
             </Text>
           </>
+        )}
+
+        {/* QR codes section */}
+        {(qrCodes.website || qrCodes.product || qrCodes.ship) && (
+          <View
+            wrap={false}
+            style={{
+              marginTop: 16,
+              marginBottom: 12,
+              backgroundColor: B.lightGray,
+              borderRadius: 6,
+              padding: 14,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: "Helvetica-Bold",
+                color: B.navy,
+                textAlign: "center",
+                marginBottom: 10,
+              }}
+            >
+              Scopri di piu
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 24,
+              }}
+            >
+              {qrCodes.website && (
+                <View style={{ alignItems: "center" }}>
+                  <Image
+                    src={qrCodes.website}
+                    style={{ width: 80, height: 80, marginBottom: 4 }}
+                  />
+                  <Text
+                    style={{ fontSize: 7, color: B.gray, textAlign: "center" }}
+                  >
+                    MishaTravel.com
+                  </Text>
+                </View>
+              )}
+              {qrCodes.product && (
+                <View style={{ alignItems: "center" }}>
+                  <Image
+                    src={qrCodes.product}
+                    style={{ width: 80, height: 80, marginBottom: 4 }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 7,
+                      color: B.gray,
+                      textAlign: "center",
+                      maxWidth: 90,
+                    }}
+                  >
+                    {data.requestType === "tour"
+                      ? "Pagina del Tour"
+                      : "Pagina della Crociera"}
+                  </Text>
+                </View>
+              )}
+              {qrCodes.ship && (
+                <View style={{ alignItems: "center" }}>
+                  <Image
+                    src={qrCodes.ship}
+                    style={{ width: 80, height: 80, marginBottom: 4 }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 7,
+                      color: B.gray,
+                      textAlign: "center",
+                      maxWidth: 90,
+                    }}
+                  >
+                    La Nave
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
         )}
 
         {/* Final branding block */}
