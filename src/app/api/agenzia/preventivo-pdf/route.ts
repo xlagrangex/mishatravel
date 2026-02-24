@@ -3,9 +3,11 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { createClient } from "@/lib/supabase/server";
 import { getQuotePdfData } from "@/lib/pdf/quote-pdf-data";
 import QuotePdfDocument from "@/lib/pdf/QuotePdfDocument";
+import type { LocationPoint } from "@/lib/pdf/quote-pdf-data";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -30,6 +32,76 @@ async function fetchImageAsBase64(
     if (buf.byteLength > 3_000_000) return null;
     const ct = res.headers.get("content-type") ?? "image/jpeg";
     return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Map generation utility
+// ---------------------------------------------------------------------------
+
+const MARKER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28">
+  <path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 18 10 18s10-10.5 10-18C20 4.5 15.5 0 10 0z" fill="#C41E2F"/>
+  <circle cx="10" cy="10" r="4" fill="white"/>
+</svg>`;
+
+async function generateMapBase64(
+  locations: LocationPoint[],
+  timeoutMs = 4000
+): Promise<string | null> {
+  const coords = locations
+    .filter((l) => l.coordinate)
+    .map((l) => {
+      const parts = l.coordinate!.split(",").map((s) => parseFloat(s.trim()));
+      if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
+      // DB stores "lat,lng", staticmaps needs [lng, lat]
+      return [parts[1], parts[0]] as [number, number];
+    })
+    .filter((c): c is [number, number] => c !== null);
+
+  if (coords.length < 2) return null;
+
+  try {
+    const StaticMaps = (await import("staticmaps")).default;
+
+    // Write SVG marker to temp file
+    const markerPath = path.join(os.tmpdir(), "mt-map-pin.svg");
+    fs.writeFileSync(markerPath, MARKER_SVG);
+
+    const map = new StaticMaps({
+      width: 600,
+      height: 300,
+      tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    });
+
+    // Draw route line
+    map.addLine({
+      coords,
+      color: "#C41E2FBB",
+      width: 2,
+    });
+
+    // Add pin markers
+    for (const coord of coords) {
+      map.addMarker({
+        coord,
+        img: markerPath,
+        height: 28,
+        width: 20,
+      });
+    }
+
+    // Render with timeout
+    await Promise.race([
+      map.render(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), timeoutMs)
+      ),
+    ]);
+
+    const buffer = await map.image.buffer("image/png");
+    return `data:image/png;base64,${Buffer.from(buffer).toString("base64")}`;
   } catch {
     return null;
   }
@@ -116,15 +188,15 @@ export async function GET(request: NextRequest) {
       logoUrl = `${origin}/images/logo/logo.png`;
     }
 
-    // 6. Pre-fetch images in parallel with a total budget
-    const IMAGE_BUDGET_MS = 5000;
+    // 6. Pre-fetch images + map in parallel with a total budget
+    const IMAGE_BUDGET_MS = 8000;
 
     const imagePromises: Promise<{ key: string; base64: string | null }>[] = [];
 
     // Cover image
     if (data.coverImageUrl) {
       imagePromises.push(
-        fetchImageAsBase64(data.coverImageUrl, 3500).then((b) => ({
+        fetchImageAsBase64(data.coverImageUrl, 4000).then((b) => ({
           key: "__cover__",
           base64: b,
         }))
@@ -134,7 +206,7 @@ export async function GET(request: NextRequest) {
     // Ship image
     if (data.ship?.cover_image_url) {
       imagePromises.push(
-        fetchImageAsBase64(data.ship.cover_image_url, 3500).then((b) => ({
+        fetchImageAsBase64(data.ship.cover_image_url, 4000).then((b) => ({
           key: "__ship__",
           base64: b,
         }))
@@ -145,12 +217,22 @@ export async function GET(request: NextRequest) {
     for (const cabin of data.shipCabinDetails.slice(0, 4)) {
       if (cabin.immagine_url) {
         imagePromises.push(
-          fetchImageAsBase64(cabin.immagine_url, 3000).then((b) => ({
+          fetchImageAsBase64(cabin.immagine_url, 3500).then((b) => ({
             key: cabin.titolo,
             base64: b,
           }))
         );
       }
+    }
+
+    // Map image from location coordinates
+    if (data.locations.length >= 2) {
+      imagePromises.push(
+        generateMapBase64(data.locations, 5000).then((b) => ({
+          key: "__map__",
+          base64: b,
+        }))
+      );
     }
 
     // Race all images against budget
@@ -166,12 +248,14 @@ export async function GET(request: NextRequest) {
 
     let coverImageBase64: string | null = null;
     let shipImageBase64: string | null = null;
+    let mapImageBase64: string | null = null;
     const cabinImagesBase64: Record<string, string> = {};
 
     for (const r of imageResults) {
       if (!r.base64) continue;
       if (r.key === "__cover__") coverImageBase64 = r.base64;
       else if (r.key === "__ship__") shipImageBase64 = r.base64;
+      else if (r.key === "__map__") mapImageBase64 = r.base64;
       else cabinImagesBase64[r.key] = r.base64;
     }
 
@@ -183,6 +267,7 @@ export async function GET(request: NextRequest) {
         coverImageBase64,
         shipImageBase64,
         cabinImagesBase64,
+        mapImageBase64,
       }) as any
     );
 

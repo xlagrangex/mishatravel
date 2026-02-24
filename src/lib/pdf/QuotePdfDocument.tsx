@@ -334,6 +334,7 @@ interface QuotePdfDocumentProps {
   coverImageBase64: string | null;
   shipImageBase64: string | null;
   cabinImagesBase64: Record<string, string>;
+  mapImageBase64: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -346,6 +347,7 @@ export default function QuotePdfDocument({
   coverImageBase64,
   shipImageBase64,
   cabinImagesBase64,
+  mapImageBase64,
 }: QuotePdfDocumentProps) {
   const pensioneMap: Record<string, string> = {
     no: "Senza pasti",
@@ -521,6 +523,20 @@ export default function QuotePdfDocument({
           <PageFooterBlock quoteId={data.quoteId} />
 
           <SectionHeader title="Programma Dettagliato" />
+
+          {/* Map image */}
+          {mapImageBase64 && (
+            <Image
+              src={mapImageBase64}
+              style={{
+                width: "100%",
+                height: 180,
+                objectFit: "cover",
+                borderRadius: 4,
+                marginBottom: 12,
+              }}
+            />
+          )}
 
           {/* Location route overview */}
           {data.locations.length > 0 && (

@@ -383,7 +383,7 @@ export async function getCruiseById(id: string) {
       terms:cruise_terms(*),
       penalties:cruise_penalties(*),
       gallery:cruise_gallery(*),
-      ship:ships(id, name, slug),
+      ship:ships(id, name, slug, cover_image_url),
       destination:destinations(id, name, slug)
     `
     )
