@@ -520,6 +520,38 @@ export default function QuotePdfDocument({
             </View>
           )}
         </View>
+
+        {/* Product QR code */}
+        {qrCodes.product && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 14,
+              gap: 10,
+            }}
+          >
+            <Image
+              src={qrCodes.product}
+              style={{ width: 64, height: 64 }}
+            />
+            <View>
+              <Text
+                style={{
+                  fontSize: 8,
+                  fontFamily: "Helvetica-Bold",
+                  color: B.navy,
+                  marginBottom: 2,
+                }}
+              >
+                Scopri {data.requestType === "tour" ? "il Tour" : "la Crociera"} online
+              </Text>
+              <Text style={{ fontSize: 7, color: B.gray }}>
+                Scansiona il QR per visualizzare tutti i dettagli su mishatravel.com
+              </Text>
+            </View>
+          </View>
+        )}
       </Page>
 
       {/* ================================================================= */}
@@ -697,6 +729,25 @@ export default function QuotePdfDocument({
                     >
                       Numero cabine: {data.numCabins}
                     </Text>
+                  )}
+                  {/* Ship QR code */}
+                  {qrCodes.ship && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 6,
+                        gap: 6,
+                      }}
+                    >
+                      <Image
+                        src={qrCodes.ship}
+                        style={{ width: 48, height: 48 }}
+                      />
+                      <Text style={{ fontSize: 7, color: B.gray, flex: 1 }}>
+                        Scopri la nave su mishatravel.com
+                      </Text>
+                    </View>
                   )}
                 </View>
               </View>
@@ -1453,91 +1504,6 @@ export default function QuotePdfDocument({
           </>
         )}
 
-        {/* QR codes section */}
-        {(qrCodes.website || qrCodes.product || qrCodes.ship) && (
-          <View
-            wrap={false}
-            style={{
-              marginTop: 16,
-              marginBottom: 12,
-              backgroundColor: B.lightGray,
-              borderRadius: 6,
-              padding: 14,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 10,
-                fontFamily: "Helvetica-Bold",
-                color: B.navy,
-                textAlign: "center",
-                marginBottom: 10,
-              }}
-            >
-              Scopri di piu
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                gap: 24,
-              }}
-            >
-              {qrCodes.website && (
-                <View style={{ alignItems: "center" }}>
-                  <Image
-                    src={qrCodes.website}
-                    style={{ width: 80, height: 80, marginBottom: 4 }}
-                  />
-                  <Text
-                    style={{ fontSize: 7, color: B.gray, textAlign: "center" }}
-                  >
-                    MishaTravel.com
-                  </Text>
-                </View>
-              )}
-              {qrCodes.product && (
-                <View style={{ alignItems: "center" }}>
-                  <Image
-                    src={qrCodes.product}
-                    style={{ width: 80, height: 80, marginBottom: 4 }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 7,
-                      color: B.gray,
-                      textAlign: "center",
-                      maxWidth: 90,
-                    }}
-                  >
-                    {data.requestType === "tour"
-                      ? "Pagina del Tour"
-                      : "Pagina della Crociera"}
-                  </Text>
-                </View>
-              )}
-              {qrCodes.ship && (
-                <View style={{ alignItems: "center" }}>
-                  <Image
-                    src={qrCodes.ship}
-                    style={{ width: 80, height: 80, marginBottom: 4 }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 7,
-                      color: B.gray,
-                      textAlign: "center",
-                      maxWidth: 90,
-                    }}
-                  >
-                    La Nave
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
         {/* Final branding block */}
         <View style={s.finalBox} wrap={false}>
           <Image src={logoUrl} style={{ width: 140, marginBottom: 12 }} />
@@ -1584,6 +1550,20 @@ export default function QuotePdfDocument({
               Questo preventivo e valido fino al{" "}
               {formatDate(data.offer.offer_expiry)}
             </Text>
+          )}
+          {/* Website QR code */}
+          {qrCodes.website && (
+            <View style={{ alignItems: "center", marginTop: 12 }}>
+              <Image
+                src={qrCodes.website}
+                style={{ width: 70, height: 70, marginBottom: 4 }}
+              />
+              <Text
+                style={{ fontSize: 7, color: B.white, textAlign: "center", opacity: 0.85 }}
+              >
+                Visita mishatravel.com
+              </Text>
+            </View>
           )}
         </View>
       </Page>
