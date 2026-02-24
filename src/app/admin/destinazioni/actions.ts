@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logActivity } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -44,6 +45,13 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
 
     if (error) return { success: false, error: error.message }
 
+    logActivity({
+      action: 'destination.update',
+      entityType: 'destination',
+      entityId: id,
+      entityTitle: cleanData.name,
+    }).catch(() => {})
+
     revalidatePath('/admin/destinazioni')
     revalidatePath(`/destinazioni/${cleanData.slug}`)
     revalidatePath('/destinazioni')
@@ -62,6 +70,13 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
       return { success: false, error: error.message }
     }
 
+    logActivity({
+      action: 'destination.create',
+      entityType: 'destination',
+      entityId: created.id,
+      entityTitle: cleanData.name,
+    }).catch(() => {})
+
     revalidatePath('/admin/destinazioni')
     revalidatePath('/destinazioni')
     revalidatePath('/')
@@ -72,12 +87,21 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
 export async function deleteDestination(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  const { data: destData } = await supabase.from('destinations').select('name').eq('id', id).single()
+
   const { error } = await supabase
     .from('destinations')
     .delete()
     .eq('id', id)
 
   if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: 'destination.delete',
+    entityType: 'destination',
+    entityId: id,
+    entityTitle: destData?.name ?? 'Destinazione eliminata',
+  }).catch(() => {})
 
   revalidatePath('/admin/destinazioni')
   revalidatePath('/destinazioni')

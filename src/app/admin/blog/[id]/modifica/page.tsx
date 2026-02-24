@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import BlogPostForm from "@/components/admin/forms/BlogPostForm";
+import ActivityLog from "@/components/admin/ActivityLog";
 import { getBlogPostById, getBlogCategories } from "@/lib/supabase/queries/blog";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,7 @@ export default async function ModificaArticoloPage({
         </p>
       </div>
 
+      <ActivityLog entityType="blog" entityId={id} />
       <BlogPostForm initialData={post} categories={categories} />
     </div>
   );

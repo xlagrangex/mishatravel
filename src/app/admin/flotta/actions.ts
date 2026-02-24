@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logActivity } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -266,7 +267,15 @@ export async function saveShip(formData: unknown): Promise<ActionResult> {
     return { success: false, error: message }
   }
 
-  // 5. Revalidate
+  // 5. Log activity
+  logActivity({
+    action: data.id ? 'ship.update' : 'ship.create',
+    entityType: 'ship',
+    entityId: shipId,
+    entityTitle: data.name,
+  }).catch(() => {})
+
+  // 6. Revalidate
   revalidatePath('/admin/flotta')
   revalidatePath('/flotta')
   revalidatePath('/')
@@ -274,14 +283,109 @@ export async function saveShip(formData: unknown): Promise<ActionResult> {
   return { success: true, id: shipId }
 }
 
+// ---------------------------------------------------------------------------
+// Standalone action for decks & cabins (used by inline dialog in CruiseForm)
+// ---------------------------------------------------------------------------
+
+const decksAndCabinsSchema = z.object({
+  shipId: z.string().uuid(),
+  decks: z
+    .array(z.object({ nome: z.string().min(1, 'Il nome del ponte è obbligatorio') }))
+    .default([]),
+  cabin_details: z
+    .array(
+      z.object({
+        titolo: z.string().min(1, 'Il titolo è obbligatorio'),
+        immagine_url: z.string().nullable().default(null),
+        tipologia: z
+          .enum(['Singola', 'Doppia', 'Tripla', 'Quadrupla'])
+          .nullable()
+          .default(null),
+        descrizione: z.string().nullable().default(null),
+        deck_index: z.number().int().min(-1).default(-1),
+      })
+    )
+    .default([]),
+})
+
+export async function saveShipDecksAndCabins(
+  formData: unknown
+): Promise<{ success: true } | { success: false; error: string }> {
+  const parsed = decksAndCabinsSchema.safeParse(formData)
+  if (!parsed.success) {
+    const message = parsed.error.issues
+      .map((i) => `${i.path.join('.')}: ${i.message}`)
+      .join('; ')
+    return { success: false, error: message }
+  }
+
+  const { shipId, decks, cabin_details } = parsed.data
+  const supabase = createAdminClient()
+
+  try {
+    // Sync decks first
+    await syncSubTable(
+      supabase,
+      'ship_decks',
+      shipId,
+      decks.map((d) => ({ nome: d.nome }))
+    )
+
+    // Fetch newly-created deck IDs
+    const { data: newDecks } = await supabase
+      .from('ship_decks')
+      .select('id, sort_order')
+      .eq('ship_id', shipId)
+      .order('sort_order')
+
+    const deckIdByIndex = new Map<number, string>()
+    for (const d of newDecks ?? []) {
+      deckIdByIndex.set(d.sort_order, d.id)
+    }
+
+    // Sync cabin details with deck references
+    await syncSubTable(
+      supabase,
+      'ship_cabin_details',
+      shipId,
+      cabin_details.map((c) => ({
+        titolo: c.titolo,
+        immagine_url: emptyToNull(c.immagine_url),
+        tipologia: c.tipologia,
+        descrizione: emptyToNull(c.descrizione),
+        deck_id: c.deck_index >= 0 ? (deckIdByIndex.get(c.deck_index) ?? null) : null,
+      }))
+    )
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Errore sconosciuto'
+    return { success: false, error: message }
+  }
+
+  revalidatePath('/admin/flotta')
+  revalidatePath('/admin/crociere')
+  revalidatePath('/flotta')
+  revalidatePath('/crociere')
+
+  return { success: true }
+}
+
 export async function deleteShipAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
+
+  const { data: shipData } = await supabase.from('ships').select('name').eq('id', id).single()
 
   const { error } = await supabase.from('ships').delete().eq('id', id)
 
   if (error) {
     return { success: false, error: error.message }
   }
+
+  logActivity({
+    action: 'ship.delete',
+    entityType: 'ship',
+    entityId: id,
+    entityTitle: shipData?.name ?? 'Nave eliminata',
+  }).catch(() => {})
 
   revalidatePath('/admin/flotta')
   revalidatePath('/flotta')

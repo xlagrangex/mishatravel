@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logActivity } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -72,6 +73,13 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
       return { success: false, error: error.message }
     }
 
+    logActivity({
+      action: 'blog.update',
+      entityType: 'blog',
+      entityId: id,
+      entityTitle: cleanData.title,
+    }).catch(() => {})
+
     revalidatePath('/admin/blog')
     revalidatePath(`/blog/${cleanData.slug}`)
     revalidatePath('/blog')
@@ -90,6 +98,13 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
       return { success: false, error: error.message }
     }
 
+    logActivity({
+      action: 'blog.create',
+      entityType: 'blog',
+      entityId: created.id,
+      entityTitle: cleanData.title,
+    }).catch(() => {})
+
     revalidatePath('/admin/blog')
     revalidatePath('/blog')
     revalidatePath('/')
@@ -104,12 +119,21 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
 export async function deleteBlogPost(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  const { data: postData } = await supabase.from('blog_posts').select('title').eq('id', id).single()
+
   const { error } = await supabase
     .from('blog_posts')
     .delete()
     .eq('id', id)
 
   if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: 'blog.delete',
+    entityType: 'blog',
+    entityId: id,
+    entityTitle: postData?.title ?? 'Articolo eliminato',
+  }).catch(() => {})
 
   revalidatePath('/admin/blog')
   revalidatePath('/blog')

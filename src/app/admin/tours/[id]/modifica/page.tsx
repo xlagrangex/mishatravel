@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import TourForm from "@/components/admin/forms/TourForm";
+import ActivityLog from "@/components/admin/ActivityLog";
 import { getTourById } from "@/lib/supabase/queries/tours";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
 import { getDistinctLocalities } from "@/lib/supabase/queries/localities";
@@ -32,6 +33,7 @@ export default async function ModificaTourPage({ params }: ModificaTourPageProps
         </p>
       </div>
 
+      <ActivityLog entityType="tour" entityId={id} />
       <TourForm initialData={tour} destinations={destinations} localities={localities} />
     </div>
   );

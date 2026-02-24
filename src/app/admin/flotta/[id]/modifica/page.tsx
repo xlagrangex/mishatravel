@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ShipForm from "@/components/admin/forms/ShipForm";
+import ActivityLog from "@/components/admin/ActivityLog";
 import { getShipById } from "@/lib/supabase/queries/ships";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ export default async function ModificaNavPage({
         </p>
       </div>
 
+      <ActivityLog entityType="ship" entityId={id} />
       <ShipForm initialData={ship} />
     </div>
   );

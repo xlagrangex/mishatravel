@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import CruiseForm from "@/components/admin/forms/CruiseForm";
+import ActivityLog from "@/components/admin/ActivityLog";
 import { getCruiseById } from "@/lib/supabase/queries/cruises";
 import { getShipOptions } from "@/lib/supabase/queries/ships";
 import { getDestinationOptions } from "@/lib/supabase/queries/destinations";
@@ -34,6 +35,7 @@ export default async function ModificaCrocieraPage({ params }: ModificaCrocieraP
         </p>
       </div>
 
+      <ActivityLog entityType="cruise" entityId={id} />
       <CruiseForm initialData={cruise} ships={ships} destinations={destinations} localities={localities} />
     </div>
   );

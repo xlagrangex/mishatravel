@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logActivity } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -34,6 +35,8 @@ const tourSchema = z.object({
   meta_description: z.string().nullable().default(null),
   content: z.string().nullable().default(null),
   cover_image_url: z.string().nullable().default(null),
+  price_label_1: z.string().min(1).default('Comfort'),
+  price_label_2: z.string().min(1).default('Deluxe'),
   status: z.enum(['draft', 'published']).default('draft'),
 
   // Sub-table arrays
@@ -189,6 +192,8 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
     meta_description: emptyToNull(data.meta_description),
     content: emptyToNull(data.content),
     cover_image_url: emptyToNull(data.cover_image_url),
+    price_label_1: data.price_label_1,
+    price_label_2: data.price_label_2,
     status: data.status,
   }
 
@@ -355,7 +360,15 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
     return { success: false, error: message }
   }
 
-  // 5. Revalidate
+  // 5. Log activity
+  logActivity({
+    action: data.id ? 'tour.update' : 'tour.create',
+    entityType: 'tour',
+    entityId: tourId,
+    entityTitle: data.title,
+  }).catch(() => {})
+
+  // 6. Revalidate
   revalidatePath('/admin/tours')
   revalidatePath('/tours')
   revalidatePath('/')
@@ -366,11 +379,21 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
 export async function deleteTourAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  // Fetch title before delete for logging
+  const { data: tourData } = await supabase.from('tours').select('title').eq('id', id).single()
+
   const { error } = await supabase.from('tours').delete().eq('id', id)
 
   if (error) {
     return { success: false, error: error.message }
   }
+
+  logActivity({
+    action: 'tour.delete',
+    entityType: 'tour',
+    entityId: id,
+    entityTitle: tourData?.title ?? 'Tour eliminato',
+  }).catch(() => {})
 
   revalidatePath('/admin/tours')
   revalidatePath('/tours')
@@ -385,6 +408,8 @@ export async function toggleTourStatus(
 ): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  const { data: tourData } = await supabase.from('tours').select('title').eq('id', id).single()
+
   const { error } = await supabase
     .from('tours')
     .update({ status: newStatus })
@@ -393,6 +418,13 @@ export async function toggleTourStatus(
   if (error) {
     return { success: false, error: error.message }
   }
+
+  logActivity({
+    action: newStatus === 'published' ? 'tour.publish' : 'tour.unpublish',
+    entityType: 'tour',
+    entityId: id,
+    entityTitle: tourData?.title ?? '',
+  }).catch(() => {})
 
   revalidatePath('/admin/tours')
   revalidatePath('/tours')
@@ -443,6 +475,8 @@ export async function duplicateTourAction(id: string): Promise<ActionResult> {
         meta_description: null,
         content: tour.content,
         cover_image_url: tour.cover_image_url,
+        price_label_1: tour.price_label_1 ?? 'Comfort',
+        price_label_2: tour.price_label_2 ?? 'Deluxe',
         status: 'draft',
       })
       .select('id')
@@ -518,6 +552,13 @@ export async function duplicateTourAction(id: string): Promise<ActionResult> {
       }))
     )
 
+    logActivity({
+      action: 'tour.duplicate',
+      entityType: 'tour',
+      entityId: newId,
+      entityTitle: `${tour.title} (copia)`,
+    }).catch(() => {})
+
     revalidatePath('/admin/tours')
     return { success: true, id: newId }
   } catch (err) {
@@ -561,4 +602,29 @@ export async function bulkDeleteTours(ids: string[]): Promise<ActionResult> {
   revalidatePath('/tours')
   revalidatePath('/')
   return { success: true, id: ids[0] }
+}
+
+export async function saveTourPriceLabels(
+  tourId: string,
+  label1: string,
+  label2: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  if (!label1.trim() || !label2.trim()) {
+    return { success: false, error: 'Le etichette non possono essere vuote' }
+  }
+
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('tours')
+    .update({ price_label_1: label1.trim(), price_label_2: label2.trim() })
+    .eq('id', tourId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/tours')
+  revalidatePath('/tours')
+  revalidatePath('/')
+
+  return { success: true }
 }

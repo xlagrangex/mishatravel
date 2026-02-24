@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logActivity } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -357,7 +358,15 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
     return { success: false, error: message }
   }
 
-  // 5. Revalidate
+  // 5. Log activity
+  logActivity({
+    action: data.id ? 'cruise.update' : 'cruise.create',
+    entityType: 'cruise',
+    entityId: cruiseId,
+    entityTitle: data.title,
+  }).catch(() => {})
+
+  // 6. Revalidate
   revalidatePath('/admin/crociere')
   revalidatePath('/crociere')
   revalidatePath('/')
@@ -368,11 +377,20 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
 export async function deleteCruiseAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  const { data: cruiseData } = await supabase.from('cruises').select('title').eq('id', id).single()
+
   const { error } = await supabase.from('cruises').delete().eq('id', id)
 
   if (error) {
     return { success: false, error: error.message }
   }
+
+  logActivity({
+    action: 'cruise.delete',
+    entityType: 'cruise',
+    entityId: id,
+    entityTitle: cruiseData?.title ?? 'Crociera eliminata',
+  }).catch(() => {})
 
   revalidatePath('/admin/crociere')
   revalidatePath('/crociere')
@@ -387,6 +405,8 @@ export async function toggleCruiseStatus(
 ): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  const { data: cruiseData } = await supabase.from('cruises').select('title').eq('id', id).single()
+
   const { error } = await supabase
     .from('cruises')
     .update({ status: newStatus })
@@ -395,6 +415,13 @@ export async function toggleCruiseStatus(
   if (error) {
     return { success: false, error: error.message }
   }
+
+  logActivity({
+    action: newStatus === 'published' ? 'cruise.publish' : 'cruise.unpublish',
+    entityType: 'cruise',
+    entityId: id,
+    entityTitle: cruiseData?.title ?? '',
+  }).catch(() => {})
 
   revalidatePath('/admin/crociere')
   revalidatePath('/crociere')
@@ -574,6 +601,13 @@ export async function duplicateCruiseAction(id: string): Promise<ActionResult> {
         caption: g.caption,
       }))
     )
+
+    logActivity({
+      action: 'cruise.duplicate',
+      entityType: 'cruise',
+      entityId: newId,
+      entityTitle: `${cruise.title} (copia)`,
+    }).catch(() => {})
 
     revalidatePath('/admin/crociere')
     return { success: true, id: newId }

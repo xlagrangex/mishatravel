@@ -8,6 +8,12 @@ import {
   FileText,
   Calendar,
   TrendingUp,
+  Activity,
+  PenLine,
+  Plus,
+  Trash2,
+  Copy,
+  Globe,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +25,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { getAdminStatusAction } from "@/lib/quote-status-config";
 import { ActionIndicator } from "@/components/ActionIndicator";
+import { getRecentActivity } from "@/lib/supabase/queries/activity";
 import PendingAgenciesWidget from "./PendingAgenciesWidget";
 import PendingDocumentsWidget from "./PendingDocumentsWidget";
 
@@ -85,7 +92,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default async function AdminDashboard() {
   // Fetch all data in parallel
-  const [pendingAgencies, pendingDocs, counts, agencyStats, quoteStats, recentQuotes, allDepartures, currentUser] =
+  const [pendingAgencies, pendingDocs, counts, agencyStats, quoteStats, recentQuotes, allDepartures, currentUser, recentActivityData] =
     await Promise.all([
       getPendingAgencies().catch(() => [] as Awaited<ReturnType<typeof getPendingAgencies>>),
       getPendingDocuments().catch(() => []),
@@ -96,6 +103,7 @@ export default async function AdminDashboard() {
       getAllQuotes().catch(() => []),
       getAllDepartures().catch(() => []),
       getCurrentUser().catch(() => null),
+      getRecentActivity(10).catch(() => []),
     ]);
 
   const upcomingCount = getUpcomingDeparturesCount(allDepartures);
@@ -298,6 +306,100 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Activity */}
+      {recentActivityData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-heading text-lg">
+              <Activity className="h-5 w-5 text-muted-foreground" />
+              Ultime Modifiche
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentActivityData.map((entry) => {
+                const actionParts = entry.action.split(".");
+                const actionVerb = actionParts[1] ?? entry.action;
+                const ActionIcon =
+                  actionVerb === "create"
+                    ? Plus
+                    : actionVerb === "delete"
+                      ? Trash2
+                      : actionVerb === "duplicate"
+                        ? Copy
+                        : actionVerb === "publish" || actionVerb === "unpublish"
+                          ? Globe
+                          : PenLine;
+                const entityLabel =
+                  entry.entity_type === "tour"
+                    ? "Tour"
+                    : entry.entity_type === "cruise"
+                      ? "Crociera"
+                      : entry.entity_type === "ship"
+                        ? "Nave"
+                        : entry.entity_type === "destination"
+                          ? "Destinazione"
+                          : entry.entity_type === "blog"
+                            ? "Articolo"
+                            : entry.entity_type ?? "";
+                const verbLabel =
+                  actionVerb === "create"
+                    ? "creato"
+                    : actionVerb === "update"
+                      ? "modificato"
+                      : actionVerb === "delete"
+                        ? "eliminato"
+                        : actionVerb === "duplicate"
+                          ? "duplicato"
+                          : actionVerb === "publish"
+                            ? "pubblicato"
+                            : actionVerb === "unpublish"
+                              ? "messo in bozza"
+                              : actionVerb;
+                const dateObj = new Date(entry.created_at);
+                const diffMs = Date.now() - dateObj.getTime();
+                const diffMin = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+                const relativeDate =
+                  diffMin < 1
+                    ? "Adesso"
+                    : diffMin < 60
+                      ? `${diffMin} min fa`
+                      : diffHours < 24
+                        ? `${diffHours}h fa`
+                        : diffDays < 7
+                          ? `${diffDays}g fa`
+                          : dateObj.toLocaleDateString("it-IT", { day: "2-digit", month: "short" });
+
+                return (
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 rounded-lg border p-2.5 text-sm"
+                  >
+                    <div className="shrink-0 rounded-md bg-muted p-1.5 text-muted-foreground">
+                      <ActionIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate">
+                        <span className="font-medium">{entityLabel}</span>{" "}
+                        {verbLabel}:{" "}
+                        <span className="text-muted-foreground">
+                          {entry.entity_title}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {entry.user_email ?? "Sistema"} &middot; {relativeDate}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* System Status */}
       <Card>
