@@ -149,6 +149,19 @@ export default function CrociereTable({ cruises }: CrociereTableProps) {
     });
   };
 
+  const handleBulkPublish = () => {
+    if (visibleSelectedIds.size === 0) return;
+    startTransition(async () => {
+      const result = await bulkSetCruiseStatus([...visibleSelectedIds], "published");
+      if (result.success) {
+        toast.success(`${visibleSelectedIds.size} crocier${visibleSelectedIds.size === 1 ? "a pubblicata" : "e pubblicate"}`);
+        clearSelection();
+      } else {
+        toast.error(`Errore: ${result.error}`);
+      }
+    });
+  };
+
   const handleBulkDraft = () => {
     if (visibleSelectedIds.size === 0) return;
     startTransition(async () => {
@@ -439,6 +452,17 @@ export default function CrociereTable({ cruises }: CrociereTableProps) {
           </span>
 
           <div className="h-5 w-px bg-border" />
+
+          {/* Bulk publish */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBulkPublish}
+            disabled={isPending}
+          >
+            <Eye className="mr-1 h-3.5 w-3.5" />
+            Pubblica
+          </Button>
 
           {/* Bulk draft */}
           <Button
