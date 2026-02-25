@@ -22,7 +22,7 @@ export default async function CataloghiPage() {
       <PageHero
         title="I Nostri Cataloghi"
         subtitle="Sfoglia e scarica i cataloghi Misha Travel"
-        backgroundImage="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1600&h=600&fit=crop"
+        backgroundImage="https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?w=1600&h=600&fit=crop"
         breadcrumbs={[{ label: "Cataloghi", href: "/cataloghi" }]}
       />
 
