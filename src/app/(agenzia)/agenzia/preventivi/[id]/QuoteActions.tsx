@@ -63,10 +63,13 @@ export default function QuoteActions({
     const list: ParticipantInput[] = [];
     for (let i = 0; i < adultsCount + childrenCount; i++) {
       list.push({
-        full_name: "",
+        first_name: "",
+        last_name: "",
         age: null,
+        codice_fiscale: null,
         document_type: null,
         document_number: null,
+        document_expiry: null,
       });
     }
     return list;
@@ -88,9 +91,14 @@ export default function QuoteActions({
   };
 
   function handleAccept() {
-    const missing = participants.findIndex((p) => !p.full_name.trim());
-    if (missing >= 0) {
-      setError(`Inserisci il nome completo del partecipante ${missing + 1}.`);
+    const missingFirst = participants.findIndex((p) => !p.first_name.trim());
+    if (missingFirst >= 0) {
+      setError(`Inserisci il nome del partecipante ${missingFirst + 1}.`);
+      return;
+    }
+    const missingLast = participants.findIndex((p) => !p.last_name.trim());
+    if (missingLast >= 0) {
+      setError(`Inserisci il cognome del partecipante ${missingLast + 1}.`);
       return;
     }
 
@@ -235,7 +243,7 @@ export default function QuoteActions({
                             }).format(totalPrice)
                           : "importo da definire"
                       } per "${packageName}".`
-                    : "Inserisci i dati dei partecipanti. Il nome completo e obbligatorio, i documenti possono essere aggiunti in seguito."}
+                    : "Inserisci i dati dei partecipanti. Nome e cognome sono obbligatori, gli altri campi possono essere aggiunti in seguito."}
                 </DialogDescription>
               </DialogHeader>
 
@@ -296,7 +304,17 @@ export default function QuoteActions({
                 <>
                   <div className="space-y-4">
                     {participants.map((p, idx) => {
-                      const isChild = p.age != null && Number(p.age) < 18;
+                      const ageNum = p.age != null ? Number(p.age) : null;
+                      const ageBadge =
+                        ageNum != null && ageNum >= 0
+                          ? ageNum < 2
+                            ? { label: "Infant", cls: "border-purple-200 bg-purple-50 text-purple-700" }
+                            : ageNum < 12
+                              ? { label: "Bambino", cls: "border-amber-200 bg-amber-50 text-amber-700" }
+                              : ageNum < 18
+                                ? { label: "Ragazzo", cls: "border-cyan-200 bg-cyan-50 text-cyan-700" }
+                                : { label: "Adulto", cls: "border-green-200 bg-green-50 text-green-700" }
+                          : null;
                       return (
                         <div
                           key={idx}
@@ -305,44 +323,53 @@ export default function QuoteActions({
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-semibold">
                               Partecipante {idx + 1}
-                              {p.age != null && Number(p.age) > 0 && (
+                              {ageBadge && (
                                 <Badge
                                   variant="outline"
-                                  className={`ml-2 text-xs ${
-                                    isChild
-                                      ? "border-amber-200 bg-amber-50 text-amber-700"
-                                      : "border-green-200 bg-green-50 text-green-700"
-                                  }`}
+                                  className={`ml-2 text-xs ${ageBadge.cls}`}
                                 >
-                                  {isChild ? "Bambino" : "Adulto"}
+                                  {ageBadge.label}
                                 </Badge>
                               )}
                             </p>
                           </div>
-                          <div className="grid grid-cols-[1fr_80px] gap-2">
+                          {/* Row 1: Nome, Cognome, Eta */}
+                          <div className="grid grid-cols-[1fr_1fr_80px] gap-2">
                             <div>
-                              <Label className="text-xs">
-                                Nome e cognome *
-                              </Label>
+                              <Label className="text-xs">Nome *</Label>
                               <Input
-                                placeholder="Es. Mario Rossi"
-                                value={p.full_name}
+                                placeholder="Es. Mario"
+                                value={p.first_name}
                                 onChange={(e) =>
                                   updateParticipant(
                                     idx,
-                                    "full_name",
+                                    "first_name",
                                     e.target.value
                                   )
                                 }
                               />
                             </div>
                             <div>
-                              <Label className="text-xs">Eta *</Label>
+                              <Label className="text-xs">Cognome *</Label>
+                              <Input
+                                placeholder="Es. Rossi"
+                                value={p.last_name}
+                                onChange={(e) =>
+                                  updateParticipant(
+                                    idx,
+                                    "last_name",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Eta</Label>
                               <Input
                                 type="number"
                                 min="0"
                                 max="120"
-                                placeholder="Es. 35"
+                                placeholder="35"
                                 value={p.age ?? ""}
                                 onChange={(e) =>
                                   updateParticipant(
@@ -356,7 +383,23 @@ export default function QuoteActions({
                               />
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
+                          {/* Row 2: Codice Fiscale */}
+                          <div>
+                            <Label className="text-xs">Codice Fiscale</Label>
+                            <Input
+                              placeholder="Es. RSSMRA85M01H501Z"
+                              value={p.codice_fiscale ?? ""}
+                              onChange={(e) =>
+                                updateParticipant(
+                                  idx,
+                                  "codice_fiscale",
+                                  e.target.value || (null as any)
+                                )
+                              }
+                            />
+                          </div>
+                          {/* Row 3: Tipo documento, N. documento, Scadenza */}
+                          <div className="grid grid-cols-3 gap-2">
                             <div>
                               <Label className="text-xs">Tipo documento</Label>
                               <select
@@ -386,6 +429,20 @@ export default function QuoteActions({
                                   updateParticipant(
                                     idx,
                                     "document_number",
+                                    e.target.value || (null as any)
+                                  )
+                                }
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Scadenza</Label>
+                              <Input
+                                type="date"
+                                value={p.document_expiry ?? ""}
+                                onChange={(e) =>
+                                  updateParticipant(
+                                    idx,
+                                    "document_expiry",
                                     e.target.value || (null as any)
                                   )
                                 }

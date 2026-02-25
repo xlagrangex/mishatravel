@@ -53,13 +53,24 @@ async function getQuoteEmailContext(requestId: string) {
 // ---------------------------------------------------------------------------
 
 const participantSchema = z.object({
-  full_name: z.string().min(1, "Nome completo obbligatorio"),
+  first_name: z.string().min(1, "Nome obbligatorio"),
+  last_name: z.string().min(1, "Cognome obbligatorio"),
   age: z.coerce.number().int().min(0).max(120).nullable().optional(),
+  codice_fiscale: z.string().nullable().optional(),
   document_type: z.string().nullable().optional(),
   document_number: z.string().nullable().optional(),
+  document_expiry: z.string().nullable().optional(),
 });
 
 export type ParticipantInput = z.infer<typeof participantSchema>;
+
+function getAgeCategory(age: number | null | undefined): string | null {
+  if (age == null) return null;
+  if (age < 2) return 'infant';
+  if (age < 12) return 'child';
+  if (age < 18) return 'teen';
+  return 'adult';
+}
 
 // ---------------------------------------------------------------------------
 // acceptOfferWithParticipants
@@ -122,11 +133,16 @@ export async function acceptOfferWithParticipants(
     if (validatedParticipants.length > 0) {
       const rows = validatedParticipants.map((p, i) => ({
         request_id: requestId,
-        full_name: p.full_name.trim(),
+        first_name: p.first_name.trim(),
+        last_name: p.last_name.trim(),
+        full_name: `${p.first_name.trim()} ${p.last_name.trim()}`,
         age: p.age ?? null,
         is_child: p.age != null ? p.age < 18 : false,
+        age_category: getAgeCategory(p.age),
+        codice_fiscale: p.codice_fiscale?.trim() || null,
         document_type: p.document_type?.trim() || null,
         document_number: p.document_number?.trim() || null,
+        document_expiry: p.document_expiry || null,
         sort_order: i,
       }));
 
@@ -155,7 +171,9 @@ export async function acceptOfferWithParticipants(
     }
 
     const participantCount = validatedParticipants.length;
-    const childCount = validatedParticipants.filter((p) => p.age != null && p.age < 18).length;
+    const childCount = validatedParticipants.filter(
+      (p) => p.age != null && p.age < 18
+    ).length;
     const adultCount = participantCount - childCount;
 
     await admin.from("quote_timeline").insert({

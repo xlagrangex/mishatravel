@@ -1733,45 +1733,64 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
                 <div className="space-y-3">
                   {quote.participants
                     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-                    .map((p, idx) => (
-                      <div
-                        key={p.id}
-                        className="flex items-start gap-3 rounded-lg border p-3"
-                      >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
-                          {idx + 1}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            {p.full_name}
-                            {p.is_child ? (
+                    .map((p, idx) => {
+                      const displayName = p.first_name && p.last_name
+                        ? `${p.first_name} ${p.last_name}`
+                        : p.full_name;
+                      const ageCat = p.age_category;
+                      const badgeConfig = ageCat === 'infant'
+                        ? { label: 'Infant', cls: 'border-purple-200 bg-purple-50 text-purple-700' }
+                        : ageCat === 'child'
+                          ? { label: 'Bambino', cls: 'border-amber-200 bg-amber-50 text-amber-700' }
+                          : ageCat === 'teen'
+                            ? { label: 'Ragazzo', cls: 'border-cyan-200 bg-cyan-50 text-cyan-700' }
+                            : ageCat === 'adult'
+                              ? { label: 'Adulto', cls: 'border-green-200 bg-green-50 text-green-700' }
+                              : p.is_child
+                                ? { label: 'Bambino', cls: 'border-amber-200 bg-amber-50 text-amber-700' }
+                                : { label: 'Adulto', cls: 'border-blue-200 bg-blue-50 text-blue-700' };
+                      return (
+                        <div
+                          key={p.id}
+                          className="flex items-start gap-3 rounded-lg border p-3"
+                        >
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              {displayName}
                               <Badge
                                 variant="outline"
-                                className="ml-2 text-xs border-amber-200 bg-amber-50 text-amber-700"
+                                className={`ml-2 text-xs ${badgeConfig.cls}`}
                               >
-                                bambino{p.age != null ? ` (${p.age} anni)` : ''}
+                                {badgeConfig.label}{p.age != null ? ` (${p.age} anni)` : ''}
                               </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="ml-2 text-xs border-blue-200 bg-blue-50 text-blue-700"
-                              >
-                                adulto{p.age != null ? ` (${p.age} anni)` : ''}
-                              </Badge>
-                            )}
-                          </p>
-                          {(p.document_type || p.document_number) && (
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              {p.document_type && <span>{p.document_type}</span>}
-                              {p.document_type && p.document_number && ' \u2022 '}
-                              {p.document_number && (
-                                <span className="font-mono">{p.document_number}</span>
-                              )}
                             </p>
-                          )}
+                            {p.codice_fiscale && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                CF: <span className="font-mono">{p.codice_fiscale}</span>
+                              </p>
+                            )}
+                            {(p.document_type || p.document_number || p.document_expiry) && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {p.document_type && <span>{p.document_type}</span>}
+                                {p.document_type && p.document_number && ' \u2022 '}
+                                {p.document_number && (
+                                  <span className="font-mono">{p.document_number}</span>
+                                )}
+                                {p.document_expiry && (
+                                  <span>
+                                    {(p.document_type || p.document_number) && ' \u2022 '}
+                                    Scad. {new Date(p.document_expiry).toLocaleDateString('it-IT')}
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
