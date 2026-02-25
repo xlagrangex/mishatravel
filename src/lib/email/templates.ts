@@ -846,6 +846,28 @@ export function adminNewPartnerInquiryEmail(
 /**
  * Notify admin: new complaint received.
  */
+/**
+ * Email sent to agency when their account is deleted by admin.
+ */
+export function agencyDeletedEmail(agencyName: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 20px;color:#C41E2F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Account eliminato</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Ti informiamo che il tuo account su MishaTravel &egrave; stato eliminato dall&rsquo;amministratore del sito.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Se ritieni che si tratti di un errore o desideri maggiori informazioni, non esitare a contattarci.
+    </p>
+    ${ctaButton("Contattaci", `${SITE_URL}/contatti`)}
+    <p style="color:#64748b;font-size:13px;margin-top:24px;">
+      Grazie per aver utilizzato MishaTravel.
+    </p>
+  `);
+}
+
 export function adminNewComplaintEmail(
   nome_cognome: string,
   email: string,

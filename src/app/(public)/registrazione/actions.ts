@@ -3,7 +3,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail, sendAdminNotification } from "@/lib/email/brevo";
 import {
-  signupConfirmationEmail,
   welcomeAgencyEmail,
   adminNewAgencyEmail,
 } from "@/lib/email/templates";
@@ -68,56 +67,53 @@ export interface AgencyData {
 }
 
 // ---------------------------------------------------------------------------
-// registerAgency — full server-side signup with branded Brevo email
+// registerAgency — server-side signup with auto-confirmed email
+// The agency goes directly to "pending approval" status (no email confirm needed).
 // ---------------------------------------------------------------------------
 
 export async function registerAgency(
   data: AgencyData & { password: string },
-  origin: string
+  _origin: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createAdminClient();
 
-    // 1. Create the user + generate signup confirmation link via Admin API
-    //    This avoids Supabase sending its default email.
-    let { data: linkData, error: linkError } =
-      await supabase.auth.admin.generateLink({
-        type: "signup",
+    // 1. Create the user with email auto-confirmed via Admin API
+    let { data: userData, error: createError } =
+      await supabase.auth.admin.createUser({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            business_name: data.business_name,
-            contact_name: data.contact_name,
-            phone: data.phone,
-          },
+        email_confirm: true,
+        user_metadata: {
+          business_name: data.business_name,
+          contact_name: data.contact_name,
+          phone: data.phone,
         },
       });
 
-    if (linkError) {
-      console.error("[Register] generateLink error:", linkError.message);
+    if (createError) {
+      console.error("[Register] createUser error:", createError.message);
 
       // If user exists in auth but has no agency (orphan from a deleted agency),
       // clean up the orphan and retry registration automatically.
-      if (linkError.message.includes("already been registered")) {
+      if (
+        createError.message.includes("already been registered") ||
+        createError.message.includes("already exists")
+      ) {
         const cleaned = await cleanOrphanAuthUser(supabase, data.email);
         if (cleaned) {
-          // Retry generateLink after cleanup
-          const retry = await supabase.auth.admin.generateLink({
-            type: "signup",
+          const retry = await supabase.auth.admin.createUser({
             email: data.email,
             password: data.password,
-            options: {
-              data: {
-                business_name: data.business_name,
-                contact_name: data.contact_name,
-                phone: data.phone,
-              },
+            email_confirm: true,
+            user_metadata: {
+              business_name: data.business_name,
+              contact_name: data.contact_name,
+              phone: data.phone,
             },
           });
           if (!retry.error && retry.data?.user?.id) {
-            // Success on retry — continue with the rest of the flow
-            linkData = retry.data;
+            userData = retry.data;
           } else {
             return {
               success: false,
@@ -131,37 +127,21 @@ export async function registerAgency(
           };
         }
       } else {
-        return { success: false, error: linkError.message };
+        return { success: false, error: createError.message };
       }
     }
 
-    const userId = linkData?.user?.id;
-    const tokenHash = linkData?.properties?.hashed_token;
+    const userId = userData?.user?.id;
 
-    if (!userId || !tokenHash) {
-      console.error("[Register] No user or hashed_token returned");
+    if (!userId) {
+      console.error("[Register] No user ID returned");
       return {
         success: false,
         error: "Errore durante la registrazione. Riprova.",
       };
     }
 
-    // 2. Send branded confirmation email via Brevo
-    const baseUrl =
-      origin || process.env.NEXT_PUBLIC_SITE_URL || "https://mishatravel.com";
-    const confirmLink = `${baseUrl}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=email`;
-
-    try {
-      await sendTransactionalEmail(
-        { email: data.email, name: data.business_name },
-        "Conferma il tuo account - MishaTravel",
-        signupConfirmationEmail(data.business_name, confirmLink)
-      );
-    } catch (emailErr) {
-      console.error("[Register] Error sending confirmation email:", emailErr);
-    }
-
-    // 3. Create agency record
+    // 2. Create agency record (status: pending — awaiting admin approval)
     const { error: agencyError } = await supabase.from("agencies").insert({
       user_id: userId,
       business_name: data.business_name,
@@ -182,10 +162,12 @@ export async function registerAgency(
 
     if (agencyError) {
       console.error("[Register] Error inserting agency:", agencyError);
-      // User was created but agency record failed — still allow email confirm
+      // Rollback: delete auth user if agency creation fails
+      await supabase.auth.admin.deleteUser(userId);
+      return { success: false, error: "Errore durante la registrazione. Riprova." };
     }
 
-    // 4. Insert user role as 'agency'
+    // 3. Insert user role as 'agency'
     const { error: roleError } = await supabase.from("user_roles").insert({
       user_id: userId,
       role: "agency",
@@ -193,6 +175,17 @@ export async function registerAgency(
 
     if (roleError) {
       console.error("[Register] Error inserting user role:", roleError);
+    }
+
+    // 4. Send welcome email to the agency (account created, awaiting approval)
+    try {
+      await sendTransactionalEmail(
+        { email: data.email, name: data.business_name },
+        "Registrazione completata - MishaTravel",
+        welcomeAgencyEmail(data.business_name)
+      );
+    } catch (emailErr) {
+      console.error("[Register] Error sending welcome email:", emailErr);
     }
 
     // 5. Notify all super_admin users about the new agency registration

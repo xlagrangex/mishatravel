@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { sendTransactionalEmail } from '@/lib/email/brevo'
-import { agencyApprovedEmail, agencyCreatedByAdminEmail, agencyDocumentVerifiedEmail } from '@/lib/email/templates'
+import { agencyApprovedEmail, agencyCreatedByAdminEmail, agencyDeletedEmail, agencyDocumentVerifiedEmail } from '@/lib/email/templates'
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string }
 
@@ -108,10 +108,10 @@ export async function approveAgencyFromDashboard(
 export async function deleteAgency(agencyId: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  // 1. Fetch user_id before deletion
+  // 1. Fetch agency data before deletion (for email notification)
   const { data: agency, error: fetchError } = await supabase
     .from('agencies')
-    .select('user_id')
+    .select('user_id, email, business_name')
     .eq('id', agencyId)
     .single()
 
@@ -119,7 +119,20 @@ export async function deleteAgency(agencyId: string): Promise<ActionResult> {
     return { success: false, error: fetchError?.message ?? 'Agenzia non trovata' }
   }
 
-  // 2. Hard-delete auth user so the email can be re-registered
+  // 2. Send deletion notification email BEFORE deleting
+  try {
+    if (agency.email) {
+      await sendTransactionalEmail(
+        { email: agency.email, name: agency.business_name },
+        'Il tuo account MishaTravel è stato eliminato',
+        agencyDeletedEmail(agency.business_name)
+      )
+    }
+  } catch (emailErr) {
+    console.error('[DeleteAgency] Error sending deletion email:', emailErr)
+  }
+
+  // 3. Hard-delete auth user so the email can be re-registered
   //    CASCADE deletes agencies + user_roles via FK
   const { error: authError } = await supabase.auth.admin.deleteUser(agency.user_id)
 
@@ -127,7 +140,7 @@ export async function deleteAgency(agencyId: string): Promise<ActionResult> {
     return { success: false, error: `Errore eliminazione utente: ${authError.message}` }
   }
 
-  // 3. Safety: explicit cleanup of user_roles if not cascaded
+  // 4. Safety: explicit cleanup of user_roles if not cascaded
   await supabase.from('user_roles').delete().eq('user_id', agency.user_id)
 
   revalidatePath('/admin/agenzie')

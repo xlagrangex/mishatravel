@@ -270,9 +270,10 @@ export default function RegistrazionePage() {
                 Registrazione completata!
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Controlla la tua email per verificare l&apos;account. Dopo la
-                verifica, il nostro team valuterà la tua richiesta e riceverai
-                una conferma entro 48 ore lavorative.
+                Il tuo account è stato creato con successo. Il nostro team
+                verificherà i tuoi dati e approverà il tuo account nel più
+                breve tempo possibile. Riceverai un&apos;email di conferma non
+                appena il tuo account sarà attivo.
               </p>
               <Link href="/login">
                 <Button
