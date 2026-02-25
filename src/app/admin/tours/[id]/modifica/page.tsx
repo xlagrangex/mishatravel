@@ -30,14 +30,17 @@ export default async function ModificaTourPage({ params }: ModificaTourPageProps
         <h1 className="font-heading text-2xl font-bold text-secondary">
           {tour.title}
         </h1>
-        <Link
-          href={`/tours/${tour.slug}`}
-          target="_blank"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          Vedi anteprima
-        </Link>
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          Vedi anteprima:
+          <Link
+            href={`/tours/${tour.slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            /tours/{tour.slug}
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </p>
       </div>
 
       <ActivityLog entityType="tour" entityId={id} />

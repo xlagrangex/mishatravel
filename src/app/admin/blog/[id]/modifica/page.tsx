@@ -28,14 +28,17 @@ export default async function ModificaArticoloPage({
         <h1 className="font-heading text-2xl font-bold text-secondary">
           {post.title}
         </h1>
-        <Link
-          href={`/blog/${post.slug}`}
-          target="_blank"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          Vedi anteprima
-        </Link>
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          Vedi anteprima:
+          <Link
+            href={`/blog/${post.slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            /blog/{post.slug}
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </p>
       </div>
 
       <ActivityLog entityType="blog" entityId={id} />

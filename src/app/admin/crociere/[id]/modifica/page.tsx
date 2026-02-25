@@ -32,14 +32,17 @@ export default async function ModificaCrocieraPage({ params }: ModificaCrocieraP
         <h1 className="font-heading text-2xl font-bold text-secondary">
           {cruise.title}
         </h1>
-        <Link
-          href={`/crociere/${cruise.slug}`}
-          target="_blank"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          Vedi anteprima
-        </Link>
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          Vedi anteprima:
+          <Link
+            href={`/crociere/${cruise.slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            /crociere/{cruise.slug}
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </p>
       </div>
 
       <ActivityLog entityType="cruise" entityId={id} />
