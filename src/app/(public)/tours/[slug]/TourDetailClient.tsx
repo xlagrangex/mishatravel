@@ -229,10 +229,9 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
               {tour.title}
             </h2>
             {tour.content ? (
-              <div
-                className="text-gray-600 leading-relaxed prose prose-gray max-w-none"
-                dangerouslySetInnerHTML={{ __html: tour.content }}
-              />
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                {tour.content}
+              </p>
             ) : (
               <p className="text-gray-500">Descrizione non ancora disponibile.</p>
             )}
@@ -273,10 +272,9 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                         </AccordionTrigger>
                         <AccordionContent>
                           {day.descrizione ? (
-                            <div
-                              className="text-gray-600 text-sm leading-relaxed pl-2 prose prose-sm max-w-none"
-                              dangerouslySetInnerHTML={{ __html: day.descrizione }}
-                            />
+                            <p className="text-gray-600 text-sm leading-relaxed pl-2 whitespace-pre-line">
+                              {day.descrizione}
+                            </p>
                           ) : (
                             <p className="text-gray-500 text-sm pl-2">Descrizione non disponibile.</p>
                           )}

@@ -105,10 +105,9 @@ export default function ConditionsSection({
             <Info className="size-5" />
             Note Importanti
           </h3>
-          <div
-            className="text-sm text-gray-600 prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: noteImportanti }}
-          />
+          <p className="text-sm text-gray-600 whitespace-pre-line">
+            {noteImportanti}
+          </p>
         </div>
       )}
     </div>
