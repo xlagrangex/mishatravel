@@ -19,8 +19,8 @@ import {
   Trash2,
   X,
   RefreshCw,
-  LayoutGrid,
-  List,
+  Columns3,
+  TableProperties,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -481,22 +481,24 @@ export default function AdminQuotesTable({
         </Select>
 
         {/* View mode toggle */}
-        <div className="ml-auto flex items-center rounded-lg border p-0.5">
+        <div className="ml-auto flex items-center gap-0.5 rounded-lg border p-0.5">
           <Button
             variant={viewMode === 'table' ? 'secondary' : 'ghost'}
             size="sm"
-            className="h-7 px-2"
+            className="h-7 gap-1.5 px-2.5 text-xs"
             onClick={() => setViewMode('table')}
           >
-            <List className="h-4 w-4" />
+            <TableProperties className="h-3.5 w-3.5" />
+            Tabella
           </Button>
           <Button
             variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
             size="sm"
-            className="h-7 px-2"
+            className="h-7 gap-1.5 px-2.5 text-xs"
             onClick={() => setViewMode('kanban')}
           >
-            <LayoutGrid className="h-4 w-4" />
+            <Columns3 className="h-3.5 w-3.5" />
+            Kanban
           </Button>
         </div>
       </div>
