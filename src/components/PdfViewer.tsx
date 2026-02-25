@@ -36,12 +36,24 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
   const [numPages, setNumPages] = useState(0);
-  const [pageNumber, setPageNumber] = useState(1);
+  const [spread, setSpread] = useState(1); // first page of the current spread
   const [zoomIndex, setZoomIndex] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [baseWidth, setBaseWidth] = useState(0);
+  const [transitioning, setTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use 2-page spread on desktop, 1 on small screens
+  const [isMobile, setIsMobile] = useState(false);
+  const pagesPerSpread = isMobile ? 1 : 2;
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Dynamically load react-pdf (avoids SSR issues with pdfjs-dist)
   useEffect(() => {
@@ -72,27 +84,69 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
     [],
   );
 
-  const prevPage = () => setPageNumber((p) => Math.max(1, p - 1));
-  const nextPage = () => setPageNumber((p) => Math.min(numPages, p + 1));
+  // Navigate by pagesPerSpread
+  const prevSpread = () => {
+    setTransitioning(true);
+    setTimeout(() => {
+      setSpread((s) => Math.max(1, s - pagesPerSpread));
+      setTransitioning(false);
+    }, 150);
+  };
+  const nextSpread = () => {
+    setTransitioning(true);
+    setTimeout(() => {
+      setSpread((s) => Math.min(numPages, s + pagesPerSpread));
+      setTransitioning(false);
+    }, 150);
+  };
+
   const handleZoomIn = () =>
     setZoomIndex((z) => Math.min(ZOOM_LEVELS.length - 1, z + 1));
   const handleZoomOut = () => setZoomIndex((z) => Math.max(0, z - 1));
 
   const scale = ZOOM_LEVELS[zoomIndex];
-  const inlineWidth = baseWidth > 0 ? baseWidth * scale : undefined;
-  const fullscreenWidth = 800 * scale;
+
+  // Width per single page: half the container for 2-page, full for 1-page
+  const pageGap = 4; // gap in px between pages
+  const inlinePageWidth =
+    baseWidth > 0
+      ? (pagesPerSpread === 2
+          ? (baseWidth - pageGap) / 2
+          : baseWidth) * scale
+      : undefined;
+
+  const fullscreenPageWidth =
+    (pagesPerSpread === 2 ? 440 : 700) * scale;
+
+  // Which pages to render in the current spread
+  const getSpreadPages = (startPage: number) => {
+    const pages: number[] = [startPage];
+    if (pagesPerSpread === 2 && startPage + 1 <= numPages) {
+      pages.push(startPage + 1);
+    }
+    return pages;
+  };
+
+  // Human-readable spread label
+  const spreadLabel =
+    pagesPerSpread === 2 && spread + 1 <= numPages
+      ? `${spread}-${spread + 1} / ${numPages}`
+      : `${spread} / ${numPages}`;
+
+  const isAtStart = spread <= 1;
+  const isAtEnd = spread + pagesPerSpread > numPages;
 
   const loadingSpinner = (
     <div
       className="flex items-center justify-center"
-      style={{ minHeight: 400 }}
+      style={{ minHeight: 300 }}
     >
-      <Loader2 className="size-8 animate-spin text-[#C41E2F]" />
+      <Loader2 className="size-7 animate-spin text-[#C41E2F]" />
     </div>
   );
 
   const errorFallback = (
-    <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-2">
+    <div className="flex flex-col items-center justify-center py-16 text-gray-500 gap-2">
       <p>Impossibile caricare il PDF.</p>
       <Button asChild variant="outline" size="sm">
         <a href={url} target="_blank" rel="noopener noreferrer">
@@ -102,30 +156,56 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
     </div>
   );
 
+  const renderPages = (pageWidth: number | undefined) => (
+    <div
+      className="flex items-start justify-center transition-opacity duration-200 ease-in-out"
+      style={{
+        gap: pageGap,
+        opacity: transitioning ? 0 : 1,
+      }}
+    >
+      {getSpreadPages(spread).map((pNum) => (
+        <div
+          key={pNum}
+          className="shadow-md bg-white rounded-sm overflow-hidden"
+        >
+          {PdfComponents && (
+            <PdfComponents.Page
+              pageNumber={pNum}
+              width={pageWidth}
+              renderAnnotationLayer={false}
+              renderTextLayer={false}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
   const renderControls = (isFullscreen: boolean) => (
-    <div className="flex items-center justify-between bg-[#1B2D4F] text-white px-3 py-2 rounded-b-lg sm:px-4">
+    <div className="flex items-center justify-between bg-[#1B2D4F] text-white px-3 py-1.5 rounded-b-lg sm:px-4">
       {/* Page navigation */}
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"
           size="icon"
-          onClick={prevPage}
-          disabled={pageNumber <= 1}
-          className="text-white hover:bg-white/20 disabled:opacity-30 size-8"
+          onClick={prevSpread}
+          disabled={isAtStart}
+          className="text-white hover:bg-white/20 disabled:opacity-30 size-7"
         >
-          <ChevronLeft className="size-4" />
+          <ChevronLeft className="size-3.5" />
         </Button>
-        <span className="text-sm tabular-nums min-w-[70px] text-center">
-          {pageNumber} / {numPages}
+        <span className="text-xs tabular-nums min-w-[60px] text-center">
+          {spreadLabel}
         </span>
         <Button
           variant="ghost"
           size="icon"
-          onClick={nextPage}
-          disabled={pageNumber >= numPages}
-          className="text-white hover:bg-white/20 disabled:opacity-30 size-8"
+          onClick={nextSpread}
+          disabled={isAtEnd}
+          className="text-white hover:bg-white/20 disabled:opacity-30 size-7"
         >
-          <ChevronRight className="size-4" />
+          <ChevronRight className="size-3.5" />
         </Button>
       </div>
 
@@ -136,11 +216,11 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
           size="icon"
           onClick={handleZoomOut}
           disabled={zoomIndex <= 0}
-          className="text-white hover:bg-white/20 disabled:opacity-30 size-8"
+          className="text-white hover:bg-white/20 disabled:opacity-30 size-7"
         >
-          <ZoomOut className="size-4" />
+          <ZoomOut className="size-3.5" />
         </Button>
-        <span className="text-xs tabular-nums min-w-[48px] text-center">
+        <span className="text-xs tabular-nums min-w-[40px] text-center">
           {ZOOM_LABELS[zoomIndex]}
         </span>
         <Button
@@ -148,9 +228,9 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
           size="icon"
           onClick={handleZoomIn}
           disabled={zoomIndex >= ZOOM_LEVELS.length - 1}
-          className="text-white hover:bg-white/20 disabled:opacity-30 size-8"
+          className="text-white hover:bg-white/20 disabled:opacity-30 size-7"
         >
-          <ZoomIn className="size-4" />
+          <ZoomIn className="size-3.5" />
         </Button>
       </div>
 
@@ -161,26 +241,26 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
             variant="ghost"
             size="icon"
             onClick={() => setFullscreen(true)}
-            className="text-white hover:bg-white/20 size-8"
+            className="text-white hover:bg-white/20 size-7"
           >
-            <Maximize2 className="size-4" />
+            <Maximize2 className="size-3.5" />
           </Button>
         )}
         <Button
           variant="ghost"
           size="icon"
           asChild
-          className="text-white hover:bg-white/20 size-8"
+          className="text-white hover:bg-white/20 size-7"
         >
           <a href={url} download target="_blank" rel="noopener noreferrer">
-            <Download className="size-4" />
+            <Download className="size-3.5" />
           </a>
         </Button>
       </div>
     </div>
   );
 
-  const { Document, Page } = PdfComponents ?? {};
+  const { Document } = PdfComponents ?? {};
 
   return (
     <>
@@ -191,22 +271,17 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
       >
         <div
           className="overflow-auto bg-gray-100 flex justify-center"
-          style={{ maxHeight: "75vh" }}
+          style={{ maxHeight: "55vh" }}
         >
-          <div className="py-4 px-4">
-            {Document && Page ? (
+          <div className="py-3 px-3">
+            {Document ? (
               <Document
                 file={url}
                 onLoadSuccess={onLoadSuccess}
                 loading={loadingSpinner}
                 error={errorFallback}
               >
-                <Page
-                  pageNumber={pageNumber}
-                  width={inlineWidth}
-                  renderAnnotationLayer={false}
-                  renderTextLayer={false}
-                />
+                {renderPages(inlinePageWidth)}
               </Document>
             ) : (
               loadingSpinner
@@ -217,7 +292,7 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
       </div>
 
       {/* Fullscreen dialog */}
-      {Document && Page && (
+      {Document && (
         <Dialog open={fullscreen} onOpenChange={setFullscreen}>
           <DialogContent
             className="max-w-[95vw] h-[90vh] w-full p-0 gap-0 flex flex-col sm:max-w-[95vw]"
@@ -227,18 +302,13 @@ export default function PdfViewer({ url, title }: PdfViewerProps) {
               {title || "Catalogo PDF"}
             </DialogTitle>
             <div className="flex-1 overflow-auto bg-gray-100 flex justify-center min-h-0">
-              <div className="py-4 px-4">
+              <div className="py-3 px-3">
                 <Document
                   file={url}
                   loading={loadingSpinner}
                   error={errorFallback}
                 >
-                  <Page
-                    pageNumber={pageNumber}
-                    width={fullscreenWidth}
-                    renderAnnotationLayer={false}
-                    renderTextLayer={false}
-                  />
+                  {renderPages(fullscreenPageWidth)}
                 </Document>
               </div>
             </div>
