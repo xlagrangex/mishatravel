@@ -330,6 +330,8 @@ export async function uploadCounterSignedContract(
     }
 
     revalidatePath(`/agenzia/preventivi/${requestId}`);
+    revalidatePath(`/admin/preventivi/${requestId}`);
+    revalidatePath("/admin/preventivi");
     return { success: true };
   } catch (err) {
     console.error("Error in uploadCounterSignedContract:", err);
@@ -422,6 +424,8 @@ export async function uploadPaymentReceipt(
     }
 
     revalidatePath(`/agenzia/preventivi/${requestId}`);
+    revalidatePath(`/admin/preventivi/${requestId}`);
+    revalidatePath("/admin/preventivi");
     return { success: true };
   } catch (err) {
     console.error("Error in uploadPaymentReceipt:", err);
@@ -501,6 +505,8 @@ export async function confirmPaymentAction(
     }
 
     revalidatePath(`/agenzia/preventivi/${requestId}`);
+    revalidatePath(`/admin/preventivi/${requestId}`);
+    revalidatePath("/admin/preventivi");
     return { success: true };
   } catch (err) {
     console.error("Error in confirmPaymentAction:", err);
