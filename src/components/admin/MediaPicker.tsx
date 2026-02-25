@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition, useRef } from "react";
+import { useState, useEffect, useCallback, useTransition, useRef, useMemo } from "react";
 import Image from "next/image";
 import {
   Search,
@@ -34,13 +34,14 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { STORAGE_BUCKETS } from "@/lib/supabase/queries/media";
+import { STORAGE_BUCKETS, buildFolderTree } from "@/lib/supabase/queries/media";
 import {
   getMediaItemsAction,
   getMediaFoldersAction,
+  getMediaFolderCountsAction,
   registerMediaAction,
 } from "@/app/admin/media/actions";
-import type { MediaItem, MediaFolder } from "@/lib/types";
+import type { MediaItem, MediaFolder, MediaFolderTreeNode } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,7 +62,7 @@ export interface MediaPickerProps {
 // ---------------------------------------------------------------------------
 
 function formatBytes(bytes: number | null): string {
-  if (!bytes) return "—";
+  if (!bytes) return "\u2014";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -109,6 +110,21 @@ async function convertToWebP(file: File): Promise<File> {
   });
 }
 
+/** Flatten folder tree for select dropdown */
+function flattenTreeForSelect(
+  nodes: MediaFolderTreeNode[]
+): { id: string; name: string; depth: number }[] {
+  const result: { id: string; name: string; depth: number }[] = [];
+  function walk(items: MediaFolderTreeNode[]) {
+    for (const node of items) {
+      result.push({ id: node.id, name: node.name, depth: node.depth });
+      walk(node.children);
+    }
+  }
+  walk(nodes);
+  return result;
+}
+
 const PAGE_SIZE = 48;
 
 // ---------------------------------------------------------------------------
@@ -129,10 +145,11 @@ export default function MediaPicker({
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [folders, setFolders] = useState<MediaFolder[]>([]);
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [bucketFilter, setBucketFilter] = useState<string>(defaultBucket ?? "all");
-  const [folderFilter, setFolderFilter] = useState<string>("all");
+  const [folderFilterId, setFolderFilterId] = useState<string>("all");
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState("library");
 
@@ -144,6 +161,13 @@ export default function MediaPicker({
 
   const [, startTransition] = useTransition();
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Computed: folder tree for select
+  const folderTree = useMemo(
+    () => buildFolderTree(folders, folderCounts),
+    [folders, folderCounts],
+  );
+  const flatFolders = useMemo(() => flattenTreeForSelect(folderTree), [folderTree]);
 
   // -----------------------------------------------------------------------
   // Data fetching
@@ -157,7 +181,7 @@ export default function MediaPicker({
           page: pageNum,
           pageSize: PAGE_SIZE,
           bucket: bucketFilter !== "all" ? bucketFilter : undefined,
-          folder: folderFilter !== "all" ? folderFilter : undefined,
+          folderId: folderFilterId !== "all" ? folderFilterId : undefined,
           search: search || undefined,
           mimeTypePrefix: acceptMimePrefix || undefined,
         });
@@ -173,13 +197,17 @@ export default function MediaPicker({
         setLoading(false);
       }
     },
-    [bucketFilter, folderFilter, search, acceptMimePrefix],
+    [bucketFilter, folderFilterId, search, acceptMimePrefix],
   );
 
   const fetchFolders = useCallback(async () => {
     try {
-      const f = await getMediaFoldersAction();
+      const [f, c] = await Promise.all([
+        getMediaFoldersAction(),
+        getMediaFolderCountsAction(),
+      ]);
       setFolders(f);
+      setFolderCounts(c);
     } catch {
       console.error("Error fetching folders");
     }
@@ -192,7 +220,7 @@ export default function MediaPicker({
       setPage(1);
       setSearch("");
       setBucketFilter(defaultBucket ?? "all");
-      setFolderFilter("all");
+      setFolderFilterId("all");
       setTab("library");
       fetchMedia(1);
       fetchFolders();
@@ -205,7 +233,7 @@ export default function MediaPicker({
       setPage(1);
       fetchMedia(1);
     }
-  }, [bucketFilter, folderFilter, search]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bucketFilter, folderFilterId, search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Debounced search
   const handleSearchChange = useCallback((value: string) => {
@@ -289,7 +317,6 @@ export default function MediaPicker({
             file_size: optimized.size,
             mime_type: optimized.type,
             bucket: uploadBucket,
-            folder: uploadBucket,
           });
 
           if (result.success && result.item) {
@@ -390,16 +417,18 @@ export default function MediaPicker({
                 </SelectContent>
               </Select>
 
-              <Select value={folderFilter} onValueChange={setFolderFilter}>
+              <Select value={folderFilterId} onValueChange={setFolderFilterId}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Cartella" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tutte le cartelle</SelectItem>
-                  {folders.map((f) => (
-                    <SelectItem key={f.id} value={f.name}>
-                      <FolderOpen className="size-3.5 inline mr-1.5" />
-                      {f.name}
+                  {flatFolders.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      <span style={{ paddingLeft: `${f.depth * 8}px` }} className="flex items-center gap-1.5">
+                        <FolderOpen className="size-3.5 shrink-0" />
+                        {f.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

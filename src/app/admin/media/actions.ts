@@ -13,6 +13,7 @@ import {
   createFolder,
   renameFolder,
   deleteFolder,
+  getFolderIdByName,
 } from '@/lib/supabase/queries/media'
 import type { MediaItem, MediaFolder } from '@/lib/types'
 
@@ -27,7 +28,8 @@ const revalidateMedia = () => revalidatePath('/admin/media')
 // ============================================================
 
 export async function getMediaItemsAction(options: {
-  folder?: string
+  folderId?: string
+  includeSubfolders?: boolean
   bucket?: string
   search?: string
   mimeTypePrefix?: string
@@ -47,10 +49,22 @@ export async function registerMediaAction(record: {
   width?: number | null
   height?: number | null
   bucket?: string
-  folder?: string
+  folder_id?: string | null
 }): Promise<ActionResult & { item?: MediaItem }> {
   try {
-    const item = await insertMediaRecord(record)
+    // If no folder_id provided, lookup by bucket name
+    let folderId = record.folder_id
+    if (!folderId && record.bucket) {
+      folderId = await getFolderIdByName(record.bucket)
+    }
+    if (!folderId) {
+      folderId = await getFolderIdByName('general')
+    }
+
+    const item = await insertMediaRecord({
+      ...record,
+      folder_id: folderId,
+    })
     return { success: true, item }
   } catch (err) {
     return {
@@ -62,7 +76,7 @@ export async function registerMediaAction(record: {
 
 export async function updateMediaAction(
   id: string,
-  updates: { folder?: string; alt_text?: string; filename?: string }
+  updates: { folder_id?: string | null; alt_text?: string; filename?: string }
 ): Promise<ActionResult> {
   try {
     await updateMediaRecord(id, updates)
@@ -104,10 +118,10 @@ export async function bulkDeleteMediaAction(ids: string[]): Promise<ActionResult
 
 export async function moveToFolderAction(
   ids: string[],
-  folder: string
+  folderId: string | null
 ): Promise<ActionResult> {
   try {
-    await moveMediaToFolder(ids, folder)
+    await moveMediaToFolder(ids, folderId)
     revalidateMedia()
     return { success: true }
   } catch (err) {
@@ -130,9 +144,12 @@ export async function getMediaFolderCountsAction(): Promise<Record<string, numbe
   return getMediaFolderCounts()
 }
 
-export async function createFolderAction(name: string): Promise<ActionResult> {
+export async function createFolderAction(
+  name: string,
+  parentId?: string | null
+): Promise<ActionResult> {
   try {
-    await createFolder(name)
+    await createFolder(name, parentId)
     revalidateMedia()
     return { success: true }
   } catch (err) {
@@ -144,11 +161,11 @@ export async function createFolderAction(name: string): Promise<ActionResult> {
 }
 
 export async function renameFolderAction(
-  oldName: string,
+  folderId: string,
   newName: string
 ): Promise<ActionResult> {
   try {
-    await renameFolder(oldName, newName)
+    await renameFolder(folderId, newName)
     revalidateMedia()
     return { success: true }
   } catch (err) {
@@ -159,9 +176,9 @@ export async function renameFolderAction(
   }
 }
 
-export async function deleteFolderAction(name: string): Promise<ActionResult> {
+export async function deleteFolderAction(folderId: string): Promise<ActionResult> {
   try {
-    await deleteFolder(name)
+    await deleteFolder(folderId)
     revalidateMedia()
     return { success: true }
   } catch (err) {

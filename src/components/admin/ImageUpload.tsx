@@ -169,7 +169,6 @@ export default function ImageUpload({
         file_size: file.size,
         mime_type: file.type,
         bucket,
-        folder: bucket,
       }).catch(() => {
         // Non-blocking: if DB insert fails, the upload still succeeds
       });

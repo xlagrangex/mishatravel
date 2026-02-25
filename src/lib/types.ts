@@ -382,6 +382,7 @@ export interface MediaItem {
   width: number | null;
   height: number | null;
   folder: string | null;
+  folder_id: string | null;
   bucket: string | null;
   alt_text: string | null;
   created_at: string;
@@ -390,7 +391,15 @@ export interface MediaItem {
 export interface MediaFolder {
   id: string;
   name: string;
+  parent_id: string | null;
   created_at: string;
+}
+
+export interface MediaFolderTreeNode extends MediaFolder {
+  children: MediaFolderTreeNode[];
+  depth: number;
+  item_count: number;
+  total_count: number;
 }
 
 // -----------------------------------------------------------------------------
@@ -528,10 +537,15 @@ export interface QuoteParticipant {
   id: string;
   request_id: string;
   full_name: string;
+  first_name: string | null;
+  last_name: string | null;
   age: number | null;
   is_child: boolean;
+  codice_fiscale: string | null;
   document_type: string | null;
   document_number: string | null;
+  document_expiry: string | null;
+  age_category: string | null; // 'infant' | 'child' | 'teen' | 'adult'
   sort_order: number;
   created_at: string;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition, useRef } from "react";
+import { useState, useEffect, useCallback, useTransition, useRef, useMemo } from "react";
 import Image from "next/image";
 import {
   Search,
@@ -21,6 +21,8 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronRightIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +43,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { STORAGE_BUCKETS } from "@/lib/supabase/queries/media";
+import { buildFolderTree } from "@/lib/supabase/queries/media";
 import {
   getMediaItemsAction,
   getMediaFoldersAction,
@@ -54,14 +57,14 @@ import {
   deleteFolderAction,
   registerMediaAction,
 } from "./actions";
-import type { MediaItem, MediaFolder } from "@/lib/types";
+import type { MediaItem, MediaFolder, MediaFolderTreeNode } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function formatBytes(bytes: number | null): string {
-  if (!bytes) return "—";
+  if (!bytes) return "\u2014";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -117,11 +120,281 @@ function formatDate(dateStr: string): string {
       year: "numeric",
     });
   } catch {
-    return "—";
+    return "\u2014";
   }
 }
 
+/** Build breadcrumb path from folder tree */
+function getBreadcrumbPath(
+  folderId: string,
+  folders: MediaFolder[]
+): MediaFolder[] {
+  const path: MediaFolder[] = [];
+  let currentId: string | null = folderId;
+  const folderMap = new Map(folders.map((f) => [f.id, f]));
+
+  while (currentId) {
+    const folder = folderMap.get(currentId);
+    if (!folder) break;
+    path.unshift(folder);
+    currentId = folder.parent_id;
+  }
+  return path;
+}
+
+/** Flatten tree for "move to" dropdown */
+function flattenTree(
+  nodes: MediaFolderTreeNode[]
+): { id: string; name: string; depth: number }[] {
+  const result: { id: string; name: string; depth: number }[] = [];
+  function walk(items: MediaFolderTreeNode[]) {
+    for (const node of items) {
+      result.push({ id: node.id, name: node.name, depth: node.depth });
+      walk(node.children);
+    }
+  }
+  walk(nodes);
+  return result;
+}
+
 const PAGE_SIZE = 50;
+
+// ---------------------------------------------------------------------------
+// FolderTreeItem - recursive sidebar component
+// ---------------------------------------------------------------------------
+
+interface FolderTreeItemProps {
+  node: MediaFolderTreeNode;
+  activeFolderId: string | null;
+  expandedFolders: Set<string>;
+  renamingFolderId: string | null;
+  renameValue: string;
+  creatingInParentId: string | null;
+  newSubfolderName: string;
+  onSelect: (id: string) => void;
+  onToggleExpand: (id: string) => void;
+  onStartRename: (id: string, name: string) => void;
+  onConfirmRename: (id: string) => void;
+  onCancelRename: () => void;
+  onRenameValueChange: (value: string) => void;
+  onStartCreateSubfolder: (parentId: string) => void;
+  onConfirmCreateSubfolder: (parentId: string) => void;
+  onCancelCreateSubfolder: () => void;
+  onSubfolderNameChange: (value: string) => void;
+  onDeleteFolder: (id: string, name: string) => void;
+}
+
+function FolderTreeItem({
+  node,
+  activeFolderId,
+  expandedFolders,
+  renamingFolderId,
+  renameValue,
+  creatingInParentId,
+  newSubfolderName,
+  onSelect,
+  onToggleExpand,
+  onStartRename,
+  onConfirmRename,
+  onCancelRename,
+  onRenameValueChange,
+  onStartCreateSubfolder,
+  onConfirmCreateSubfolder,
+  onCancelCreateSubfolder,
+  onSubfolderNameChange,
+  onDeleteFolder,
+}: FolderTreeItemProps) {
+  const hasChildren = node.children.length > 0;
+  const isExpanded = expandedFolders.has(node.id);
+  const isActive = activeFolderId === node.id;
+  const isRenaming = renamingFolderId === node.id;
+  const isCreatingChild = creatingInParentId === node.id;
+  const canCreateSubfolder = node.depth < 2; // max 3 levels
+
+  return (
+    <div>
+      {isRenaming ? (
+        <div
+          className="flex items-center gap-1 px-2 py-1"
+          style={{ paddingLeft: `${node.depth * 16 + 8}px` }}
+        >
+          <Input
+            value={renameValue}
+            onChange={(e) => onRenameValueChange(e.target.value)}
+            className="h-7 text-sm"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onConfirmRename(node.id);
+              if (e.key === "Escape") onCancelRename();
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => onConfirmRename(node.id)}
+            className="rounded p-1 hover:bg-muted"
+          >
+            <Check className="size-3.5 text-green-600" />
+          </button>
+          <button
+            type="button"
+            onClick={onCancelRename}
+            className="rounded p-1 hover:bg-muted"
+          >
+            <X className="size-3.5 text-muted-foreground" />
+          </button>
+        </div>
+      ) : (
+        <div className="group relative">
+          <button
+            type="button"
+            onClick={() => onSelect(node.id)}
+            className={cn(
+              "flex w-full items-center gap-1.5 rounded-md py-1.5 pr-2 text-sm transition-colors",
+              isActive
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+            style={{ paddingLeft: `${node.depth * 16 + 8}px` }}
+          >
+            {/* Expand/collapse chevron */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand(node.id);
+              }}
+              className={cn(
+                "shrink-0 rounded p-0.5 hover:bg-muted-foreground/20",
+                !hasChildren && !canCreateSubfolder && "invisible",
+              )}
+            >
+              {isExpanded ? (
+                <ChevronDown className="size-3.5" />
+              ) : (
+                <ChevronRightIcon className="size-3.5" />
+              )}
+            </button>
+
+            <FolderOpen className="size-4 shrink-0" />
+            <span className="flex-1 text-left truncate">{node.name}</span>
+            <span className="text-xs tabular-nums">{node.total_count}</span>
+
+            {/* Folder actions */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <span
+                  role="button"
+                  onClick={(e) => e.stopPropagation()}
+                  className="invisible group-hover:visible rounded p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <MoreHorizontal className="size-3.5" />
+                </span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {canCreateSubfolder && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStartCreateSubfolder(node.id);
+                    }}
+                  >
+                    <FolderPlus className="size-4" />
+                    Nuova sottocartella
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStartRename(node.id, node.name);
+                  }}
+                >
+                  <Pencil className="size-4" />
+                  Rinomina
+                </DropdownMenuItem>
+                {node.name !== "general" && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteFolder(node.id, node.name);
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                    Elimina
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </button>
+        </div>
+      )}
+
+      {/* Children */}
+      {isExpanded && hasChildren && (
+        <div>
+          {node.children.map((child) => (
+            <FolderTreeItem
+              key={child.id}
+              node={child}
+              activeFolderId={activeFolderId}
+              expandedFolders={expandedFolders}
+              renamingFolderId={renamingFolderId}
+              renameValue={renameValue}
+              creatingInParentId={creatingInParentId}
+              newSubfolderName={newSubfolderName}
+              onSelect={onSelect}
+              onToggleExpand={onToggleExpand}
+              onStartRename={onStartRename}
+              onConfirmRename={onConfirmRename}
+              onCancelRename={onCancelRename}
+              onRenameValueChange={onRenameValueChange}
+              onStartCreateSubfolder={onStartCreateSubfolder}
+              onConfirmCreateSubfolder={onConfirmCreateSubfolder}
+              onCancelCreateSubfolder={onCancelCreateSubfolder}
+              onSubfolderNameChange={onSubfolderNameChange}
+              onDeleteFolder={onDeleteFolder}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Inline create subfolder input */}
+      {isExpanded && isCreatingChild && (
+        <div
+          className="flex items-center gap-1 py-1"
+          style={{ paddingLeft: `${(node.depth + 1) * 16 + 8}px`, paddingRight: 8 }}
+        >
+          <FolderPlus className="size-3.5 shrink-0 text-muted-foreground" />
+          <Input
+            value={newSubfolderName}
+            onChange={(e) => onSubfolderNameChange(e.target.value)}
+            placeholder="Nome sottocartella"
+            className="h-7 text-sm"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onConfirmCreateSubfolder(node.id);
+              if (e.key === "Escape") onCancelCreateSubfolder();
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => onConfirmCreateSubfolder(node.id)}
+            className="rounded p-1 hover:bg-muted"
+          >
+            <Check className="size-3.5 text-green-600" />
+          </button>
+          <button
+            type="button"
+            onClick={onCancelCreateSubfolder}
+            className="rounded p-1 hover:bg-muted"
+          >
+            <X className="size-3.5 text-muted-foreground" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -150,7 +423,7 @@ export default function MediaLibrary({
   // Filter state
   const [search, setSearch] = useState("");
   const [bucketFilter, setBucketFilter] = useState("all");
-  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"created_at" | "filename" | "file_size">("created_at");
 
   // Selection state
@@ -160,9 +433,12 @@ export default function MediaLibrary({
   // UI state
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [creatingFolder, setCreatingFolder] = useState(false);
-  const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [creatingInParentId, setCreatingInParentId] = useState<string | null>(null);
+  const [newSubfolderName, setNewSubfolderName] = useState("");
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [editingAltText, setEditingAltText] = useState(false);
   const [altTextValue, setAltTextValue] = useState("");
@@ -170,6 +446,21 @@ export default function MediaLibrary({
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Computed: folder tree
+  const folderTree = useMemo(
+    () => buildFolderTree(folders, folderCounts),
+    [folders, folderCounts],
+  );
+
+  // Computed: flat list for "move to" dropdowns
+  const flatFolders = useMemo(() => flattenTree(folderTree), [folderTree]);
+
+  // Computed: breadcrumb path
+  const breadcrumbPath = useMemo(
+    () => (activeFolderId ? getBreadcrumbPath(activeFolderId, folders) : []),
+    [activeFolderId, folders],
+  );
 
   // -----------------------------------------------------------------------
   // Data fetching
@@ -183,7 +474,7 @@ export default function MediaLibrary({
           page: pageNum,
           pageSize: PAGE_SIZE,
           bucket: bucketFilter !== "all" ? bucketFilter : undefined,
-          folder: activeFolder || undefined,
+          folderId: activeFolderId || undefined,
           search: search || undefined,
           sortBy,
         });
@@ -199,7 +490,7 @@ export default function MediaLibrary({
         setLoading(false);
       }
     },
-    [bucketFilter, activeFolder, search, sortBy],
+    [bucketFilter, activeFolderId, search, sortBy],
   );
 
   const refreshFolders = useCallback(async () => {
@@ -219,7 +510,7 @@ export default function MediaLibrary({
   useEffect(() => {
     setPage(1);
     fetchMedia(1, true);
-  }, [bucketFilter, activeFolder, search, sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bucketFilter, activeFolderId, search, sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearchChange = useCallback((value: string) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -310,16 +601,15 @@ export default function MediaLibrary({
   // -----------------------------------------------------------------------
 
   const handleMoveToFolder = useCallback(
-    async (folder: string) => {
+    async (folderId: string) => {
       const ids = Array.from(selectedIds);
       if (ids.length === 0) return;
       startTransition(async () => {
-        const result = await moveToFolderAction(ids, folder);
+        const result = await moveToFolderAction(ids, folderId);
         if (!result.success) {
           alert(`Errore: ${result.error}`);
           return;
         }
-        // Refresh data
         fetchMedia(page);
         refreshFolders();
         setSelectedIds(new Set());
@@ -327,6 +617,23 @@ export default function MediaLibrary({
     },
     [selectedIds, page, fetchMedia, refreshFolders],
   );
+
+  // -----------------------------------------------------------------------
+  // Folder tree interactions
+  // -----------------------------------------------------------------------
+
+  const handleToggleExpand = useCallback((folderId: string) => {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
+  }, []);
+
+  const handleSelectFolder = useCallback((folderId: string) => {
+    setActiveFolderId((prev) => (prev === folderId ? null : folderId));
+  }, []);
 
   // -----------------------------------------------------------------------
   // Folder CRUD
@@ -346,41 +653,78 @@ export default function MediaLibrary({
     });
   }, [newFolderName, refreshFolders]);
 
-  const handleRenameFolder = useCallback(
-    async (oldName: string) => {
-      if (!renameValue.trim() || renameValue.trim() === oldName) {
-        setRenamingFolder(null);
-        return;
-      }
+  const handleStartCreateSubfolder = useCallback((parentId: string) => {
+    setCreatingInParentId(parentId);
+    setNewSubfolderName("");
+    // Auto-expand the parent
+    setExpandedFolders((prev) => new Set(prev).add(parentId));
+  }, []);
+
+  const handleConfirmCreateSubfolder = useCallback(
+    async (parentId: string) => {
+      if (!newSubfolderName.trim()) return;
       startTransition(async () => {
-        const result = await renameFolderAction(oldName, renameValue.trim());
+        const result = await createFolderAction(newSubfolderName.trim(), parentId);
         if (!result.success) {
           alert(`Errore: ${result.error}`);
           return;
         }
-        setRenamingFolder(null);
-        if (activeFolder === oldName) setActiveFolder(renameValue.trim());
+        setCreatingInParentId(null);
+        setNewSubfolderName("");
         refreshFolders();
       });
     },
-    [renameValue, activeFolder, refreshFolders],
+    [newSubfolderName, refreshFolders],
   );
 
-  const handleDeleteFolder = useCallback(
-    async (name: string) => {
-      if (!confirm(`Eliminare la cartella "${name}"? I file verranno spostati in "general".`)) return;
+  const handleCancelCreateSubfolder = useCallback(() => {
+    setCreatingInParentId(null);
+    setNewSubfolderName("");
+  }, []);
+
+  const handleStartRename = useCallback((folderId: string, currentName: string) => {
+    setRenamingFolderId(folderId);
+    setRenameValue(currentName);
+  }, []);
+
+  const handleConfirmRename = useCallback(
+    async (folderId: string) => {
+      if (!renameValue.trim()) {
+        setRenamingFolderId(null);
+        return;
+      }
       startTransition(async () => {
-        const result = await deleteFolderAction(name);
+        const result = await renameFolderAction(folderId, renameValue.trim());
         if (!result.success) {
           alert(`Errore: ${result.error}`);
           return;
         }
-        if (activeFolder === name) setActiveFolder(null);
+        setRenamingFolderId(null);
+        refreshFolders();
+      });
+    },
+    [renameValue, refreshFolders],
+  );
+
+  const handleCancelRename = useCallback(() => {
+    setRenamingFolderId(null);
+  }, []);
+
+  const handleDeleteFolder = useCallback(
+    async (folderId: string, name: string) => {
+      if (!confirm(`Eliminare la cartella "${name}"? I file verranno spostati in "general".`)) return;
+      startTransition(async () => {
+        const result = await deleteFolderAction(folderId);
+        if (!result.success) {
+          alert(`Errore: ${result.error}`);
+          return;
+        }
+        if (activeFolderId === folderId) setActiveFolderId(null);
         refreshFolders();
         fetchMedia(1, true);
       });
     },
-    [activeFolder, refreshFolders, fetchMedia],
+    [activeFolderId, refreshFolders, fetchMedia],
   );
 
   // -----------------------------------------------------------------------
@@ -400,11 +744,11 @@ export default function MediaLibrary({
   }, [detailItem, altTextValue]);
 
   const handleMoveItem = useCallback(
-    async (folder: string) => {
+    async (folderId: string) => {
       if (!detailItem) return;
       startTransition(async () => {
-        await moveToFolderAction([detailItem.id], folder);
-        setDetailItem((prev) => prev ? { ...prev, folder } : null);
+        await moveToFolderAction([detailItem.id], folderId);
+        setDetailItem((prev) => prev ? { ...prev, folder_id: folderId } : null);
         fetchMedia(page);
         refreshFolders();
       });
@@ -426,7 +770,6 @@ export default function MediaLibrary({
       if (!files || files.length === 0) return;
 
       const targetBucket = bucketFilter !== "all" ? bucketFilter : "general";
-      const targetFolder = activeFolder || targetBucket;
       setIsUploading(true);
 
       try {
@@ -457,7 +800,7 @@ export default function MediaLibrary({
             file_size: optimized.size,
             mime_type: optimized.type,
             bucket: targetBucket,
-            folder: targetFolder,
+            folder_id: activeFolderId || undefined,
           });
         }
         // Refresh
@@ -470,7 +813,7 @@ export default function MediaLibrary({
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     },
-    [bucketFilter, activeFolder, fetchMedia, refreshFolders],
+    [bucketFilter, activeFolderId, fetchMedia, refreshFolders],
   );
 
   // -----------------------------------------------------------------------
@@ -478,6 +821,21 @@ export default function MediaLibrary({
   // -----------------------------------------------------------------------
 
   const totalCount = Object.values(folderCounts).reduce((a, b) => a + b, 0);
+
+  // Find active folder name for detail panel display
+  const activeFolderName = useMemo(() => {
+    if (!activeFolderId) return null;
+    return folders.find((f) => f.id === activeFolderId)?.name ?? null;
+  }, [activeFolderId, folders]);
+
+  // Get folder name by ID for detail panel
+  const getFolderName = useCallback(
+    (folderId: string | null) => {
+      if (!folderId) return "\u2014";
+      return folders.find((f) => f.id === folderId)?.name ?? "\u2014";
+    },
+    [folders],
+  );
 
   // -----------------------------------------------------------------------
   // Render
@@ -508,10 +866,10 @@ export default function MediaLibrary({
             {/* All files */}
             <button
               type="button"
-              onClick={() => setActiveFolder(null)}
+              onClick={() => setActiveFolderId(null)}
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                activeFolder === null
+                activeFolderId === null
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
@@ -521,95 +879,34 @@ export default function MediaLibrary({
               <span className="text-xs tabular-nums">{totalCount}</span>
             </button>
 
-            {/* Folders */}
-            {folders.map((folder) => (
-              <div key={folder.id} className="group relative">
-                {renamingFolder === folder.name ? (
-                  <div className="flex items-center gap-1 px-2 py-1">
-                    <Input
-                      value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
-                      className="h-7 text-sm"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleRenameFolder(folder.name);
-                        if (e.key === "Escape") setRenamingFolder(null);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRenameFolder(folder.name)}
-                      className="rounded p-1 hover:bg-muted"
-                    >
-                      <Check className="size-3.5 text-green-600" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRenamingFolder(null)}
-                      className="rounded p-1 hover:bg-muted"
-                    >
-                      <X className="size-3.5 text-muted-foreground" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setActiveFolder(folder.name)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                      activeFolder === folder.name
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    <FolderOpen className="size-4 shrink-0" />
-                    <span className="flex-1 text-left truncate">{folder.name}</span>
-                    <span className="text-xs tabular-nums">
-                      {folderCounts[folder.name] || 0}
-                    </span>
-
-                    {/* Folder actions */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <span
-                          role="button"
-                          onClick={(e) => e.stopPropagation()}
-                          className="invisible group-hover:visible rounded p-0.5 hover:bg-muted-foreground/20"
-                        >
-                          <MoreHorizontal className="size-3.5" />
-                        </span>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRenamingFolder(folder.name);
-                            setRenameValue(folder.name);
-                          }}
-                        >
-                          <Pencil className="size-4" />
-                          Rinomina
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteFolder(folder.name);
-                          }}
-                        >
-                          <Trash2 className="size-4" />
-                          Elimina
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </button>
-                )}
-              </div>
+            {/* Folder tree */}
+            {folderTree.map((node) => (
+              <FolderTreeItem
+                key={node.id}
+                node={node}
+                activeFolderId={activeFolderId}
+                expandedFolders={expandedFolders}
+                renamingFolderId={renamingFolderId}
+                renameValue={renameValue}
+                creatingInParentId={creatingInParentId}
+                newSubfolderName={newSubfolderName}
+                onSelect={handleSelectFolder}
+                onToggleExpand={handleToggleExpand}
+                onStartRename={handleStartRename}
+                onConfirmRename={handleConfirmRename}
+                onCancelRename={handleCancelRename}
+                onRenameValueChange={setRenameValue}
+                onStartCreateSubfolder={handleStartCreateSubfolder}
+                onConfirmCreateSubfolder={handleConfirmCreateSubfolder}
+                onCancelCreateSubfolder={handleCancelCreateSubfolder}
+                onSubfolderNameChange={setNewSubfolderName}
+                onDeleteFolder={handleDeleteFolder}
+              />
             ))}
           </div>
         </ScrollArea>
 
-        {/* New folder */}
+        {/* New root folder */}
         <div className="p-2 border-t">
           {creatingFolder ? (
             <div className="flex items-center gap-1">
@@ -657,6 +954,36 @@ export default function MediaLibrary({
       <div className="flex-1 flex flex-col min-w-0">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 p-4 border-b">
+          {/* Breadcrumb */}
+          {breadcrumbPath.length > 0 && (
+            <div className="flex items-center gap-1 text-sm mr-2">
+              <button
+                type="button"
+                onClick={() => setActiveFolderId(null)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Tutti i file
+              </button>
+              {breadcrumbPath.map((folder) => (
+                <span key={folder.id} className="flex items-center gap-1">
+                  <ChevronRightIcon className="size-3.5 text-muted-foreground" />
+                  <button
+                    type="button"
+                    onClick={() => setActiveFolderId(folder.id)}
+                    className={cn(
+                      "transition-colors",
+                      folder.id === activeFolderId
+                        ? "font-medium text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {folder.name}
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Search */}
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -704,13 +1031,15 @@ export default function MediaLibrary({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    {folders.map((f) => (
+                    {flatFolders.map((f) => (
                       <DropdownMenuItem
                         key={f.id}
-                        onClick={() => handleMoveToFolder(f.name)}
+                        onClick={() => handleMoveToFolder(f.id)}
                       >
-                        <FolderOpen className="size-4" />
-                        {f.name}
+                        <span style={{ paddingLeft: `${f.depth * 12}px` }} className="flex items-center gap-2">
+                          <FolderOpen className="size-4 shrink-0" />
+                          {f.name}
+                        </span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -766,7 +1095,7 @@ export default function MediaLibrary({
                     Nessun file trovato
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {search || bucketFilter !== "all" || activeFolder
+                    {search || bucketFilter !== "all" || activeFolderId
                       ? "Prova a modificare i filtri di ricerca."
                       : "Clicca \"Carica File\" per iniziare."}
                   </p>
@@ -831,7 +1160,7 @@ export default function MediaLibrary({
                             </p>
                             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                               <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase">
-                                {item.bucket || "—"}
+                                {item.bucket || "\u2014"}
                               </span>
                               <span>{formatBytes(item.file_size)}</span>
                             </div>
@@ -908,15 +1237,15 @@ export default function MediaLibrary({
                   </div>
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase mb-0.5">Tipo</p>
-                    <p className="text-sm truncate">{detailItem.mime_type || "—"}</p>
+                    <p className="text-sm truncate">{detailItem.mime_type || "\u2014"}</p>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase mb-0.5">Bucket</p>
-                    <p className="text-sm">{detailItem.bucket || "—"}</p>
+                    <p className="text-sm">{detailItem.bucket || "\u2014"}</p>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase mb-0.5">Cartella</p>
-                    <p className="text-sm">{detailItem.folder || "—"}</p>
+                    <p className="text-sm">{getFolderName(detailItem.folder_id)}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs font-medium text-muted-foreground uppercase mb-0.5">Creato</p>
@@ -975,15 +1304,19 @@ export default function MediaLibrary({
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Sposta in</p>
                   <Select
-                    value={detailItem.folder || "general"}
+                    value={detailItem.folder_id || ""}
                     onValueChange={handleMoveItem}
                   >
                     <SelectTrigger className="h-8 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {folders.map((f) => (
-                        <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
+                      {flatFolders.map((f) => (
+                        <SelectItem key={f.id} value={f.id}>
+                          <span style={{ paddingLeft: `${f.depth * 8}px` }}>
+                            {f.name}
+                          </span>
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

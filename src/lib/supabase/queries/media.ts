@@ -1,5 +1,5 @@
 import { createAdminClient } from '../admin'
-import type { MediaItem, MediaFolder } from '@/lib/types'
+import type { MediaItem, MediaFolder, MediaFolderTreeNode } from '@/lib/types'
 
 // ============================================================
 // Constants
@@ -86,7 +86,8 @@ export async function deleteStorageFile(
 // ============================================================
 
 interface GetMediaItemsOptions {
-  folder?: string
+  folderId?: string
+  includeSubfolders?: boolean
   bucket?: string
   search?: string
   mimeTypePrefix?: string
@@ -100,7 +101,8 @@ export async function getMediaItems(
   options: GetMediaItemsOptions = {}
 ): Promise<{ items: MediaItem[]; total: number }> {
   const {
-    folder,
+    folderId,
+    includeSubfolders = false,
     bucket,
     search,
     mimeTypePrefix,
@@ -114,7 +116,15 @@ export async function getMediaItems(
 
   let query = supabase.from('media').select('*', { count: 'exact' })
 
-  if (folder) query = query.eq('folder', folder)
+  if (folderId) {
+    if (includeSubfolders) {
+      const descendantIds = await getDescendantFolderIds(folderId)
+      const allIds = [folderId, ...descendantIds]
+      query = query.in('folder_id', allIds)
+    } else {
+      query = query.eq('folder_id', folderId)
+    }
+  }
   if (bucket) query = query.eq('bucket', bucket)
   if (search) query = query.ilike('filename', `%${search}%`)
   if (mimeTypePrefix) query = query.like('mime_type', `${mimeTypePrefix}%`)
@@ -154,8 +164,7 @@ export async function insertMediaRecord(record: {
   width?: number | null
   height?: number | null
   bucket?: string
-  folder?: string
-  alt_text?: string
+  folder_id?: string | null
 }): Promise<MediaItem> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
@@ -168,8 +177,9 @@ export async function insertMediaRecord(record: {
       width: record.width ?? null,
       height: record.height ?? null,
       bucket: record.bucket ?? 'general',
-      folder: record.folder ?? 'general',
-      alt_text: record.alt_text ?? '',
+      folder: record.bucket ?? 'general',
+      folder_id: record.folder_id ?? null,
+      alt_text: '',
     })
     .select()
     .single()
@@ -180,7 +190,7 @@ export async function insertMediaRecord(record: {
 
 export async function updateMediaRecord(
   id: string,
-  updates: { folder?: string; alt_text?: string; filename?: string }
+  updates: { folder_id?: string | null; alt_text?: string; filename?: string }
 ): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('media').update(updates).eq('id', id)
@@ -222,12 +232,12 @@ export async function bulkDeleteMedia(ids: string[]): Promise<void> {
 
 export async function moveMediaToFolder(
   ids: string[],
-  folder: string
+  folderId: string | null
 ): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('media')
-    .update({ folder })
+    .update({ folder_id: folderId })
     .in('id', ids)
   if (error) throw new Error(`Errore spostamento media: ${error.message}`)
 }
@@ -251,23 +261,34 @@ export async function getMediaFolderCounts(): Promise<Record<string, number>> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('media')
-    .select('folder')
+    .select('folder_id')
 
   if (error) return {}
 
   const counts: Record<string, number> = {}
   for (const row of data ?? []) {
-    const f = row.folder ?? 'general'
-    counts[f] = (counts[f] || 0) + 1
+    const fid = row.folder_id ?? 'none'
+    counts[fid] = (counts[fid] || 0) + 1
   }
   return counts
 }
 
-export async function createFolder(name: string): Promise<MediaFolder> {
+export async function createFolder(
+  name: string,
+  parentId?: string | null
+): Promise<MediaFolder> {
+  // Max depth check: 3 levels (root > child > grandchild)
+  if (parentId) {
+    const depth = await getFolderDepth(parentId)
+    if (depth >= 2) {
+      throw new Error('Profondita massima raggiunta (3 livelli)')
+    }
+  }
+
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('media_folders')
-    .insert({ name })
+    .insert({ name, parent_id: parentId ?? null })
     .select()
     .single()
 
@@ -276,40 +297,182 @@ export async function createFolder(name: string): Promise<MediaFolder> {
 }
 
 export async function renameFolder(
-  oldName: string,
+  folderId: string,
   newName: string
 ): Promise<void> {
   const supabase = createAdminClient()
-
-  // Rename the folder entry
-  const { error: folderError } = await supabase
+  const { error } = await supabase
     .from('media_folders')
     .update({ name: newName })
-    .eq('name', oldName)
-  if (folderError) throw new Error(`Errore rinomina cartella: ${folderError.message}`)
-
-  // Update all media items in this folder
-  const { error: mediaError } = await supabase
-    .from('media')
-    .update({ folder: newName })
-    .eq('folder', oldName)
-  if (mediaError) throw new Error(`Errore aggiornamento media: ${mediaError.message}`)
+    .eq('id', folderId)
+  if (error) throw new Error(`Errore rinomina cartella: ${error.message}`)
 }
 
-export async function deleteFolder(name: string): Promise<void> {
+export async function deleteFolder(folderId: string): Promise<void> {
   const supabase = createAdminClient()
 
-  // Move all items to 'general' first
-  const { error: moveError } = await supabase
-    .from('media')
-    .update({ folder: 'general' })
-    .eq('folder', name)
-  if (moveError) throw new Error(`Errore spostamento media: ${moveError.message}`)
+  // Find the "general" folder ID
+  const { data: generalFolder } = await supabase
+    .from('media_folders')
+    .select('id')
+    .eq('name', 'general')
+    .is('parent_id', null)
+    .single()
 
-  // Delete the folder
+  const generalId = generalFolder?.id
+
+  if (generalId) {
+    // Get all descendant folder IDs
+    const descendantIds = await getDescendantFolderIds(folderId)
+    const allFolderIds = [folderId, ...descendantIds]
+
+    // Move all media in this folder and descendants to "general"
+    const { error: moveError } = await supabase
+      .from('media')
+      .update({ folder_id: generalId })
+      .in('folder_id', allFolderIds)
+    if (moveError) throw new Error(`Errore spostamento media: ${moveError.message}`)
+  }
+
+  // Delete the folder (CASCADE will delete children)
   const { error } = await supabase
     .from('media_folders')
     .delete()
-    .eq('name', name)
+    .eq('id', folderId)
   if (error) throw new Error(`Errore eliminazione cartella: ${error.message}`)
+}
+
+// ============================================================
+// Hierarchy utilities
+// ============================================================
+
+/** BFS to find all descendant folder IDs */
+export async function getDescendantFolderIds(folderId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data: allFolders, error } = await supabase
+    .from('media_folders')
+    .select('id, parent_id')
+
+  if (error || !allFolders) return []
+
+  const childrenMap = new Map<string, string[]>()
+  for (const f of allFolders) {
+    if (f.parent_id) {
+      const siblings = childrenMap.get(f.parent_id) ?? []
+      siblings.push(f.id)
+      childrenMap.set(f.parent_id, siblings)
+    }
+  }
+
+  const result: string[] = []
+  const queue = [folderId]
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    const children = childrenMap.get(current) ?? []
+    for (const childId of children) {
+      result.push(childId)
+      queue.push(childId)
+    }
+  }
+
+  return result
+}
+
+/** Get folder depth (0 = root, 1 = child, 2 = grandchild) */
+async function getFolderDepth(folderId: string): Promise<number> {
+  const supabase = createAdminClient()
+  let depth = 0
+  let currentId: string | null = folderId
+
+  while (currentId) {
+    const result = await supabase
+      .from('media_folders')
+      .select('parent_id')
+      .eq('id', currentId)
+      .single()
+
+    const row = result.data as { parent_id: string | null } | null
+    if (!row || !row.parent_id) break
+    depth++
+    currentId = row.parent_id
+  }
+
+  return depth
+}
+
+/** Build a tree structure from flat folder list + counts */
+export function buildFolderTree(
+  folders: MediaFolder[],
+  counts: Record<string, number>
+): MediaFolderTreeNode[] {
+  const nodeMap = new Map<string, MediaFolderTreeNode>()
+
+  // Create nodes
+  for (const f of folders) {
+    nodeMap.set(f.id, {
+      ...f,
+      children: [],
+      depth: 0,
+      item_count: counts[f.id] || 0,
+      total_count: counts[f.id] || 0,
+    })
+  }
+
+  // Build tree
+  const roots: MediaFolderTreeNode[] = []
+  for (const node of nodeMap.values()) {
+    if (node.parent_id && nodeMap.has(node.parent_id)) {
+      const parent = nodeMap.get(node.parent_id)!
+      parent.children.push(node)
+      node.depth = parent.depth + 1
+    } else {
+      roots.push(node)
+    }
+  }
+
+  // Fix depths recursively
+  function fixDepths(nodes: MediaFolderTreeNode[], depth: number) {
+    for (const node of nodes) {
+      node.depth = depth
+      fixDepths(node.children, depth + 1)
+    }
+  }
+  fixDepths(roots, 0)
+
+  // Sort children by name
+  function sortChildren(nodes: MediaFolderTreeNode[]) {
+    nodes.sort((a, b) => a.name.localeCompare(b.name))
+    for (const node of nodes) {
+      sortChildren(node.children)
+    }
+  }
+  sortChildren(roots)
+
+  // Calculate total_count (includes descendants)
+  function calcTotalCount(node: MediaFolderTreeNode): number {
+    let total = node.item_count
+    for (const child of node.children) {
+      total += calcTotalCount(child)
+    }
+    node.total_count = total
+    return total
+  }
+  for (const root of roots) {
+    calcTotalCount(root)
+  }
+
+  return roots
+}
+
+/** Lookup folder_id by bucket name (for backwards compatibility) */
+export async function getFolderIdByName(name: string): Promise<string | null> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('media_folders')
+    .select('id')
+    .eq('name', name)
+    .is('parent_id', null)
+    .single()
+
+  return data?.id ?? null
 }
