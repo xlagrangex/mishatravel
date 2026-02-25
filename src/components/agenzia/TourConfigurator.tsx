@@ -74,7 +74,7 @@ function formatDate(dateStr: string): string {
 }
 
 function formatPrice(price: number | null): string {
-  if (!price) return "Su richiesta";
+  if (price === null || price === undefined) return "Su richiesta";
   return new Intl.NumberFormat("it-IT", {
     style: "currency",
     currency: "EUR",
@@ -82,9 +82,12 @@ function formatPrice(price: number | null): string {
   }).format(price);
 }
 
-function parsePriceStr(val: string | null): number | null {
-  if (!val) return null;
-  const n = parseFloat(val);
+function parsePriceStr(val: string | number | null): number | null {
+  if (val === null || val === undefined) return null;
+  if (typeof val === "number") return isNaN(val) ? null : val;
+  // Handle Italian format: "2.739" (thousands sep) or "2.739,00" (decimal comma)
+  const cleaned = val.replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(cleaned);
   return isNaN(n) ? null : n;
 }
 
@@ -131,13 +134,15 @@ export default function TourConfigurator({
     }
   }, [open, preselectedDepartureId]);
 
-  // Live price preview
+  // Live price preview — fallback to the other category if the selected one is null
   const indicativePrice = useMemo(() => {
     if (!selectedDeparture) return null;
+    const p3 = selectedDeparture.prezzo_3_stelle;
+    const p4 = parsePriceStr(selectedDeparture.prezzo_4_stelle);
     if (selectedStars === "4") {
-      return parsePriceStr(selectedDeparture.prezzo_4_stelle) ?? selectedDeparture.prezzo_3_stelle;
+      return p4 ?? p3;
     }
-    return selectedDeparture.prezzo_3_stelle;
+    return p3 ?? p4;
   }, [selectedDeparture, selectedStars]);
 
   const estimatedTotal = useMemo(() => {
