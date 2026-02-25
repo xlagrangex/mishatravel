@@ -34,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ShipCabinDetail, ShipDeck } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -163,7 +162,7 @@ export default function EditShipCabinsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Ship className="size-5" />
@@ -180,7 +179,7 @@ export default function EditShipCabinsDialog({
             <span className="text-sm text-muted-foreground">Caricamento...</span>
           </div>
         ) : (
-          <ScrollArea className="flex-1 -mx-6 px-6">
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
             <form id="ship-cabins-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-4">
               {/* --- Ponti Section --- */}
               <div>
@@ -422,7 +421,7 @@ export default function EditShipCabinsDialog({
                 </div>
               </div>
             </form>
-          </ScrollArea>
+          </div>
         )}
 
         <div className="flex justify-end gap-2 pt-2 border-t">
