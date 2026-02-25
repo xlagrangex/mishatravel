@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, ChevronDown, ChevronRight, MapPin } from "lucide-react";
+import { Menu, ChevronDown, ChevronRight, MapPin, Waves } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -91,10 +91,11 @@ export default function Header({ destinationsByArea }: Props) {
                           <div key={area} className="break-inside-avoid mb-4">
                             <h4
                               className={cn(
-                                "font-semibold text-xs uppercase tracking-wider mb-1.5 font-[family-name:var(--font-poppins)]",
+                                "font-semibold text-xs uppercase tracking-wider mb-1.5 font-[family-name:var(--font-poppins)] flex items-center gap-1.5",
                                 isFluviali ? "text-[#1B6FA8]" : "text-[#C41E2F]"
                               )}
                             >
+                              {isFluviali && <Waves className="size-3.5" />}
                               {area}
                             </h4>
                             <ul className="space-y-0.5">
@@ -210,10 +211,11 @@ export default function Header({ destinationsByArea }: Props) {
                             <div key={area} className="px-4 py-2">
                               <p
                                 className={cn(
-                                  "text-xs font-semibold uppercase tracking-wider mb-1",
+                                  "text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5",
                                   isFluviali ? "text-[#1B6FA8]" : "text-[#C41E2F]"
                                 )}
                               >
+                                {isFluviali && <Waves className="size-3.5" />}
                                 {area}
                               </p>
                               <div className="flex flex-wrap gap-x-3 gap-y-1">

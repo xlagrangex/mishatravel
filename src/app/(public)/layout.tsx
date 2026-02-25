@@ -27,16 +27,7 @@ export default async function PublicLayout({
     displayName = agency?.business_name ?? undefined;
   }
 
-  // Group destinations by macro_area for the mega menu (ordered)
-  const AREA_ORDER = [
-    "Europa",
-    "Medio Oriente",
-    "Asia",
-    "Asia Centrale",
-    "Africa",
-    "America Latina",
-    "Percorsi Fluviali",
-  ];
+  // Group destinations by macro_area for the mega menu (fully dynamic)
   const groupedRaw: Record<string, { name: string; slug: string; hasProducts: boolean }[]> = {};
   for (const dest of destinations) {
     const area = dest.macro_area ?? "Altro";
@@ -47,15 +38,18 @@ export default async function PublicLayout({
       hasProducts: (productCounts[dest.slug] ?? 0) > 0,
     });
   }
+  // Sort areas alphabetically, but keep "Percorsi Fluviali" always last
+  const RIVER_AREA = "Percorsi Fluviali";
+  const sortedAreas = Object.keys(groupedRaw)
+    .filter((a) => groupedRaw[a].length > 0)
+    .sort((a, b) => {
+      if (a === RIVER_AREA) return 1;
+      if (b === RIVER_AREA) return -1;
+      return a.localeCompare(b, "it");
+    });
   const destinationsByArea: Record<string, { name: string; slug: string; hasProducts: boolean }[]> = {};
-  for (const area of AREA_ORDER) {
-    if (groupedRaw[area]?.length) destinationsByArea[area] = groupedRaw[area];
-  }
-  // Add any remaining areas not in the predefined order
-  for (const area of Object.keys(groupedRaw)) {
-    if (!destinationsByArea[area] && groupedRaw[area].length) {
-      destinationsByArea[area] = groupedRaw[area];
-    }
+  for (const area of sortedAreas) {
+    destinationsByArea[area] = groupedRaw[area];
   }
 
   return (
