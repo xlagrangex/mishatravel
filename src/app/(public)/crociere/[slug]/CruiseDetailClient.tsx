@@ -107,13 +107,16 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
     });
   }, [cruise.itinerary_days, mapLocations]);
 
-  // Next departure
-  const prossimaPartenza = useMemo(() => {
+  // Next departure and count of future departures
+  const { prossimaPartenza, numDepartures } = useMemo(() => {
     const now = new Date();
     const future = (cruise.departures ?? [])
       .filter((d: CruiseDeparture) => new Date(d.data_partenza) >= now)
       .sort((a: CruiseDeparture, b: CruiseDeparture) => new Date(a.data_partenza).getTime() - new Date(b.data_partenza).getTime());
-    return future[0]?.data_partenza ?? null;
+    return {
+      prossimaPartenza: future[0]?.data_partenza ?? null,
+      numDepartures: future.length,
+    };
   }, [cruise.departures]);
 
   // Gallery images
@@ -187,6 +190,11 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
                   destinationName={destinationName}
                   programmaPdfUrl={cruise.programma_pdf_url}
                   shipName={shipName}
+                  pensione={cruise.pensione ?? []}
+                  tipoVoli={cruise.tipo_voli}
+                  prossimaPartenza={prossimaPartenza}
+                  numDepartures={numDepartures}
+                  numeroPersone={cruise.numero_minimo_persone}
                   onRequestQuote={() => openConfigurator()}
                 />
               </div>

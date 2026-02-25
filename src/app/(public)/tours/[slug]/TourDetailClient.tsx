@@ -102,13 +102,16 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
     });
   }, [tour.itinerary_days, mapLocations]);
 
-  // Next departure (future dates)
-  const prossimaPartenza = useMemo(() => {
+  // Next departure and count of future departures
+  const { prossimaPartenza, numDepartures } = useMemo(() => {
     const now = new Date();
     const future = (tour.departures ?? [])
       .filter((d: TourDeparture) => new Date(d.data_partenza) >= now)
       .sort((a: TourDeparture, b: TourDeparture) => new Date(a.data_partenza).getTime() - new Date(b.data_partenza).getTime());
-    return future[0]?.data_partenza ?? null;
+    return {
+      prossimaPartenza: future[0]?.data_partenza ?? null,
+      numDepartures: future.length,
+    };
   }, [tour.departures]);
 
   // Gallery images
@@ -188,6 +191,11 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                   durataNotti={tour.durata_notti}
                   destinationName={destinationName}
                   programmaPdfUrl={tour.programma_pdf_url}
+                  pensione={tour.pensione ?? []}
+                  tipoVoli={tour.tipo_voli}
+                  prossimaPartenza={prossimaPartenza}
+                  numDepartures={numDepartures}
+                  numeroPersone={tour.numero_persone}
                   onRequestQuote={() => openConfigurator()}
                 />
               </div>
