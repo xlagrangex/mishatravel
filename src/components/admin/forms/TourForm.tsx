@@ -102,6 +102,7 @@ const tourFormSchema = z.object({
   durata_notti: z.string().nullable(),
   pensione: z.array(z.enum(["no", "mezza", "completa"])),
   tipo_voli: z.string().nullable(),
+  cover_image_url: z.string().nullable(),
   status: z.enum(["draft", "published"]),
 
   // Tab 2: Programma
@@ -179,6 +180,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
         durata_notti: initialData.durata_notti,
         pensione: initialData.pensione,
         tipo_voli: initialData.tipo_voli,
+        cover_image_url: initialData.cover_image_url,
         status: initialData.status,
         price_label_1: initialData.price_label_1 ?? "Comfort",
         price_label_2: initialData.price_label_2 ?? "Deluxe",
@@ -226,6 +228,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
         durata_notti: null,
         pensione: [],
         tipo_voli: null,
+        cover_image_url: null,
         status: "draft",
         price_label_1: "Comfort",
         price_label_2: "Deluxe",
@@ -561,6 +564,24 @@ export default function TourForm({ initialData, destinations = [], localities = 
                   id="tipo_voli"
                   placeholder="es. Voli diretti di linea"
                   {...register("tipo_voli")}
+                />
+              </div>
+
+              <Separator />
+
+              {/* Cover Image */}
+              <div className="space-y-2">
+                <Label>Immagine di Copertina</Label>
+                <Controller
+                  control={control}
+                  name="cover_image_url"
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value ? [field.value] : []}
+                      onUpload={(urls) => field.onChange(urls[0] || null)}
+                      bucket="tours"
+                    />
+                  )}
                 />
               </div>
 

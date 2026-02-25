@@ -58,8 +58,8 @@ export async function createAdminUser(
     .insert({ user_id: userId, role })
 
   if (roleError) {
-    // Rollback: delete the auth user
-    await supabase.auth.admin.deleteUser(userId)
+    // Rollback: hard-delete the auth user so the email is freed
+    await supabase.auth.admin.deleteUser(userId, false)
     return { success: false, error: `Errore creazione ruolo: ${roleError.message}` }
   }
 
@@ -218,7 +218,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
   await supabase.from('user_roles').delete().eq('user_id', userId)
 
   // Hard-delete auth user so the email can be re-registered
-  const { error } = await supabase.auth.admin.deleteUser(userId)
+  const { error } = await supabase.auth.admin.deleteUser(userId, false)
   if (error) return { success: false, error: error.message }
 
   revalidatePath('/admin/utenti')

@@ -134,7 +134,7 @@ export async function deleteAgency(agencyId: string): Promise<ActionResult> {
 
   // 3. Hard-delete auth user so the email can be re-registered
   //    CASCADE deletes agencies + user_roles via FK
-  const { error: authError } = await supabase.auth.admin.deleteUser(agency.user_id)
+  const { error: authError } = await supabase.auth.admin.deleteUser(agency.user_id, false)
 
   if (authError) {
     return { success: false, error: `Errore eliminazione utente: ${authError.message}` }
@@ -191,8 +191,8 @@ export async function createAgencyFromAdmin(
     .single()
 
   if (agencyError) {
-    // Rollback: delete auth user
-    await supabase.auth.admin.deleteUser(userId)
+    // Rollback: hard-delete auth user so the email is freed
+    await supabase.auth.admin.deleteUser(userId, false)
     return { success: false, error: `Errore creazione agenzia: ${agencyError.message}` }
   }
 

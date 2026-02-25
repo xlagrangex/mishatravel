@@ -35,7 +35,7 @@ async function cleanOrphanAuthUser(
     await supabase.from("user_roles").delete().eq("user_id", user.id);
     await supabase.from("user_activity_log").delete().eq("user_id", user.id);
     await supabase.from("notifications").delete().eq("user_id", user.id);
-    const { error } = await supabase.auth.admin.deleteUser(user.id);
+    const { error } = await supabase.auth.admin.deleteUser(user.id, false);
 
     if (error) {
       console.error("[Register] Error cleaning orphan user:", error.message);
@@ -163,7 +163,7 @@ export async function registerAgency(
     if (agencyError) {
       console.error("[Register] Error inserting agency:", agencyError);
       // Rollback: delete auth user if agency creation fails
-      await supabase.auth.admin.deleteUser(userId);
+      await supabase.auth.admin.deleteUser(userId, false);
       return { success: false, error: "Errore durante la registrazione. Riprova." };
     }
 

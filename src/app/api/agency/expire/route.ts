@@ -65,8 +65,9 @@ export async function POST() {
     console.error('Error sending account expired email:', e)
   }
 
-  // Delete auth user → cascades to agencies + user_roles
-  await admin.auth.admin.deleteUser(agency.user_id)
+  // Hard-delete auth user so the email can be re-registered
+  //   CASCADE deletes agencies + user_roles via FK
+  await admin.auth.admin.deleteUser(agency.user_id, false)
   await admin.from('user_roles').delete().eq('user_id', agency.user_id)
 
   return NextResponse.json({ success: true })
