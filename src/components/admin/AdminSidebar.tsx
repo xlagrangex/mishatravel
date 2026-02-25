@@ -24,6 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
+  History,
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const navItems = [
   { label: "Estratti Conto", href: "/admin/estratti-conto", icon: FileSpreadsheet, pathSegment: "estratti-conto" },
   { label: "Utenti", href: "/admin/utenti", icon: UserCog, pathSegment: "utenti" },
   { type: "separator" as const, label: "Sistema" },
+  { label: "Storico", href: "/admin/storico", icon: History, pathSegment: "storico" },
   { label: "Impostazioni", href: "/admin/impostazioni", icon: Settings, pathSegment: "impostazioni" },
 ];
 

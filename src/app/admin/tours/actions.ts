@@ -366,6 +366,7 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
     entityType: 'tour',
     entityId: tourId,
     entityTitle: data.title,
+    details: `Stato: ${data.status}`,
   }).catch(() => {})
 
   // 6. Revalidate
@@ -424,6 +425,7 @@ export async function toggleTourStatus(
     entityType: 'tour',
     entityId: id,
     entityTitle: tourData?.title ?? '',
+    details: `Da ${newStatus === 'published' ? 'draft' : 'published'} a ${newStatus}`,
   }).catch(() => {})
 
   revalidatePath('/admin/tours')
@@ -557,6 +559,7 @@ export async function duplicateTourAction(id: string): Promise<ActionResult> {
       entityType: 'tour',
       entityId: newId,
       entityTitle: `${tour.title} (copia)`,
+      details: `Duplicato da: ${tour.title}`,
     }).catch(() => {})
 
     revalidatePath('/admin/tours')
@@ -581,6 +584,14 @@ export async function bulkSetTourStatus(
 
   if (error) return { success: false, error: error.message }
 
+  logActivity({
+    action: newStatus === 'draft' ? 'tour.bulk_draft' : 'tour.bulk_publish',
+    entityType: 'tour',
+    entityId: ids[0],
+    entityTitle: `${ids.length} tour`,
+    details: `${ids.length} tour → ${newStatus}`,
+  }).catch(() => {})
+
   revalidatePath('/admin/tours')
   revalidatePath('/tours')
   revalidatePath('/')
@@ -597,6 +608,14 @@ export async function bulkDeleteTours(ids: string[]): Promise<ActionResult> {
     .in('id', ids)
 
   if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: 'tour.bulk_delete',
+    entityType: 'tour',
+    entityId: ids[0],
+    entityTitle: `${ids.length} tour`,
+    details: `${ids.length} tour eliminati`,
+  }).catch(() => {})
 
   revalidatePath('/admin/tours')
   revalidatePath('/tours')

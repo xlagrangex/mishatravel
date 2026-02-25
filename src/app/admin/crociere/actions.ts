@@ -364,6 +364,7 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
     entityType: 'cruise',
     entityId: cruiseId,
     entityTitle: data.title,
+    details: `Stato: ${data.status}`,
   }).catch(() => {})
 
   // 6. Revalidate
@@ -421,6 +422,7 @@ export async function toggleCruiseStatus(
     entityType: 'cruise',
     entityId: id,
     entityTitle: cruiseData?.title ?? '',
+    details: `Da ${newStatus === 'published' ? 'draft' : 'published'} a ${newStatus}`,
   }).catch(() => {})
 
   revalidatePath('/admin/crociere')
@@ -607,6 +609,7 @@ export async function duplicateCruiseAction(id: string): Promise<ActionResult> {
       entityType: 'cruise',
       entityId: newId,
       entityTitle: `${cruise.title} (copia)`,
+      details: `Duplicato da: ${cruise.title}`,
     }).catch(() => {})
 
     revalidatePath('/admin/crociere')
@@ -631,6 +634,14 @@ export async function bulkSetCruiseStatus(
 
   if (error) return { success: false, error: error.message }
 
+  logActivity({
+    action: newStatus === 'draft' ? 'cruise.bulk_draft' : 'cruise.bulk_publish',
+    entityType: 'cruise',
+    entityId: ids[0],
+    entityTitle: `${ids.length} crociere`,
+    details: `${ids.length} crociere → ${newStatus}`,
+  }).catch(() => {})
+
   revalidatePath('/admin/crociere')
   revalidatePath('/crociere')
   revalidatePath('/')
@@ -647,6 +658,14 @@ export async function bulkDeleteCruises(ids: string[]): Promise<ActionResult> {
     .in('id', ids)
 
   if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: 'cruise.bulk_delete',
+    entityType: 'cruise',
+    entityId: ids[0],
+    entityTitle: `${ids.length} crociere`,
+    details: `${ids.length} crociere eliminate`,
+  }).catch(() => {})
 
   revalidatePath('/admin/crociere')
   revalidatePath('/crociere')
