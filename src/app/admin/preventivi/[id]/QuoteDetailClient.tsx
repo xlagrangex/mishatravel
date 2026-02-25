@@ -1514,6 +1514,28 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
                 />
               </div>
 
+              {/* Warning: departure prices missing */}
+              {quote.departure_has_prices === false && (
+                <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-amber-800">
+                      Prezzi partenza non inseriti
+                    </p>
+                    <p className="mt-0.5 text-amber-700">
+                      La partenza selezionata non ha prezzi configurati.
+                      {(() => {
+                        const product = quote.request_type === 'tour' ? quote.tour : quote.cruise
+                        if (product?.a_partire_da) {
+                          return ` L'agenzia ha visto il prezzo indicativo "a partire da \u20ac${Number(product.a_partire_da).toLocaleString('it-IT')}" nella scheda del ${quote.request_type === 'tour' ? 'tour' : 'la crociera'}, ma il prezzo reale della partenza non e stato inserito.`
+                        }
+                        return ' Verificare i prezzi prima di inviare un\'offerta.'
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Extras */}
               {quote.extras.length > 0 && (
                 <>

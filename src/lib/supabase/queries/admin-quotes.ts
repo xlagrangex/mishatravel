@@ -66,6 +66,8 @@ export type QuoteDetailData = {
     slug: string
     durata_notti: string | null
     cover_image_url: string | null
+    a_partire_da: string | null
+    prezzo_su_richiesta: boolean
   } | null
   cruise: {
     id: string
@@ -73,7 +75,11 @@ export type QuoteDetailData = {
     slug: string
     durata_notti: string | null
     cover_image_url: string | null
+    a_partire_da: string | null
+    prezzo_su_richiesta: boolean
   } | null
+  // Departure price check
+  departure_has_prices: boolean | null
   // Relations
   extras: { id: string; extra_name: string; quantity: number | null }[]
   offers: {
@@ -270,8 +276,8 @@ export async function getQuoteDetail(
       `
       *,
       agency:agencies(id, business_name, contact_name, phone, email, city, province),
-      tour:tours(id, title, slug, durata_notti, cover_image_url),
-      cruise:cruises(id, title, slug, durata_notti, cover_image_url),
+      tour:tours(id, title, slug, durata_notti, cover_image_url, a_partire_da, prezzo_su_richiesta),
+      cruise:cruises(id, title, slug, durata_notti, cover_image_url, a_partire_da, prezzo_su_richiesta),
       extras:quote_request_extras(id, extra_name, quantity),
       offers:quote_offers(*),
       payments:quote_payments(id, bank_details, amount, reference, status, created_at),
@@ -306,6 +312,47 @@ export async function getQuoteDetail(
     documents = d ?? []
   } catch { /* table may not exist yet */ }
 
+  // Check if the selected departure has actual prices configured
+  let departureHasPrices: boolean | null = null
+  if (data.departure_id) {
+    try {
+      if (data.request_type === 'tour') {
+        const { data: dep } = await supabase
+          .from('tour_departures')
+          .select('prezzo_3_stelle, prezzo_4_stelle')
+          .eq('id', data.departure_id)
+          .single()
+        if (dep) {
+          departureHasPrices =
+            dep.prezzo_3_stelle != null || (dep.prezzo_4_stelle != null && dep.prezzo_4_stelle !== '')
+        }
+      } else {
+        const { data: dep } = await supabase
+          .from('cruise_departures')
+          .select('prezzo_main_deck, prezzo_middle_deck, prezzo_superior_deck')
+          .eq('id', data.departure_id)
+          .single()
+        if (dep) {
+          departureHasPrices =
+            dep.prezzo_main_deck != null ||
+            (dep.prezzo_middle_deck != null && dep.prezzo_middle_deck !== '') ||
+            (dep.prezzo_superior_deck != null && dep.prezzo_superior_deck !== '')
+        }
+        // Also check cruise_departure_prices if main columns are empty
+        if (departureHasPrices === false) {
+          const { data: cabinPrices } = await supabase
+            .from('cruise_departure_prices')
+            .select('prezzo')
+            .eq('departure_id', data.departure_id)
+            .limit(1)
+          if (cabinPrices && cabinPrices.length > 0 && cabinPrices[0].prezzo) {
+            departureHasPrices = true
+          }
+        }
+      }
+    } catch { /* ignore errors */ }
+  }
+
   return {
     id: data.id,
     request_type: data.request_type,
@@ -323,6 +370,7 @@ export async function getQuoteDetail(
     agency: data.agency ?? null,
     tour: data.tour ?? null,
     cruise: data.cruise ?? null,
+    departure_has_prices: departureHasPrices,
     extras: data.extras ?? [],
     offers: (data.offers ?? []).sort(
       (a: any, b: any) =>
