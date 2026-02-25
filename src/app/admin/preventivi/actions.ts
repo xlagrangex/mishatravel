@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getCurrentUser } from '@/lib/supabase/auth'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { sendTransactionalEmail } from '@/lib/email/brevo'
@@ -70,18 +71,43 @@ async function getQuoteEmailContext(
   }
 }
 
+type ActorInfo = {
+  user_id: string
+  actor_name: string | null
+  actor_email: string | null
+}
+
+async function getAdminActorInfo(): Promise<ActorInfo | undefined> {
+  try {
+    const user = await getCurrentUser()
+    if (!user) return undefined
+    return {
+      user_id: user.id,
+      actor_name:
+        user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
+      actor_email: user.email ?? null,
+    }
+  } catch {
+    return undefined
+  }
+}
+
 async function addTimelineEntry(
   supabase: ReturnType<typeof createAdminClient>,
   requestId: string,
   action: string,
   details: string | null,
-  actor: 'admin' | 'agency' | 'system' = 'admin'
+  actor: 'admin' | 'agency' | 'system' = 'admin',
+  actorInfo?: ActorInfo
 ) {
   const { error } = await supabase.from('quote_timeline').insert({
     request_id: requestId,
     action,
     details,
     actor,
+    user_id: actorInfo?.user_id ?? null,
+    actor_name: actorInfo?.actor_name ?? null,
+    actor_email: actorInfo?.actor_email ?? null,
   })
   if (error) {
     throw new Error(`Failed to create timeline entry: ${error.message}`)
@@ -120,6 +146,7 @@ export async function updateQuoteStatus(
 
   const { request_id, status, details } = parsed.data
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     const { error } = await supabase
@@ -135,7 +162,9 @@ export async function updateQuoteStatus(
       supabase,
       request_id,
       `Stato aggiornato a "${status}"`,
-      details ?? null
+      details ?? null,
+      'admin',
+      actorInfo
     )
   } catch (err) {
     return {
@@ -184,6 +213,7 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
     package_details,
   } = parsed.data
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     // Insert the offer
@@ -209,7 +239,9 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
       supabase,
       request_id,
       'Offerta creata',
-      `Prezzo totale: EUR ${total_price.toFixed(2)}${offer_expiry ? ` - Scadenza: ${offer_expiry}` : ''}`
+      `Prezzo totale: EUR ${total_price.toFixed(2)}${offer_expiry ? ` - Scadenza: ${offer_expiry}` : ''}`,
+      'admin',
+      actorInfo
     )
 
     // Always send the offer to the agency (email + status update)
@@ -246,7 +278,9 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
       supabase,
       request_id,
       'Offerta inviata all\'agenzia',
-      emailSent ? 'Email inviata con successo' : 'Attenzione: invio email fallito'
+      emailSent ? 'Email inviata con successo' : 'Attenzione: invio email fallito',
+      'admin',
+      actorInfo
     )
 
     revalidatePath('/admin/preventivi')
@@ -288,6 +322,7 @@ export async function sendPaymentDetails(
 
   const { request_id, bank_details, amount, reference } = parsed.data
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     // Insert payment record
@@ -342,7 +377,9 @@ export async function sendPaymentDetails(
       supabase,
       request_id,
       'Estremi di pagamento inviati',
-      `Importo: EUR ${amount.toFixed(2)} - Causale: ${reference}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
+      `Importo: EUR ${amount.toFixed(2)} - Causale: ${reference}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`,
+      'admin',
+      actorInfo
     )
 
     revalidatePath('/admin/preventivi')
@@ -366,6 +403,7 @@ export async function confirmPayment(requestId: string): Promise<ActionResult> {
   }
 
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     // Update quote status to confirmed
@@ -393,7 +431,9 @@ export async function confirmPayment(requestId: string): Promise<ActionResult> {
       supabase,
       requestId,
       'Pagamento confermato',
-      'Prenotazione confermata'
+      'Prenotazione confermata',
+      'admin',
+      actorInfo
     )
 
     revalidatePath('/admin/preventivi')
@@ -441,6 +481,7 @@ export async function confirmWithContract(
   const { request_id, offer_id, contract_file_url, iban, destinatario, causale, banca, notes } =
     parsed.data
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     // Update the offer with contract file and banking details
@@ -500,7 +541,9 @@ export async function confirmWithContract(
       supabase,
       request_id,
       'Contratto e dati bancari inviati',
-      detailParts.join(' - ')
+      detailParts.join(' - '),
+      'admin',
+      actorInfo
     )
 
     revalidatePath('/admin/preventivi')
@@ -524,6 +567,7 @@ export async function finalizeBooking(requestId: string): Promise<ActionResult> 
   }
 
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     // Verify the request is in contract_sent status
@@ -558,7 +602,9 @@ export async function finalizeBooking(requestId: string): Promise<ActionResult> 
       supabase,
       requestId,
       'Prenotazione confermata dall\'operatore',
-      'La prenotazione e stata confermata definitivamente.'
+      'La prenotazione e stata confermata definitivamente.',
+      'admin',
+      actorInfo
     )
 
     // Send confirmation email to agency
@@ -610,6 +656,7 @@ export async function uploadQuoteDocument(
 
   const { request_id, file_url, file_name, document_type } = parsed.data
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     const { data: doc, error } = await supabase
@@ -631,7 +678,9 @@ export async function uploadQuoteDocument(
       supabase,
       request_id,
       'Documento caricato',
-      `${file_name} (${document_type})`
+      `${file_name} (${document_type})`,
+      'admin',
+      actorInfo
     )
 
     // If it's an estratto conto, also create a record in account_statements
@@ -755,6 +804,7 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
 
   const { request_id, motivation } = parsed.data
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     // --- Email: notify agency first, before updating status ---
@@ -785,7 +835,9 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
       supabase,
       request_id,
       'Richiesta rifiutata',
-      `${motivation}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
+      `${motivation}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`,
+      'admin',
+      actorInfo
     )
 
     revalidatePath('/admin/preventivi')
@@ -819,6 +871,7 @@ export async function sendReminder(formData: unknown): Promise<ActionResult> {
 
   const { request_id, message } = parsed.data
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     let emailSent = false
@@ -839,7 +892,9 @@ export async function sendReminder(formData: unknown): Promise<ActionResult> {
       supabase,
       request_id,
       'Sollecito inviato all\'agenzia',
-      `${message ? message : 'Sollecito generico'}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
+      `${message ? message : 'Sollecito generico'}${emailSent ? '' : ' (Attenzione: invio email fallito)'}`,
+      'admin',
+      actorInfo
     )
 
     revalidatePath('/admin/preventivi')
@@ -882,6 +937,7 @@ export async function bulkUpdateStatus(
   }
 
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     const { error } = await supabase
@@ -899,6 +955,9 @@ export async function bulkUpdateStatus(
       action: `Stato aggiornato in massa a "${newStatus}"`,
       details: `${requestIds.length} preventivi aggiornati`,
       actor: 'admin' as const,
+      user_id: actorInfo?.user_id ?? null,
+      actor_name: actorInfo?.actor_name ?? null,
+      actor_email: actorInfo?.actor_email ?? null,
     }))
 
     await supabase.from('quote_timeline').insert(timelineRows)
@@ -958,6 +1017,7 @@ export async function revokeOffer(requestId: string): Promise<ActionResult> {
   }
 
   const supabase = createAdminClient()
+  const actorInfo = await getAdminActorInfo()
 
   try {
     // Verify the request is in offer_sent status
@@ -1017,7 +1077,9 @@ export async function revokeOffer(requestId: string): Promise<ActionResult> {
       supabase,
       requestId,
       'Offerta revocata',
-      `L'offerta e stata revocata dal tour operator.${emailSent ? '' : ' (Attenzione: invio email fallito)'}`
+      `L'offerta e stata revocata dal tour operator.${emailSent ? '' : ' (Attenzione: invio email fallito)'}`,
+      'admin',
+      actorInfo
     )
 
     revalidatePath('/admin/preventivi')

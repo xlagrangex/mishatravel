@@ -650,9 +650,9 @@ export default async function PreventivoDetailPage({
                           )}{" "}
                           &middot;{" "}
                           {entry.actor === "agency"
-                            ? "Agenzia"
+                            ? "Agenzia di Viaggi"
                             : entry.actor === "admin"
-                              ? "Amministratore"
+                              ? "Tour Operator MishaTravel"
                               : "Sistema"}
                         </p>
                       </div>

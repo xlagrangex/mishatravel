@@ -581,6 +581,9 @@ export interface QuoteTimeline {
   action: string;
   details: string | null;
   actor: QuoteTimelineActor;
+  user_id: string | null;
+  actor_name: string | null;
+  actor_email: string | null;
   created_at: string;
 }
 

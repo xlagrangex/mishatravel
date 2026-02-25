@@ -286,8 +286,10 @@ function WorkflowTimeline({ currentStatus }: { currentStatus: string }) {
 
 function ActivityTimeline({
   entries,
+  agencyBusinessName,
 }: {
   entries: QuoteDetailData['timeline']
+  agencyBusinessName: string | null
 }) {
   if (entries.length === 0) {
     return (
@@ -326,7 +328,26 @@ function ActivityTimeline({
             )}
             <p className="mt-1 text-xs text-muted-foreground/70">
               {formatDate(entry.created_at)} &middot;{' '}
-              <span className="capitalize">{entry.actor}</span>
+              {entry.actor === 'admin' ? (
+                <span>
+                  <span className="font-medium">Tour Operator MishaTravel</span>
+                  {entry.actor_name && (
+                    <span> — {entry.actor_name}</span>
+                  )}
+                  {entry.actor_email && (
+                    <span className="text-muted-foreground/50"> ({entry.actor_email})</span>
+                  )}
+                </span>
+              ) : entry.actor === 'agency' ? (
+                <span>
+                  <span className="font-medium">Agenzia di Viaggi</span>
+                  {agencyBusinessName && (
+                    <span> — {agencyBusinessName}</span>
+                  )}
+                </span>
+              ) : (
+                <span className="font-medium">Sistema</span>
+              )}
             </p>
           </div>
         </div>
@@ -1940,7 +1961,7 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
                 <Clock className="h-5 w-5" />
                 Storico Attivita
               </h2>
-              <ActivityTimeline entries={quote.timeline} />
+              <ActivityTimeline entries={quote.timeline} agencyBusinessName={quote.agency?.business_name ?? null} />
             </CardContent>
           </Card>
 

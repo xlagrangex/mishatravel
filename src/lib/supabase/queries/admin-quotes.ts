@@ -134,6 +134,9 @@ export type QuoteDetailData = {
     action: string
     details: string | null
     actor: string
+    user_id: string | null
+    actor_name: string | null
+    actor_email: string | null
     created_at: string
   }[]
 }
@@ -283,7 +286,7 @@ export async function getQuoteDetail(
       extras:quote_request_extras(id, extra_name, quantity),
       offers:quote_offers(*),
       payments:quote_payments(id, bank_details, amount, reference, status, created_at),
-      timeline:quote_timeline(id, action, details, actor, created_at)
+      timeline:quote_timeline(id, action, details, actor, user_id, actor_name, actor_email, created_at)
     `
     )
     .eq('id', id)

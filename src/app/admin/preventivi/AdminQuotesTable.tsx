@@ -19,6 +19,8 @@ import {
   Trash2,
   X,
   RefreshCw,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -55,6 +57,7 @@ import { cn } from '@/lib/utils'
 import { getAdminStatusAction } from '@/lib/quote-status-config'
 import { ActionIndicator } from '@/components/ActionIndicator'
 import { bulkUpdateStatus, bulkArchive, bulkDelete } from './actions'
+import KanbanBoard from './KanbanBoard'
 import type {
   QuoteListItem,
   QuoteStats,
@@ -235,6 +238,7 @@ export default function AdminQuotesTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
   const [bulkStatusValue, setBulkStatusValue] = useState('')
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table')
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -475,6 +479,26 @@ export default function AdminQuotesTable({
             ))}
           </SelectContent>
         </Select>
+
+        {/* View mode toggle */}
+        <div className="ml-auto flex items-center rounded-lg border p-0.5">
+          <Button
+            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => setViewMode('table')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => setViewMode('kanban')}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Date range filter */}
@@ -512,7 +536,7 @@ export default function AdminQuotesTable({
         )}
       </div>
 
-      {/* Table */}
+      {/* Content: Table or Kanban */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
           <FileText className="mb-4 h-12 w-12 text-muted-foreground/30" />
@@ -525,6 +549,8 @@ export default function AdminQuotesTable({
               : 'Le richieste di preventivo dalle agenzie appariranno qui.'}
           </p>
         </div>
+      ) : viewMode === 'kanban' ? (
+        <KanbanBoard quotes={filtered} />
       ) : (
         <div className="rounded-lg border bg-white">
           <Table>
@@ -661,8 +687,8 @@ export default function AdminQuotesTable({
         </div>
       )}
 
-      {/* Bulk Actions Toolbar (floating bar) */}
-      {visibleSelectedIds.size > 0 && (
+      {/* Bulk Actions Toolbar (floating bar) — only in table mode */}
+      {viewMode === 'table' && visibleSelectedIds.size > 0 && (
         <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border bg-white px-5 py-3 shadow-lg">
           <span className="text-sm font-medium">
             {visibleSelectedIds.size} selezionat{visibleSelectedIds.size === 1 ? 'o' : 'i'}
