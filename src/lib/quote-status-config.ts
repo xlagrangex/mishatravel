@@ -62,6 +62,15 @@ const STATUS_ACTIONS: Record<string, StatusActionInfo> = {
     agencyActionRequired: false,
   },
 
+  // ---- Admin sent contract, agency must countersign + pay ----
+  contract_sent: {
+    adminMessage: "In attesa della controfirma e del pagamento dall'agenzia",
+    adminActionRequired: false,
+    agencyMessage:
+      "Azione richiesta: invia il contratto controfirmato, la ricevuta di pagamento e conferma il pagamento",
+    agencyActionRequired: true,
+  },
+
   // ---- Terminal / completed states ----
   confirmed: {
     adminMessage: "Prenotazione confermata",

@@ -12,6 +12,7 @@ import {
   offerRevokedEmail,
   reminderEmail,
   documentUploadedToAgencyEmail,
+  bookingConfirmedEmail,
 } from '@/lib/email/templates'
 
 // ---------------------------------------------------------------------------
@@ -479,10 +480,10 @@ export async function confirmWithContract(
       console.error('Error sending contract email:', emailErr)
     }
 
-    // Update status to 'confirmed'
+    // Update status to 'contract_sent' (agency must countersign + pay before confirmed)
     const { error: statusError } = await supabase
       .from('quote_requests')
-      .update({ status: 'confirmed' })
+      .update({ status: 'contract_sent' })
       .eq('id', request_id)
 
     if (statusError) {
@@ -505,6 +506,78 @@ export async function confirmWithContract(
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
     return { success: true, id: request_id }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Errore sconosciuto',
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 5b. Finalize Booking (admin confirms after agency actions)
+// ---------------------------------------------------------------------------
+
+export async function finalizeBooking(requestId: string): Promise<ActionResult> {
+  if (!requestId) {
+    return { success: false, error: 'ID preventivo mancante' }
+  }
+
+  const supabase = createAdminClient()
+
+  try {
+    // Verify the request is in contract_sent status
+    const { data: request } = await supabase
+      .from('quote_requests')
+      .select('id, status')
+      .eq('id', requestId)
+      .single()
+
+    if (!request) {
+      return { success: false, error: 'Richiesta non trovata' }
+    }
+
+    if (request.status !== 'contract_sent') {
+      return {
+        success: false,
+        error: 'Lo stato della richiesta non permette questa azione. Stato attuale: ' + request.status,
+      }
+    }
+
+    // Update status to confirmed
+    const { error: statusError } = await supabase
+      .from('quote_requests')
+      .update({ status: 'confirmed' })
+      .eq('id', requestId)
+
+    if (statusError) {
+      return { success: false, error: statusError.message }
+    }
+
+    await addTimelineEntry(
+      supabase,
+      requestId,
+      'Prenotazione confermata dall\'operatore',
+      'La prenotazione e stata confermata definitivamente.'
+    )
+
+    // Send confirmation email to agency
+    try {
+      const ctx = await getQuoteEmailContext(supabase, requestId)
+      if (ctx?.agencyEmail) {
+        await sendTransactionalEmail(
+          { email: ctx.agencyEmail, name: ctx.agencyName },
+          'Prenotazione confermata - MishaTravel',
+          bookingConfirmedEmail(ctx.agencyName, ctx.productName)
+        )
+      }
+    } catch (emailErr) {
+      console.error('Error sending booking confirmed email:', emailErr)
+    }
+
+    revalidatePath('/admin/preventivi')
+    revalidatePath(`/admin/preventivi/${requestId}`)
+    return { success: true, id: requestId }
   } catch (err) {
     return {
       success: false,
@@ -791,6 +864,7 @@ const VALID_STATUSES = [
   'accepted',
   'declined',
   'payment_sent',
+  'contract_sent',
   'confirmed',
   'rejected',
   'archived',

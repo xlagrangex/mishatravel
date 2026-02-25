@@ -55,6 +55,7 @@ import type { QuoteDetailData, BankingPreset } from '@/lib/supabase/queries/admi
 import {
   createOffer,
   confirmWithContract,
+  finalizeBooking,
   uploadQuoteDocument,
   deleteQuoteDocument,
   rejectQuote,
@@ -87,6 +88,12 @@ const STATUS_CONFIG: Record<
     color: 'border-green-200 bg-green-50 text-green-700',
     icon: CheckCircle,
     step: 3,
+  },
+  contract_sent: {
+    label: 'Contratto Inviato',
+    color: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+    icon: FileText,
+    step: 3.5,
   },
   confirmed: {
     label: 'Confermato',
@@ -133,7 +140,7 @@ const STATUS_CONFIG: Record<
   },
 }
 
-const TIMELINE_STEPS = ['requested', 'offered', 'accepted', 'confirmed']
+const TIMELINE_STEPS = ['requested', 'offered', 'accepted', 'contract_sent', 'confirmed']
 
 // ---------------------------------------------------------------------------
 // Helper components
@@ -212,6 +219,8 @@ function normalizeStatus(status: string): string {
       return 'offered'
     case 'payment_sent':
       return 'confirmed'
+    case 'contract_sent':
+      return 'contract_sent'
     default:
       return status
   }
@@ -1233,6 +1242,64 @@ function SendReminderDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Finalize Booking Button (contract_sent → confirmed)
+// ---------------------------------------------------------------------------
+
+function FinalizeBookingButton({
+  requestId,
+  onSuccess,
+}: {
+  requestId: string
+  onSuccess: () => void
+}) {
+  const [isPending, startTransition] = useTransition()
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const handleFinalize = () => {
+    startTransition(async () => {
+      const result = await finalizeBooking(requestId)
+      if (result.success) {
+        setShowConfirm(false)
+        onSuccess()
+      }
+    })
+  }
+
+  return (
+    <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+      <DialogTrigger asChild>
+        <Button className="bg-emerald-600 hover:bg-emerald-700">
+          <CheckCircle className="h-4 w-4" />
+          Conferma Prenotazione
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Conferma Prenotazione</DialogTitle>
+          <DialogDescription>
+            Confermi che il contratto controfirmato e il pagamento sono stati
+            ricevuti? Lo stato passera a &quot;Confermato&quot;.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowConfirm(false)}>
+            Annulla
+          </Button>
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={handleFinalize}
+            disabled={isPending}
+          >
+            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Conferma Prenotazione
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main Detail Component
 // ---------------------------------------------------------------------------
 
@@ -1338,6 +1405,14 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
               requestId={quote.id}
               offerId={latestOffer.id}
               bankingPresets={bankingPresets}
+              onSuccess={handleRefresh}
+            />
+          )}
+
+          {/* contract_sent → Finalize Booking */}
+          {normalized === 'contract_sent' && (
+            <FinalizeBookingButton
+              requestId={quote.id}
               onSuccess={handleRefresh}
             />
           )}
@@ -1864,6 +1939,24 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
                 deletingDocId={deletingDocId}
               />
 
+              {/* Documenti Agenzia — contratto controfirmato */}
+              <DocumentSection
+                title="Contratto Controfirmato (Agenzia)"
+                type="contratto_controfirmato"
+                documents={quote.documents?.filter(d => d.document_type === 'contratto_controfirmato') ?? []}
+                onDelete={handleDeleteDocument}
+                deletingDocId={deletingDocId}
+              />
+
+              {/* Documenti Agenzia — ricevuta pagamento */}
+              <DocumentSection
+                title="Ricevuta Pagamento (Agenzia)"
+                type="ricevuta_pagamento"
+                documents={quote.documents?.filter(d => d.document_type === 'ricevuta_pagamento') ?? []}
+                onDelete={handleDeleteDocument}
+                deletingDocId={deletingDocId}
+              />
+
               {/* Estratti conto */}
               <DocumentSection
                 title="Estratti Conto"
@@ -1876,7 +1969,7 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
               {/* Altri documenti */}
               {(() => {
                 const others = quote.documents?.filter(
-                  d => !['fattura', 'contratto', 'estratto_conto'].includes(d.document_type)
+                  d => !['fattura', 'contratto', 'estratto_conto', 'contratto_controfirmato', 'ricevuta_pagamento'].includes(d.document_type)
                 ) ?? []
                 return others.length > 0 ? (
                   <DocumentSection

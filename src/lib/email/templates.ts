@@ -868,6 +868,85 @@ export function agencyDeletedEmail(agencyName: string): string {
   `);
 }
 
+// ---------------------------------------------------------------------------
+// Contract workflow emails
+// ---------------------------------------------------------------------------
+
+/**
+ * Email to agency: booking confirmed definitively by admin.
+ */
+export function bookingConfirmedEmail(agencyName: string, productName: string): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 20px;color:#16a34a;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Prenotazione confermata!</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Gentile <strong>${agencyName}</strong>,
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      La prenotazione per <strong>${productName}</strong> &egrave; stata <strong style="color:#16a34a;">confermata definitivamente</strong>.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      Tutti i documenti e i pagamenti sono stati verificati. Ricever&agrave; a breve tutte le informazioni di viaggio.
+    </p>
+    ${ctaButton("Vai ai tuoi preventivi", `${SITE_URL}/agenzia/preventivi`)}
+    <p style="color:#64748b;font-size:13px;margin-top:24px;">
+      Per qualsiasi domanda, non esiti a contattarci.
+    </p>
+  `);
+}
+
+/**
+ * Email to admin: agency uploaded counter-signed contract.
+ */
+export function adminCounterSignedContractEmail(
+  agencyName: string,
+  productName: string,
+  requestId: string
+): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Contratto controfirmato ricevuto</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      L&rsquo;agenzia <strong>${agencyName}</strong> ha caricato il contratto controfirmato per <strong>${productName}</strong>.
+    </p>
+    ${ctaButton("Vedi dettaglio preventivo", `${SITE_URL}/admin/preventivi/${requestId}`)}
+  `);
+}
+
+/**
+ * Email to admin: agency uploaded payment receipt.
+ */
+export function adminPaymentReceiptEmail(
+  agencyName: string,
+  productName: string,
+  requestId: string
+): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Ricevuta di pagamento ricevuta</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      L&rsquo;agenzia <strong>${agencyName}</strong> ha inviato la ricevuta di pagamento per <strong>${productName}</strong>.
+    </p>
+    ${ctaButton("Vedi dettaglio preventivo", `${SITE_URL}/admin/preventivi/${requestId}`)}
+  `);
+}
+
+/**
+ * Email to admin: agency confirmed payment.
+ */
+export function adminPaymentConfirmedEmail(
+  agencyName: string,
+  productName: string,
+  requestId: string,
+  notes?: string | null
+): string {
+  return baseTemplate(`
+    <h2 style="margin:0 0 20px;color:#1B2D4F;font-family:${HEADING_FONT};font-size:22px;font-weight:700;letter-spacing:-0.3px;">Pagamento confermato dall&rsquo;agenzia</h2>
+    <p style="color:#334155;font-size:15px;line-height:1.7;">
+      L&rsquo;agenzia <strong>${agencyName}</strong> ha confermato il pagamento per <strong>${productName}</strong>.
+    </p>
+    ${notes ? `<p style="color:#334155;font-size:15px;line-height:1.7;"><strong>Note:</strong> ${notes}</p>` : ""}
+    ${ctaButton("Vedi dettaglio preventivo", `${SITE_URL}/admin/preventivi/${requestId}`)}
+  `);
+}
+
 export function adminNewComplaintEmail(
   nome_cognome: string,
   email: string,

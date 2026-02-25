@@ -30,6 +30,7 @@ export type QuoteStats = {
   accepted: number
   declined: number
   payment_sent: number
+  contract_sent: number
   confirmed: number
   rejected: number
   archived: number
@@ -244,6 +245,7 @@ export async function getQuoteStats(): Promise<QuoteStats> {
     accepted: 0,
     declined: 0,
     payment_sent: 0,
+    contract_sent: 0,
     confirmed: 0,
     rejected: 0,
     archived: 0,

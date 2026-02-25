@@ -485,6 +485,7 @@ export type QuoteRequestStatus =
   | 'requested'
   | 'offered'
   | 'accepted'
+  | 'contract_sent'
   | 'confirmed'
   | 'declined'
   | 'rejected'

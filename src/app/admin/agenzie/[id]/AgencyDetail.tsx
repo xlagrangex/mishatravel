@@ -85,6 +85,7 @@ const quoteStatusConfig: Record<string, { label: string; className: string }> = 
   requested: { label: "Richiesto", className: "border-blue-200 bg-blue-50 text-blue-700" },
   offered: { label: "Offerta Inviata", className: "border-purple-200 bg-purple-50 text-purple-700" },
   accepted: { label: "Accettato", className: "border-green-200 bg-green-50 text-green-700" },
+  contract_sent: { label: "Contratto Inviato", className: "border-indigo-200 bg-indigo-50 text-indigo-700" },
   confirmed: { label: "Confermato", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   declined: { label: "Rifiutato", className: "border-orange-200 bg-orange-50 text-orange-700" },
   rejected: { label: "Respinto", className: "border-red-200 bg-red-50 text-red-700" },

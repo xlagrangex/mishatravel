@@ -38,6 +38,7 @@ const STATUS_CONFIG: Record<
   requested: { label: "Richiesta", variant: "secondary" },
   offered: { label: "Offerta inviata", variant: "default" },
   accepted: { label: "Accettata", variant: "default" },
+  contract_sent: { label: "Contratto inviato", variant: "outline" },
   confirmed: { label: "Confermata", variant: "default" },
   declined: { label: "Rifiutata", variant: "destructive" },
   rejected: { label: "Respinta", variant: "destructive" },

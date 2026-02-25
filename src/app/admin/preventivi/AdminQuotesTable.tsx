@@ -88,6 +88,11 @@ const STATUS_CONFIG: Record<
     color: 'border-green-200 bg-green-50 text-green-700',
     icon: CheckCircle,
   },
+  contract_sent: {
+    label: 'Contratto Inviato',
+    color: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+    icon: FileText,
+  },
   declined: {
     label: 'Rifiutato Agenzia',
     color: 'border-orange-200 bg-orange-50 text-orange-700',
@@ -159,10 +164,10 @@ function StatCards({ stats }: { stats: QuoteStats }) {
       bg: 'bg-green-100 text-green-700',
     },
     {
-      label: 'Pagamento',
-      value: stats.payment_sent,
+      label: 'In Lavorazione',
+      value: stats.payment_sent + stats.contract_sent,
       icon: CreditCard,
-      bg: 'bg-cyan-100 text-cyan-700',
+      bg: 'bg-indigo-100 text-indigo-700',
     },
     {
       label: 'Confermati',

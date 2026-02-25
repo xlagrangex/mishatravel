@@ -51,6 +51,10 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
     label: "Accettata",
     className: "bg-green-100 text-green-800 border-green-200",
   },
+  contract_sent: {
+    label: "Contratto inviato",
+    className: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  },
   confirmed: {
     label: "Confermata",
     className: "bg-emerald-100 text-emerald-800 border-emerald-200",

@@ -10,6 +10,9 @@ import {
   offerAcceptedConfirmationEmail,
   adminOfferAcceptedEmail,
   adminOfferDeclinedEmail,
+  adminCounterSignedContractEmail,
+  adminPaymentReceiptEmail,
+  adminPaymentConfirmedEmail,
 } from "@/lib/email/templates";
 
 /**
@@ -243,6 +246,269 @@ export async function declineOfferAction(
   }
 
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// uploadCounterSignedContract
+// ---------------------------------------------------------------------------
+
+export async function uploadCounterSignedContract(
+  requestId: string,
+  fileUrl: string,
+  fileName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Non autenticato." };
+    }
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!agency) {
+      return { success: false, error: "Nessuna agenzia associata." };
+    }
+
+    const admin = createAdminClient();
+
+    const { data: request } = await admin
+      .from("quote_requests")
+      .select("id, agency_id, status")
+      .eq("id", requestId)
+      .single();
+
+    if (!request || request.agency_id !== agency.id) {
+      return { success: false, error: "Richiesta non trovata." };
+    }
+
+    if (request.status !== "contract_sent") {
+      return {
+        success: false,
+        error: "Lo stato della richiesta non permette questa azione.",
+      };
+    }
+
+    // Insert document
+    const { error: docError } = await admin.from("quote_documents").insert({
+      request_id: requestId,
+      file_url: fileUrl,
+      file_name: fileName,
+      document_type: "contratto_controfirmato",
+    });
+
+    if (docError) {
+      return { success: false, error: docError.message };
+    }
+
+    // Timeline
+    await admin.from("quote_timeline").insert({
+      request_id: requestId,
+      action: "Contratto controfirmato caricato dall'agenzia",
+      details: fileName,
+      actor: "agency",
+    });
+
+    // Notify admin
+    try {
+      const ctx = await getQuoteEmailContext(requestId);
+      if (ctx) {
+        await sendAdminNotification(
+          `Contratto controfirmato da ${ctx.agencyName}`,
+          adminCounterSignedContractEmail(ctx.agencyName, ctx.productName, requestId)
+        );
+      }
+    } catch (emailErr) {
+      console.error("Error sending counter-signed contract email:", emailErr);
+    }
+
+    revalidatePath(`/agenzia/preventivi/${requestId}`);
+    return { success: true };
+  } catch (err) {
+    console.error("Error in uploadCounterSignedContract:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Errore imprevisto.",
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// uploadPaymentReceipt
+// ---------------------------------------------------------------------------
+
+export async function uploadPaymentReceipt(
+  requestId: string,
+  fileUrl: string,
+  fileName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Non autenticato." };
+    }
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!agency) {
+      return { success: false, error: "Nessuna agenzia associata." };
+    }
+
+    const admin = createAdminClient();
+
+    const { data: request } = await admin
+      .from("quote_requests")
+      .select("id, agency_id, status")
+      .eq("id", requestId)
+      .single();
+
+    if (!request || request.agency_id !== agency.id) {
+      return { success: false, error: "Richiesta non trovata." };
+    }
+
+    if (request.status !== "contract_sent") {
+      return {
+        success: false,
+        error: "Lo stato della richiesta non permette questa azione.",
+      };
+    }
+
+    // Insert document
+    const { error: docError } = await admin.from("quote_documents").insert({
+      request_id: requestId,
+      file_url: fileUrl,
+      file_name: fileName,
+      document_type: "ricevuta_pagamento",
+    });
+
+    if (docError) {
+      return { success: false, error: docError.message };
+    }
+
+    // Timeline
+    await admin.from("quote_timeline").insert({
+      request_id: requestId,
+      action: "Ricevuta di pagamento caricata dall'agenzia",
+      details: fileName,
+      actor: "agency",
+    });
+
+    // Notify admin
+    try {
+      const ctx = await getQuoteEmailContext(requestId);
+      if (ctx) {
+        await sendAdminNotification(
+          `Ricevuta pagamento da ${ctx.agencyName}`,
+          adminPaymentReceiptEmail(ctx.agencyName, ctx.productName, requestId)
+        );
+      }
+    } catch (emailErr) {
+      console.error("Error sending payment receipt email:", emailErr);
+    }
+
+    revalidatePath(`/agenzia/preventivi/${requestId}`);
+    return { success: true };
+  } catch (err) {
+    console.error("Error in uploadPaymentReceipt:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Errore imprevisto.",
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// confirmPaymentAction
+// ---------------------------------------------------------------------------
+
+export async function confirmPaymentAction(
+  requestId: string,
+  notes?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Non autenticato." };
+    }
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!agency) {
+      return { success: false, error: "Nessuna agenzia associata." };
+    }
+
+    const admin = createAdminClient();
+
+    const { data: request } = await admin
+      .from("quote_requests")
+      .select("id, agency_id, status")
+      .eq("id", requestId)
+      .single();
+
+    if (!request || request.agency_id !== agency.id) {
+      return { success: false, error: "Richiesta non trovata." };
+    }
+
+    if (request.status !== "contract_sent") {
+      return {
+        success: false,
+        error: "Lo stato della richiesta non permette questa azione.",
+      };
+    }
+
+    // Timeline entry
+    await admin.from("quote_timeline").insert({
+      request_id: requestId,
+      action: "Pagamento confermato dall'agenzia",
+      details: notes?.trim() || null,
+      actor: "agency",
+    });
+
+    // Notify admin
+    try {
+      const ctx = await getQuoteEmailContext(requestId);
+      if (ctx) {
+        await sendAdminNotification(
+          `Pagamento confermato da ${ctx.agencyName}`,
+          adminPaymentConfirmedEmail(ctx.agencyName, ctx.productName, requestId, notes)
+        );
+      }
+    } catch (emailErr) {
+      console.error("Error sending payment confirmed email:", emailErr);
+    }
+
+    revalidatePath(`/agenzia/preventivi/${requestId}`);
+    return { success: true };
+  } catch (err) {
+    console.error("Error in confirmPaymentAction:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Errore imprevisto.",
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -20,6 +20,7 @@ import { getQuoteById } from "@/lib/supabase/queries/quotes";
 import { getAgencyStatusAction } from "@/lib/quote-status-config";
 import { ActionIndicator } from "@/components/ActionIndicator";
 import QuoteActions from "./QuoteActions";
+import ContractSentActions from "./ContractSentActions";
 import DownloadPdfButton from "./DownloadPdfButton";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   requested: { label: "Richiesta inviata", className: "bg-blue-100 text-blue-700 border-blue-200" },
   offered: { label: "Offerta ricevuta", className: "bg-purple-100 text-purple-800 border-purple-200" },
   accepted: { label: "Accettata", className: "bg-green-100 text-green-800 border-green-200" },
+  contract_sent: { label: "Contratto inviato", className: "bg-indigo-100 text-indigo-800 border-indigo-200" },
   confirmed: { label: "Confermata", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
   declined: { label: "Rifiutata", className: "bg-orange-100 text-orange-800 border-orange-200" },
   rejected: { label: "Respinta", className: "bg-red-100 text-red-800 border-red-200" },
@@ -138,6 +140,37 @@ export default async function PreventivoDetailPage({
 
       {/* Prominent PDF Download */}
       <DownloadPdfButton quoteId={id} />
+
+      {/* Contract Sent Actions (agency must countersign + pay) */}
+      {quote.status === "contract_sent" && (() => {
+        const counterContract = quote.documents?.find(
+          (d) => d.document_type === "contratto_controfirmato"
+        ) ?? null;
+        const paymentReceipt = quote.documents?.find(
+          (d) => d.document_type === "ricevuta_pagamento"
+        ) ?? null;
+        const paymentConfirmed = quote.timeline.some(
+          (t) =>
+            t.actor === "agency" &&
+            t.action === "Pagamento confermato dall'agenzia"
+        );
+        return (
+          <ContractSentActions
+            requestId={id}
+            existingCounterContract={
+              counterContract
+                ? { file_name: counterContract.file_name, file_url: counterContract.file_url }
+                : null
+            }
+            existingPaymentReceipt={
+              paymentReceipt
+                ? { file_name: paymentReceipt.file_name, file_url: paymentReceipt.file_url }
+                : null
+            }
+            paymentConfirmed={paymentConfirmed}
+          />
+        );
+      })()}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column: details */}

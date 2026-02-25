@@ -71,6 +71,7 @@ const STATUS_LABELS: Record<string, string> = {
   accepted: "Accettato",
   declined: "Rifiutato",
   payment_sent: "Pagamento inviato",
+  contract_sent: "Contratto inviato",
   confirmed: "Confermato",
   rejected: "Respinto",
 };
@@ -82,6 +83,7 @@ const STATUS_COLORS: Record<string, string> = {
   accepted: "bg-green-100 text-green-800",
   declined: "bg-red-100 text-red-800",
   payment_sent: "bg-orange-100 text-orange-800",
+  contract_sent: "bg-indigo-100 text-indigo-800",
   confirmed: "bg-emerald-100 text-emerald-800",
   rejected: "bg-red-100 text-red-800",
 };
@@ -98,7 +100,7 @@ export default async function AdminDashboard() {
       getPendingDocuments().catch(() => []),
       getDashboardCounts().catch(() => ({ tours: 0, cruises: 0, ships: 0, destinations: 0 })),
       getAgencyStats().catch(() => ({ total: 0, active: 0, pending: 0, blocked: 0, totalQuotes: 0 })),
-      getQuoteStats().catch(() => ({ total: 0, sent: 0, in_review: 0, offer_sent: 0, accepted: 0, declined: 0, payment_sent: 0, confirmed: 0, rejected: 0 }),
+      getQuoteStats().catch(() => ({ total: 0, sent: 0, in_review: 0, offer_sent: 0, accepted: 0, declined: 0, payment_sent: 0, contract_sent: 0, confirmed: 0, rejected: 0, archived: 0 }),
       ),
       getAllQuotes().catch(() => []),
       getAllDepartures().catch(() => []),
