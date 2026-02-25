@@ -196,6 +196,7 @@ export async function getDestinationWithTours(
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
         ?.data_partenza ?? null,
+      last_departure_date: null,
     }))
 
   const cruises: CruiseListItem[] = (cruisesResult.data ?? [])
@@ -221,6 +222,7 @@ export async function getDestinationWithTours(
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
         ?.data_partenza ?? null,
+      last_departure_date: null,
     }))
 
   return { destination: dest, tours, cruises }

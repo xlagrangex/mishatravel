@@ -45,6 +45,7 @@ export default async function ToursPage() {
         destination_slug: t.destinationSlug,
         destination_macro_area: mockDestinations.find((d) => d.slug === t.destinationSlug)?.macroArea ?? null,
         next_departure_date: null,
+        last_departure_date: null,
         departures: t.departures.map((d) => ({
           id: d.date,
           data_partenza: d.date,

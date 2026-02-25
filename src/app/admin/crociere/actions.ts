@@ -702,3 +702,64 @@ export async function bulkDeleteCruises(ids: string[]): Promise<ActionResult> {
   revalidatePath('/')
   return { success: true, id: ids[0] }
 }
+
+// ---------------------------------------------------------------------------
+// Add single departure (quick action from expired dialog)
+// ---------------------------------------------------------------------------
+
+export async function addCruiseDepartureAction(
+  cruiseId: string,
+  departure: {
+    from_city: string
+    data_partenza: string
+  }
+): Promise<ActionResult> {
+  const supabase = createAdminClient()
+
+  if (!departure.from_city.trim()) {
+    return { success: false, error: 'La città di partenza è obbligatoria' }
+  }
+  if (!departure.data_partenza) {
+    return { success: false, error: 'La data di partenza è obbligatoria' }
+  }
+
+  const { data: cruise } = await supabase
+    .from('cruises')
+    .select('title')
+    .eq('id', cruiseId)
+    .single()
+
+  if (!cruise) return { success: false, error: 'Crociera non trovata' }
+
+  const { data: existing } = await supabase
+    .from('cruise_departures')
+    .select('sort_order')
+    .eq('cruise_id', cruiseId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextSortOrder = (existing?.[0]?.sort_order ?? -1) + 1
+
+  const { error } = await supabase.from('cruise_departures').insert({
+    cruise_id: cruiseId,
+    from_city: departure.from_city.trim(),
+    data_partenza: departure.data_partenza,
+    sort_order: nextSortOrder,
+  })
+
+  if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: 'cruise.add_departure',
+    entityType: 'cruise',
+    entityId: cruiseId,
+    entityTitle: cruise.title,
+    details: `Aggiunta partenza: ${departure.data_partenza} da ${departure.from_city}`,
+  }).catch(() => {})
+
+  revalidatePath('/admin/crociere')
+  revalidatePath('/crociere')
+  revalidatePath('/')
+
+  return { success: true, id: cruiseId }
+}

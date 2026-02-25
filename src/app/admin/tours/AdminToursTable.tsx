@@ -50,6 +50,7 @@ import {
   bulkSetTourStatus,
   bulkDeleteTours,
 } from "@/app/admin/tours/actions";
+import ExpiredItemDialog from "@/components/admin/ExpiredItemDialog";
 
 interface AdminToursTableProps {
   tours: TourListItem[];
@@ -63,6 +64,7 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expiredDialogTour, setExpiredDialogTour] = useState<TourListItem | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return tours;
@@ -371,7 +373,8 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
                     tour.next_departure_date === null ? (
                       <Badge
                         variant="outline"
-                        className="text-xs border-orange-200 bg-orange-50 text-orange-700"
+                        className="text-xs border-orange-200 bg-orange-50 text-orange-700 cursor-pointer hover:bg-orange-100 transition-colors"
+                        onClick={() => setExpiredDialogTour(tour)}
                       >
                         Scaduto
                       </Badge>
@@ -548,6 +551,22 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
             Deseleziona
           </Button>
         </div>
+      )}
+
+      {/* Expired tour dialog */}
+      {expiredDialogTour && (
+        <ExpiredItemDialog
+          open={!!expiredDialogTour}
+          onOpenChange={(open) => { if (!open) setExpiredDialogTour(null); }}
+          itemType="tour"
+          itemId={expiredDialogTour.id}
+          itemTitle={expiredDialogTour.title}
+          lastDepartureDate={expiredDialogTour.last_departure_date}
+          onActionCompleted={() => {
+            setExpiredDialogTour(null);
+            router.refresh();
+          }}
+        />
       )}
     </div>
   );

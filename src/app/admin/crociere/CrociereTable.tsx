@@ -34,6 +34,7 @@ import {
   bulkSetCruiseStatus,
   bulkDeleteCruises,
 } from "@/app/admin/crociere/actions";
+import ExpiredItemDialog from "@/components/admin/ExpiredItemDialog";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -64,6 +65,7 @@ export default function CrociereTable({ cruises }: CrociereTableProps) {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expiredDialogCruise, setExpiredDialogCruise] = useState<CruiseListItem | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return cruises;
@@ -351,9 +353,10 @@ export default function CrociereTable({ cruises }: CrociereTableProps) {
                     {cruise.status === "published" && cruise.next_departure_date === null ? (
                       <Badge
                         variant="outline"
-                        className="text-xs border-orange-200 bg-orange-50 text-orange-700"
+                        className="text-xs border-orange-200 bg-orange-50 text-orange-700 cursor-pointer hover:bg-orange-100 transition-colors"
+                        onClick={() => setExpiredDialogCruise(cruise)}
                       >
-                        Scaduto
+                        Scaduta
                       </Badge>
                     ) : cruise.status === "published" ? (
                       <div className="space-y-0.5">
@@ -518,6 +521,22 @@ export default function CrociereTable({ cruises }: CrociereTableProps) {
             Deseleziona
           </Button>
         </div>
+      )}
+
+      {/* Expired cruise dialog */}
+      {expiredDialogCruise && (
+        <ExpiredItemDialog
+          open={!!expiredDialogCruise}
+          onOpenChange={(open) => { if (!open) setExpiredDialogCruise(null); }}
+          itemType="crociera"
+          itemId={expiredDialogCruise.id}
+          itemTitle={expiredDialogCruise.title}
+          lastDepartureDate={expiredDialogCruise.last_departure_date}
+          onActionCompleted={() => {
+            setExpiredDialogCruise(null);
+            router.refresh();
+          }}
+        />
       )}
     </div>
   );

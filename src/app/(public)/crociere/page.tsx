@@ -52,6 +52,7 @@ export default async function CrocierePage() {
         destination_name: c.river,
         destination_macro_area: "Percorsi Fluviali",
         next_departure_date: null,
+        last_departure_date: null,
         departures: c.departures.map((d) => ({
           id: d.date,
           data_partenza: d.date,

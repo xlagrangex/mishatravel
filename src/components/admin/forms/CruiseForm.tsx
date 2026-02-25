@@ -5,7 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { saveCruise, getShipCabinsAndDecks } from "@/app/admin/crociere/actions";
 import {
   Plus,
@@ -407,6 +407,8 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
 
   const [serverError, setServerError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get("tab") ?? "info-base";
 
   const onSubmit = async (data: CruiseFormValues) => {
     setServerError(null);
@@ -478,7 +480,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
   return (
     <>
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Tabs defaultValue="info-base">
+      <Tabs defaultValue={defaultTab}>
         {/* Tabs Navigation */}
         <TabsList className="flex w-full flex-wrap" variant="line">
           <TabsTrigger value="info-base">Info Base</TabsTrigger>

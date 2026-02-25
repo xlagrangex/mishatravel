@@ -5,7 +5,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { saveTour } from "@/app/admin/tours/actions";
 import {
   Plus,
@@ -317,6 +317,8 @@ export default function TourForm({ initialData, destinations = [], localities = 
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get("tab") ?? "info-base";
 
   const onSubmit = async (data: TourFormValues) => {
     setServerError(null);
@@ -390,7 +392,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
   return (
     <>
     <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-6">
-      <Tabs defaultValue="info-base">
+      <Tabs defaultValue={defaultTab}>
         {/* Tabs Navigation */}
         <TabsList className="flex w-full flex-wrap" variant="line">
           <TabsTrigger value="info-base">Info Base</TabsTrigger>

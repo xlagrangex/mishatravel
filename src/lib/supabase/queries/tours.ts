@@ -16,6 +16,7 @@ export type TourListItem = {
   created_at: string
   destination_name: string | null
   next_departure_date: string | null
+  last_departure_date: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -54,7 +55,10 @@ export async function getTours(): Promise<TourListItem[]> {
   const today = new Date().toISOString().slice(0, 10)
 
   return (data ?? []).map((row: any) => {
-    const futureDeps = (row.departures ?? [])
+    const allDeps = (row.departures ?? [])
+      .sort((a: any, b: any) => b.data_partenza.localeCompare(a.data_partenza))
+
+    const futureDeps = allDeps
       .filter((d: any) => d.data_partenza >= today)
       .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))
 
@@ -70,6 +74,7 @@ export async function getTours(): Promise<TourListItem[]> {
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
       next_departure_date: futureDeps[0]?.data_partenza ?? null,
+      last_departure_date: allDeps[0]?.data_partenza ?? null,
     }
   })
 }
@@ -198,6 +203,7 @@ export async function getPublishedToursWithDepartures(): Promise<TourListItemEnr
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
         ?.data_partenza ?? null,
+      last_departure_date: null,
     }))
 }
 
@@ -273,6 +279,7 @@ export async function getPublishedTours(): Promise<TourListItem[]> {
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
         ?.data_partenza ?? null,
+      last_departure_date: null,
     }))
 }
 
@@ -385,6 +392,7 @@ export async function getToursForDestination(destinationId: string): Promise<Tou
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
         ?.data_partenza ?? null,
+      last_departure_date: null,
     }))
 }
 
@@ -457,5 +465,6 @@ export async function getRelatedTours(
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
         ?.data_partenza ?? null,
+      last_departure_date: null,
     }))
 }

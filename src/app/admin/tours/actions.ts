@@ -677,3 +677,68 @@ export async function saveTourPriceLabels(
 
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Add single departure (quick action from expired dialog)
+// ---------------------------------------------------------------------------
+
+export async function addTourDepartureAction(
+  tourId: string,
+  departure: {
+    from_city: string
+    data_partenza: string
+    prezzo_3_stelle: number | null
+    prezzo_4_stelle: string | null
+  }
+): Promise<ActionResult> {
+  const supabase = createAdminClient()
+
+  if (!departure.from_city.trim()) {
+    return { success: false, error: 'La città di partenza è obbligatoria' }
+  }
+  if (!departure.data_partenza) {
+    return { success: false, error: 'La data di partenza è obbligatoria' }
+  }
+
+  const { data: tour } = await supabase
+    .from('tours')
+    .select('title')
+    .eq('id', tourId)
+    .single()
+
+  if (!tour) return { success: false, error: 'Tour non trovato' }
+
+  const { data: existing } = await supabase
+    .from('tour_departures')
+    .select('sort_order')
+    .eq('tour_id', tourId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextSortOrder = (existing?.[0]?.sort_order ?? -1) + 1
+
+  const { error } = await supabase.from('tour_departures').insert({
+    tour_id: tourId,
+    from_city: departure.from_city.trim(),
+    data_partenza: departure.data_partenza,
+    prezzo_3_stelle: departure.prezzo_3_stelle,
+    prezzo_4_stelle: departure.prezzo_4_stelle,
+    sort_order: nextSortOrder,
+  })
+
+  if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: 'tour.add_departure',
+    entityType: 'tour',
+    entityId: tourId,
+    entityTitle: tour.title,
+    details: `Aggiunta partenza: ${departure.data_partenza} da ${departure.from_city}`,
+  }).catch(() => {})
+
+  revalidatePath('/admin/tours')
+  revalidatePath('/tours')
+  revalidatePath('/')
+
+  return { success: true, id: tourId }
+}
