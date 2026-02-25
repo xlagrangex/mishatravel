@@ -119,7 +119,8 @@ export async function deleteAgency(agencyId: string): Promise<ActionResult> {
     return { success: false, error: fetchError?.message ?? 'Agenzia non trovata' }
   }
 
-  // 2. Delete auth user → CASCADE deletes agencies + user_roles
+  // 2. Hard-delete auth user so the email can be re-registered
+  //    CASCADE deletes agencies + user_roles via FK
   const { error: authError } = await supabase.auth.admin.deleteUser(agency.user_id)
 
   if (authError) {

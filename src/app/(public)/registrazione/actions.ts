@@ -8,6 +8,49 @@ import {
   adminNewAgencyEmail,
 } from "@/lib/email/templates";
 
+// ---------------------------------------------------------------------------
+// Helper: clean orphan auth users (exist in auth.users but no agency record)
+// ---------------------------------------------------------------------------
+
+async function cleanOrphanAuthUser(
+  supabase: ReturnType<typeof createAdminClient>,
+  email: string
+): Promise<boolean> {
+  try {
+    // Find the auth user by email
+    const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    const user = listData?.users?.find((u) => u.email === email);
+    if (!user) return false;
+
+    // Check if they have an active agency record
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    // If agency exists, this is NOT an orphan — don't delete
+    if (agency) return false;
+
+    // Orphan confirmed: delete auth user + user_roles
+    await supabase.from("user_roles").delete().eq("user_id", user.id);
+    await supabase.from("user_activity_log").delete().eq("user_id", user.id);
+    await supabase.from("notifications").delete().eq("user_id", user.id);
+    const { error } = await supabase.auth.admin.deleteUser(user.id);
+
+    if (error) {
+      console.error("[Register] Error cleaning orphan user:", error.message);
+      return false;
+    }
+
+    console.log(`[Register] Cleaned orphan auth user: ${email} (${user.id})`);
+    return true;
+  } catch (err) {
+    console.error("[Register] cleanOrphanAuthUser error:", err);
+    return false;
+  }
+}
+
 export interface AgencyData {
   business_name: string;
   vat_number: string | null;
@@ -37,7 +80,7 @@ export async function registerAgency(
 
     // 1. Create the user + generate signup confirmation link via Admin API
     //    This avoids Supabase sending its default email.
-    const { data: linkData, error: linkError } =
+    let { data: linkData, error: linkError } =
       await supabase.auth.admin.generateLink({
         type: "signup",
         email: data.email,
@@ -53,13 +96,43 @@ export async function registerAgency(
 
     if (linkError) {
       console.error("[Register] generateLink error:", linkError.message);
+
+      // If user exists in auth but has no agency (orphan from a deleted agency),
+      // clean up the orphan and retry registration automatically.
       if (linkError.message.includes("already been registered")) {
-        return {
-          success: false,
-          error: "Esiste già un account con questo indirizzo email.",
-        };
+        const cleaned = await cleanOrphanAuthUser(supabase, data.email);
+        if (cleaned) {
+          // Retry generateLink after cleanup
+          const retry = await supabase.auth.admin.generateLink({
+            type: "signup",
+            email: data.email,
+            password: data.password,
+            options: {
+              data: {
+                business_name: data.business_name,
+                contact_name: data.contact_name,
+                phone: data.phone,
+              },
+            },
+          });
+          if (!retry.error && retry.data?.user?.id) {
+            // Success on retry — continue with the rest of the flow
+            linkData = retry.data;
+          } else {
+            return {
+              success: false,
+              error: "Esiste già un account con questo indirizzo email.",
+            };
+          }
+        } else {
+          return {
+            success: false,
+            error: "Esiste già un account con questo indirizzo email.",
+          };
+        }
+      } else {
+        return { success: false, error: linkError.message };
       }
-      return { success: false, error: linkError.message };
     }
 
     const userId = linkData?.user?.id;

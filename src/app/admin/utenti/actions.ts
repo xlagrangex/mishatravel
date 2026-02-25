@@ -217,7 +217,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
   await supabase.from('operator_permissions').delete().eq('user_id', userId)
   await supabase.from('user_roles').delete().eq('user_id', userId)
 
-  // Delete auth user
+  // Hard-delete auth user so the email can be re-registered
   const { error } = await supabase.auth.admin.deleteUser(userId)
   if (error) return { success: false, error: error.message }
 
