@@ -14,6 +14,7 @@ import {
   footerInfoUtili,
   footerAreaAgenzie,
 } from "@/lib/data";
+import CookieSettingsButton from "@/components/cookie/CookieSettingsButton";
 
 function FooterLinkList({
   title,
@@ -165,17 +166,21 @@ export default function Footer() {
             Grimaldi 1-3-5-7 r, 16124 Genova &mdash; P.Iva 02531300990 &mdash;
             &copy; {new Date().getFullYear()}
           </p>
-          <p>
-            Sito realizzato da{" "}
-            <a
-              href="https://bizstudio.it"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-white transition-colors duration-300"
-            >
-              Biz Studio
-            </a>
-          </p>
+          <div className="flex items-center gap-3">
+            <CookieSettingsButton />
+            <span className="text-white/40">|</span>
+            <p>
+              Sito realizzato da{" "}
+              <a
+                href="https://bizstudio.it"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-white transition-colors duration-300"
+              >
+                Biz Studio
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

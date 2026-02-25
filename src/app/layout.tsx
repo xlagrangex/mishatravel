@@ -4,6 +4,7 @@ import "./globals.css";
 import { generateBaseMetadata } from "@/lib/seo/metadata";
 import { organizationSchema } from "@/lib/seo/structured-data";
 import DevTools from "@/components/DevTools";
+import CookieConsentProvider from "@/components/cookie/CookieConsentProvider";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -50,7 +51,7 @@ export default function RootLayout({
             __html: JSON.stringify(organizationSchema()),
           }}
         />
-        {children}
+        <CookieConsentProvider>{children}</CookieConsentProvider>
       </body>
     </html>
   );
