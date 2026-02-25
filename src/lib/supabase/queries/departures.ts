@@ -42,6 +42,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         id,
         title,
         slug,
+        status,
         durata_notti,
         a_partire_da,
         prezzo_su_richiesta,
@@ -49,6 +50,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
       )
     `
     )
+    .eq('tour.status', 'published')
     .order('data_partenza', { ascending: true })
 
   if (tourError) {
@@ -67,6 +69,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         id,
         title,
         slug,
+        status,
         durata_notti,
         a_partire_da,
         prezzo_su_richiesta,
@@ -74,6 +77,7 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
       )
     `
     )
+    .eq('cruise.status', 'published')
     .order('data_partenza', { ascending: true })
 
   if (cruiseError) {

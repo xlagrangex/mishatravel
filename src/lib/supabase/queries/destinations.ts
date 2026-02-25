@@ -84,6 +84,7 @@ export async function getDestinationBySlug(slug: string): Promise<Destination | 
     .from('destinations')
     .select('*')
     .eq('slug', slug)
+    .eq('status', 'published')
     .single()
 
   if (error) {
