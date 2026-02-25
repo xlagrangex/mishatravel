@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { STORAGE_BUCKETS } from "@/lib/supabase/queries/media";
@@ -414,7 +413,7 @@ export default function MediaPicker({
             </div>
 
             {/* Grid */}
-            <ScrollArea className="flex-1 min-h-0" style={{ height: "50vh" }}>
+            <div className="flex-1 min-h-0 overflow-y-auto" style={{ height: "50vh" }}>
               {loading && items.length === 0 ? (
                 <div className="flex items-center justify-center h-48">
                   <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -501,7 +500,7 @@ export default function MediaPicker({
                   )}
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </TabsContent>
 
           {/* === UPLOAD TAB === */}

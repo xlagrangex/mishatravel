@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -223,7 +222,7 @@ export default function TourConfigurator({
 
         <Separator />
 
-        <ScrollArea className="max-h-[60vh]">
+        <div className="max-h-[60vh] overflow-y-auto">
           <div className="px-6 py-4">
             {/* -------- FORM STEP -------- */}
             {step === "form" && (
@@ -553,7 +552,7 @@ export default function TourConfigurator({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
