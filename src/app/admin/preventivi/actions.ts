@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUser } from '@/lib/supabase/auth'
+import { logActivity } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { sendTransactionalEmail } from '@/lib/email/brevo'
@@ -173,6 +174,16 @@ export async function updateQuoteStatus(
     }
   }
 
+  const ctx = await getQuoteEmailContext(supabase, request_id)
+  logActivity({
+    action: 'quote.status_change',
+    entityType: 'quote',
+    entityId: request_id,
+    entityTitle: ctx ? `${ctx.productName} - ${ctx.agencyName}` : 'Preventivo',
+    details: `Stato aggiornato a "${status}"`,
+    changes: [{ field: 'Stato', to: status }],
+  }).catch(() => {})
+
   revalidatePath('/admin/preventivi')
   revalidatePath(`/admin/preventivi/${request_id}`)
   return { success: true, id: request_id }
@@ -246,8 +257,9 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
 
     // Always send the offer to the agency (email + status update)
     let emailSent = false
+    let ctx: Awaited<ReturnType<typeof getQuoteEmailContext>> = null
     try {
-      const ctx = await getQuoteEmailContext(supabase, request_id)
+      ctx = await getQuoteEmailContext(supabase, request_id)
       if (ctx?.agencyEmail) {
         emailSent = await sendTransactionalEmail(
           { email: ctx.agencyEmail, name: ctx.agencyName },
@@ -282,6 +294,18 @@ export async function createOffer(formData: unknown): Promise<ActionResult> {
       'admin',
       actorInfo
     )
+
+    logActivity({
+      action: 'quote.offer_created',
+      entityType: 'quote',
+      entityId: request_id,
+      entityTitle: ctx ? `${ctx.productName} - ${ctx.agencyName}` : 'Preventivo',
+      details: `Offerta: EUR ${total_price.toFixed(2)}`,
+      changes: [
+        { field: 'Prezzo totale', to: `EUR ${total_price.toFixed(2)}` },
+        ...(offer_expiry ? [{ field: 'Scadenza offerta', to: offer_expiry }] : []),
+      ],
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
@@ -382,6 +406,19 @@ export async function sendPaymentDetails(
       actorInfo
     )
 
+    const logCtx = await getQuoteEmailContext(supabase, request_id)
+    logActivity({
+      action: 'quote.payment_sent',
+      entityType: 'quote',
+      entityId: request_id,
+      entityTitle: logCtx ? `${logCtx.productName} - ${logCtx.agencyName}` : 'Preventivo',
+      details: `Importo: EUR ${amount.toFixed(2)} - Causale: ${reference}`,
+      changes: [
+        { field: 'Importo', to: `EUR ${amount.toFixed(2)}` },
+        { field: 'Causale', to: reference },
+      ],
+    }).catch(() => {})
+
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
     return { success: true, id: payment.id }
@@ -435,6 +472,15 @@ export async function confirmPayment(requestId: string): Promise<ActionResult> {
       'admin',
       actorInfo
     )
+
+    const ctx = await getQuoteEmailContext(supabase, requestId)
+    logActivity({
+      action: 'quote.payment_confirmed',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: ctx ? `${ctx.productName} - ${ctx.agencyName}` : 'Preventivo',
+      details: 'Pagamento confermato',
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${requestId}`)
@@ -546,6 +592,16 @@ export async function confirmWithContract(
       actorInfo
     )
 
+    const logCtx = await getQuoteEmailContext(supabase, request_id)
+    logActivity({
+      action: 'quote.contract_sent',
+      entityType: 'quote',
+      entityId: request_id,
+      entityTitle: logCtx ? `${logCtx.productName} - ${logCtx.agencyName}` : 'Preventivo',
+      details: `Contratto e dati bancari inviati`,
+      changes: [{ field: 'IBAN', to: iban.trim() }],
+    }).catch(() => {})
+
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
     return { success: true, id: request_id }
@@ -608,18 +664,27 @@ export async function finalizeBooking(requestId: string): Promise<ActionResult> 
     )
 
     // Send confirmation email to agency
+    let logCtx: Awaited<ReturnType<typeof getQuoteEmailContext>> = null
     try {
-      const ctx = await getQuoteEmailContext(supabase, requestId)
-      if (ctx?.agencyEmail) {
+      logCtx = await getQuoteEmailContext(supabase, requestId)
+      if (logCtx?.agencyEmail) {
         await sendTransactionalEmail(
-          { email: ctx.agencyEmail, name: ctx.agencyName },
+          { email: logCtx.agencyEmail, name: logCtx.agencyName },
           'Prenotazione confermata - MishaTravel',
-          bookingConfirmedEmail(ctx.agencyName, ctx.productName)
+          bookingConfirmedEmail(logCtx.agencyName, logCtx.productName)
         )
       }
     } catch (emailErr) {
       console.error('Error sending booking confirmed email:', emailErr)
     }
+
+    logActivity({
+      action: 'quote.booking_confirmed',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: logCtx ? `${logCtx.productName} - ${logCtx.agencyName}` : 'Preventivo',
+      details: 'Prenotazione confermata',
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${requestId}`)
@@ -709,18 +774,28 @@ export async function uploadQuoteDocument(
     }
 
     // Send email notification to agency
+    let logCtx: Awaited<ReturnType<typeof getQuoteEmailContext>> = null
     try {
-      const ctx = await getQuoteEmailContext(supabase, request_id)
-      if (ctx?.agencyEmail) {
+      logCtx = await getQuoteEmailContext(supabase, request_id)
+      if (logCtx?.agencyEmail) {
         await sendTransactionalEmail(
-          { email: ctx.agencyEmail, name: ctx.agencyName },
+          { email: logCtx.agencyEmail, name: logCtx.agencyName },
           'Nuovo documento disponibile - MishaTravel',
-          documentUploadedToAgencyEmail(ctx.agencyName, ctx.productName, document_type)
+          documentUploadedToAgencyEmail(logCtx.agencyName, logCtx.productName, document_type)
         )
       }
     } catch (emailErr) {
       console.error('Error sending document uploaded email:', emailErr)
     }
+
+    logActivity({
+      action: 'quote.document_uploaded',
+      entityType: 'quote',
+      entityId: request_id,
+      entityTitle: logCtx ? `${logCtx.productName} - ${logCtx.agencyName}` : 'Preventivo',
+      details: `${file_name} (${document_type})`,
+      changes: [{ field: 'Documento', to: file_name }],
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
@@ -772,6 +847,15 @@ export async function deleteQuoteDocument(
         // Non-blocking: if the account_statement wasn't found, that's ok
       }
     }
+
+    const ctx = await getQuoteEmailContext(supabase, requestId)
+    logActivity({
+      action: 'quote.document_deleted',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: ctx ? `${ctx.productName} - ${ctx.agencyName}` : 'Preventivo',
+      details: docData?.document_type ?? 'Documento eliminato',
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${requestId}`)
@@ -840,6 +924,16 @@ export async function rejectQuote(formData: unknown): Promise<ActionResult> {
       actorInfo
     )
 
+    const logCtx = await getQuoteEmailContext(supabase, request_id)
+    logActivity({
+      action: 'quote.rejected',
+      entityType: 'quote',
+      entityId: request_id,
+      entityTitle: logCtx ? `${logCtx.productName} - ${logCtx.agencyName}` : 'Preventivo',
+      details: `Motivo: ${motivation}`,
+      changes: [{ field: 'Stato', from: 'in revisione', to: 'rifiutato' }],
+    }).catch(() => {})
+
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
     return { success: true, id: request_id }
@@ -896,6 +990,15 @@ export async function sendReminder(formData: unknown): Promise<ActionResult> {
       'admin',
       actorInfo
     )
+
+    const logCtx = await getQuoteEmailContext(supabase, request_id)
+    logActivity({
+      action: 'quote.reminder_sent',
+      entityType: 'quote',
+      entityId: request_id,
+      entityTitle: logCtx ? `${logCtx.productName} - ${logCtx.agencyName}` : 'Preventivo',
+      details: message ?? 'Sollecito generico',
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${request_id}`)
@@ -962,6 +1065,14 @@ export async function bulkUpdateStatus(
 
     await supabase.from('quote_timeline').insert(timelineRows)
 
+    logActivity({
+      action: 'quote.bulk_status',
+      entityType: 'quote',
+      entityId: requestIds[0],
+      entityTitle: `${requestIds.length} preventivi`,
+      details: `${requestIds.length} preventivi → ${newStatus}`,
+    }).catch(() => {})
+
     revalidatePath('/admin/preventivi')
     return { success: true }
   } catch (err) {
@@ -996,6 +1107,14 @@ export async function bulkDelete(
     if (error) {
       return { success: false, error: error.message }
     }
+
+    logActivity({
+      action: 'quote.bulk_delete',
+      entityType: 'quote',
+      entityId: requestIds[0],
+      entityTitle: `${requestIds.length} preventivi`,
+      details: `${requestIds.length} preventivi eliminati`,
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     return { success: true }
@@ -1081,6 +1200,16 @@ export async function revokeOffer(requestId: string): Promise<ActionResult> {
       'admin',
       actorInfo
     )
+
+    const logCtx = await getQuoteEmailContext(supabase, requestId)
+    logActivity({
+      action: 'quote.offer_revoked',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: logCtx ? `${logCtx.productName} - ${logCtx.agencyName}` : 'Preventivo',
+      details: 'Offerta revocata',
+      changes: [{ field: 'Stato', from: 'offer_sent', to: 'sent' }],
+    }).catch(() => {})
 
     revalidatePath('/admin/preventivi')
     revalidatePath(`/admin/preventivi/${requestId}`)

@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { logActivity } from '@/lib/supabase/audit'
+import { logActivity, buildChanges, buildCreateChanges, buildDeleteChanges, DESTINATION_LABELS } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -37,6 +37,13 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
   }
 
   if (id) {
+    // Fetch old record for change tracking
+    const { data: oldRecord } = await supabase
+      .from('destinations')
+      .select('name, slug, status, macro_area, cover_image_url')
+      .eq('id', id)
+      .single()
+
     // Update
     const { error } = await supabase
       .from('destinations')
@@ -45,11 +52,14 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
 
     if (error) return { success: false, error: error.message }
 
+    const changes = oldRecord ? buildChanges(oldRecord, cleanData, DESTINATION_LABELS) : []
     logActivity({
       action: 'destination.update',
       entityType: 'destination',
       entityId: id,
       entityTitle: cleanData.name,
+      details: changes.length ? `Modificati ${changes.length} campi` : 'Aggiornato',
+      changes,
     }).catch(() => {})
 
     revalidatePath('/admin/destinazioni')
@@ -75,6 +85,8 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
       entityType: 'destination',
       entityId: created.id,
       entityTitle: cleanData.name,
+      details: 'Destinazione creata',
+      changes: buildCreateChanges(cleanData, DESTINATION_LABELS),
     }).catch(() => {})
 
     revalidatePath('/admin/destinazioni')
@@ -104,6 +116,7 @@ export async function toggleDestinationStatus(
     entityType: 'destination',
     entityId: id,
     entityTitle: destData?.name ?? '',
+    changes: [{ field: 'Stato', from: newStatus === 'published' ? 'draft' : 'published', to: newStatus }],
   }).catch(() => {})
 
   revalidatePath('/admin/destinazioni')
@@ -152,7 +165,11 @@ export async function bulkDeleteDestinations(ids: string[]): Promise<ActionResul
 export async function deleteDestination(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  const { data: destData } = await supabase.from('destinations').select('name').eq('id', id).single()
+  const { data: destData } = await supabase
+    .from('destinations')
+    .select('name, slug, status, macro_area, cover_image_url')
+    .eq('id', id)
+    .single()
 
   const { error } = await supabase
     .from('destinations')
@@ -166,6 +183,7 @@ export async function deleteDestination(id: string): Promise<ActionResult> {
     entityType: 'destination',
     entityId: id,
     entityTitle: destData?.name ?? 'Destinazione eliminata',
+    changes: destData ? buildDeleteChanges(destData, DESTINATION_LABELS) : undefined,
   }).catch(() => {})
 
   revalidatePath('/admin/destinazioni')

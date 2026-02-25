@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { logActivity, buildChanges, buildCreateChanges, buildDeleteChanges, CATALOG_LABELS } from '@/lib/supabase/audit'
 
 const catalogSchema = z.object({
   id: z.string().uuid().optional(),
@@ -34,6 +35,13 @@ export async function saveCatalog(formData: z.infer<typeof catalogSchema>): Prom
   }
 
   if (id) {
+    // Fetch old record for change tracking
+    const { data: oldRecord } = await supabase
+      .from('catalogs')
+      .select('title, year, is_published, pdf_url, cover_image_url')
+      .eq('id', id)
+      .single()
+
     // Update
     const { error } = await supabase
       .from('catalogs')
@@ -41,6 +49,18 @@ export async function saveCatalog(formData: z.infer<typeof catalogSchema>): Prom
       .eq('id', id)
 
     if (error) return { success: false, error: error.message }
+
+    if (oldRecord) {
+      const changes = buildChanges(oldRecord, cleanData, CATALOG_LABELS)
+      logActivity({
+        action: 'catalog.update',
+        entityType: 'catalog',
+        entityId: id,
+        entityTitle: cleanData.title,
+        details: changes.length ? `Modificati ${changes.length} campi` : 'Aggiornato',
+        changes,
+      }).catch(() => {})
+    }
 
     revalidatePath('/admin/cataloghi')
     revalidatePath('/cataloghi')
@@ -56,6 +76,15 @@ export async function saveCatalog(formData: z.infer<typeof catalogSchema>): Prom
 
     if (error) return { success: false, error: error.message }
 
+    logActivity({
+      action: 'catalog.create',
+      entityType: 'catalog',
+      entityId: created.id,
+      entityTitle: cleanData.title,
+      details: 'Catalogo creato',
+      changes: buildCreateChanges(cleanData, CATALOG_LABELS),
+    }).catch(() => {})
+
     revalidatePath('/admin/cataloghi')
     revalidatePath('/cataloghi')
     revalidatePath('/')
@@ -66,12 +95,29 @@ export async function saveCatalog(formData: z.infer<typeof catalogSchema>): Prom
 export async function deleteCatalog(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  const { data: catalog } = await supabase
+    .from('catalogs')
+    .select('title, year, is_published, pdf_url, cover_image_url')
+    .eq('id', id)
+    .single()
+
   const { error } = await supabase
     .from('catalogs')
     .delete()
     .eq('id', id)
 
   if (error) return { success: false, error: error.message }
+
+  if (catalog) {
+    logActivity({
+      action: 'catalog.delete',
+      entityType: 'catalog',
+      entityId: id,
+      entityTitle: catalog.title,
+      details: 'Catalogo eliminato',
+      changes: buildDeleteChanges(catalog, CATALOG_LABELS),
+    }).catch(() => {})
+  }
 
   revalidatePath('/admin/cataloghi')
   revalidatePath('/cataloghi')

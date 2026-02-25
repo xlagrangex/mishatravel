@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { logActivity } from '@/lib/supabase/audit'
+import { logActivity, buildChanges, buildCreateChanges, buildDeleteChanges, BLOG_LABELS } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -62,6 +62,13 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
   }
 
   if (id) {
+    // Fetch old record for change tracking
+    const { data: oldRecord } = await supabase
+      .from('blog_posts')
+      .select('title, slug, status, category_id, cover_image_url')
+      .eq('id', id)
+      .single()
+
     // Update
     const { error } = await supabase
       .from('blog_posts')
@@ -73,11 +80,14 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
       return { success: false, error: error.message }
     }
 
+    const changes = oldRecord ? buildChanges(oldRecord, cleanData, BLOG_LABELS) : []
     logActivity({
       action: 'blog.update',
       entityType: 'blog',
       entityId: id,
       entityTitle: cleanData.title,
+      details: changes.length ? `Modificati ${changes.length} campi` : 'Aggiornato',
+      changes,
     }).catch(() => {})
 
     revalidatePath('/admin/blog')
@@ -103,6 +113,8 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
       entityType: 'blog',
       entityId: created.id,
       entityTitle: cleanData.title,
+      details: 'Articolo creato',
+      changes: buildCreateChanges(cleanData, BLOG_LABELS),
     }).catch(() => {})
 
     revalidatePath('/admin/blog')
@@ -136,6 +148,7 @@ export async function toggleBlogPostStatus(
     entityType: 'blog',
     entityId: id,
     entityTitle: postData?.title ?? '',
+    changes: [{ field: 'Stato', from: newStatus === 'published' ? 'draft' : 'published', to: newStatus }],
   }).catch(() => {})
 
   revalidatePath('/admin/blog')
@@ -184,7 +197,11 @@ export async function bulkDeleteBlogPosts(ids: string[]): Promise<ActionResult> 
 export async function deleteBlogPost(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  const { data: postData } = await supabase.from('blog_posts').select('title').eq('id', id).single()
+  const { data: postData } = await supabase
+    .from('blog_posts')
+    .select('title, slug, status, category_id, cover_image_url')
+    .eq('id', id)
+    .single()
 
   const { error } = await supabase
     .from('blog_posts')
@@ -198,6 +215,7 @@ export async function deleteBlogPost(id: string): Promise<ActionResult> {
     entityType: 'blog',
     entityId: id,
     entityTitle: postData?.title ?? 'Articolo eliminato',
+    changes: postData ? buildDeleteChanges(postData, BLOG_LABELS) : undefined,
   }).catch(() => {})
 
   revalidatePath('/admin/blog')

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import Link from "next/link";
-import { Search, History } from "lucide-react";
+import { Search, History, ChevronDown, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,6 +28,11 @@ const ENTITY_FILTERS = [
   { label: "Flotta", value: "ship" },
   { label: "Destinazioni", value: "destination" },
   { label: "Blog", value: "blog" },
+  { label: "Preventivi", value: "quote" },
+  { label: "Media", value: "media" },
+  { label: "Agenzie", value: "agency" },
+  { label: "Messaggi", value: "message" },
+  { label: "Cataloghi", value: "catalog" },
 ] as const;
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
@@ -36,6 +41,11 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   ship: "Nave",
   destination: "Destinazione",
   blog: "Blog",
+  quote: "Preventivo",
+  media: "Media",
+  agency: "Agenzia",
+  message: "Messaggio",
+  catalog: "Catalogo",
 };
 
 const ENTITY_TYPE_ADMIN_PATH: Record<string, string> = {
@@ -44,9 +54,52 @@ const ENTITY_TYPE_ADMIN_PATH: Record<string, string> = {
   ship: "flotta",
   destination: "destinazioni",
   blog: "blog",
+  quote: "preventivi",
+  media: "media",
+  agency: "agenzie",
+  message: "messaggi",
+  catalog: "cataloghi",
+};
+
+const ACTION_BADGES: Record<string, { label: string; className: string }> = {
+  // Quote-specific
+  "quote.status_change": { label: "Stato cambiato", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
+  "quote.offer_created": { label: "Offerta creata", className: "border-green-200 bg-green-50 text-green-700" },
+  "quote.payment_sent": { label: "Dati pagamento", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  "quote.payment_confirmed": { label: "Pagamento confermato", className: "border-green-200 bg-green-50 text-green-700" },
+  "quote.contract_sent": { label: "Contratto inviato", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  "quote.booking_confirmed": { label: "Prenotazione", className: "border-green-200 bg-green-50 text-green-700" },
+  "quote.document_uploaded": { label: "Doc. caricato", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  "quote.document_deleted": { label: "Doc. eliminato", className: "border-red-200 bg-red-50 text-red-700" },
+  "quote.rejected": { label: "Rifiutato", className: "border-red-200 bg-red-50 text-red-700" },
+  "quote.offer_revoked": { label: "Offerta revocata", className: "border-red-200 bg-red-50 text-red-700" },
+  "quote.bulk_status": { label: "Stato (bulk)", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
+  "quote.bulk_delete": { label: "Eliminati (bulk)", className: "border-red-200 bg-red-50 text-red-700" },
+  "quote.reminder_sent": { label: "Sollecito", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
+  "quote.offer_accepted": { label: "Offerta accettata", className: "border-green-200 bg-green-50 text-green-700" },
+  "quote.offer_declined": { label: "Offerta rifiutata", className: "border-red-200 bg-red-50 text-red-700" },
+  "quote.contract_signed": { label: "Contratto firmato", className: "border-green-200 bg-green-50 text-green-700" },
+  "quote.receipt_uploaded": { label: "Ricevuta caricata", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  "quote.payment_confirmed_agency": { label: "Pagamento (agenzia)", className: "border-green-200 bg-green-50 text-green-700" },
+  "quote.bulk_archive": { label: "Archiviati (bulk)", className: "border-gray-200 bg-gray-50 text-gray-600" },
+  // Media
+  "media.upload": { label: "Caricato", className: "border-green-200 bg-green-50 text-green-700" },
+  "media.delete": { label: "Eliminato", className: "border-red-200 bg-red-50 text-red-700" },
+  "media.bulk_delete": { label: "Eliminati (bulk)", className: "border-red-200 bg-red-50 text-red-700" },
+  "media.folder_created": { label: "Cartella creata", className: "border-green-200 bg-green-50 text-green-700" },
+  "media.folder_deleted": { label: "Cartella eliminata", className: "border-red-200 bg-red-50 text-red-700" },
+  // Messages
+  "message.delete": { label: "Eliminato", className: "border-red-200 bg-red-50 text-red-700" },
+  // Agencies
+  "agency.status_change": { label: "Stato cambiato", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
+  "agency.approved": { label: "Approvata", className: "border-green-200 bg-green-50 text-green-700" },
+  "agency.create": { label: "Creata", className: "border-green-200 bg-green-50 text-green-700" },
+  "agency.delete": { label: "Eliminata", className: "border-red-200 bg-red-50 text-red-700" },
+  "agency.document_verified": { label: "Doc. verificato", className: "border-green-200 bg-green-50 text-green-700" },
 };
 
 function getActionBadge(action: string) {
+  if (ACTION_BADGES[action]) return ACTION_BADGES[action];
   if (action.endsWith(".create"))
     return { label: "Creato", className: "border-green-200 bg-green-50 text-green-700" };
   if (action.endsWith(".update"))
@@ -61,6 +114,8 @@ function getActionBadge(action: string) {
     return { label: "Duplicato", className: "border-cyan-200 bg-cyan-50 text-cyan-700" };
   if (action.endsWith(".bulk_draft"))
     return { label: "Bozza (bulk)", className: "border-orange-200 bg-orange-50 text-orange-700" };
+  if (action.endsWith(".bulk_publish"))
+    return { label: "Pubblicati (bulk)", className: "border-green-200 bg-green-50 text-green-700" };
   if (action.endsWith(".bulk_delete"))
     return { label: "Eliminati (bulk)", className: "border-red-200 bg-red-50 text-red-700" };
   return { label: action, className: "border-gray-200 bg-gray-50 text-gray-600" };
@@ -76,9 +131,30 @@ function formatDate(dateStr: string) {
   });
 }
 
+function getEntityLink(entry: ActivityLogEntry): string | null {
+  if (!entry.entity_type || !entry.entity_id) return null;
+  if (entry.action.endsWith(".delete") || entry.action.endsWith(".bulk_delete")) return null;
+  const adminPath = ENTITY_TYPE_ADMIN_PATH[entry.entity_type];
+  if (!adminPath) return null;
+  if (entry.entity_type === "quote") return `/admin/${adminPath}/${entry.entity_id}`;
+  if (entry.entity_type === "media" || entry.entity_type === "message") return null;
+  if (entry.entity_type === "agency") return `/admin/${adminPath}/${entry.entity_id}`;
+  return `/admin/${adminPath}/${entry.entity_id}/modifica`;
+}
+
 export default function StoricoTable({ activity }: StoricoTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [entityFilter, setEntityFilter] = useState("");
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const filtered = useMemo(() => {
     let items = activity;
@@ -127,7 +203,7 @@ export default function StoricoTable({ activity }: StoricoTableProps) {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           {ENTITY_FILTERS.map((f) => (
             <Button
               key={f.value}
@@ -159,6 +235,7 @@ export default function StoricoTable({ activity }: StoricoTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8"></TableHead>
                 <TableHead>Data/Ora</TableHead>
                 <TableHead>Utente</TableHead>
                 <TableHead>Azione</TableHead>
@@ -169,69 +246,129 @@ export default function StoricoTable({ activity }: StoricoTableProps) {
             <TableBody>
               {filtered.map((entry) => {
                 const badge = getActionBadge(entry.action);
-                const adminPath = entry.entity_type
-                  ? ENTITY_TYPE_ADMIN_PATH[entry.entity_type]
-                  : null;
                 const entityLabel = entry.entity_type
                   ? ENTITY_TYPE_LABELS[entry.entity_type] ?? entry.entity_type
                   : null;
+                const link = getEntityLink(entry);
+                const hasChanges = entry.changes && entry.changes.length > 0;
+                const isExpanded = expandedRows.has(entry.id);
 
                 return (
-                  <TableRow key={entry.id}>
-                    {/* Date */}
-                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(entry.created_at)}
-                    </TableCell>
-
-                    {/* User */}
-                    <TableCell className="text-sm">
-                      {entry.user_email ?? (
-                        <span className="text-muted-foreground">Sconosciuto</span>
+                  <Fragment key={entry.id}>
+                    <TableRow
+                      className={cn(
+                        hasChanges && "cursor-pointer hover:bg-muted/50",
+                        isExpanded && "bg-muted/30",
                       )}
-                    </TableCell>
+                      onClick={() => hasChanges && toggleRow(entry.id)}
+                    >
+                      {/* Expand indicator */}
+                      <TableCell className="w-8 px-2">
+                        {hasChanges ? (
+                          isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )
+                        ) : null}
+                      </TableCell>
 
-                    {/* Action Badge */}
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn("text-xs", badge.className)}
-                      >
-                        {badge.label}
-                      </Badge>
-                    </TableCell>
+                      {/* Date */}
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDate(entry.created_at)}
+                      </TableCell>
 
-                    {/* Entity */}
-                    <TableCell>
-                      <div className="space-y-0.5">
-                        {entityLabel && (
-                          <span className="text-xs text-muted-foreground">
-                            {entityLabel}
-                          </span>
+                      {/* User */}
+                      <TableCell className="text-sm">
+                        {entry.user_email ?? (
+                          <span className="text-muted-foreground">Sconosciuto</span>
                         )}
-                        {entry.entity_title && adminPath && entry.entity_id && !entry.action.endsWith(".delete") ? (
-                          <Link
-                            href={`/admin/${adminPath}/${entry.entity_id}/modifica`}
-                            className="block text-sm font-medium hover:text-primary hover:underline line-clamp-1"
-                          >
-                            {entry.entity_title}
-                          </Link>
+                      </TableCell>
+
+                      {/* Action Badge */}
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn("text-xs", badge.className)}
+                        >
+                          {badge.label}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Entity */}
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          {entityLabel && (
+                            <span className="text-xs text-muted-foreground">
+                              {entityLabel}
+                            </span>
+                          )}
+                          {entry.entity_title && link ? (
+                            <Link
+                              href={link}
+                              className="block text-sm font-medium hover:text-primary hover:underline line-clamp-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {entry.entity_title}
+                            </Link>
+                          ) : (
+                            <span className="block text-sm font-medium line-clamp-1">
+                              {entry.entity_title ?? "\u2014"}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Details */}
+                      <TableCell className="max-w-[300px] text-sm text-muted-foreground">
+                        {entry.details ? (
+                          <span className="line-clamp-2">{entry.details}</span>
                         ) : (
-                          <span className="block text-sm font-medium line-clamp-1">
-                            {entry.entity_title ?? "\u2014"}
-                          </span>
+                          <span className="text-muted-foreground/50">&mdash;</span>
                         )}
-                      </div>
-                    </TableCell>
+                      </TableCell>
+                    </TableRow>
 
-                    {/* Details */}
-                    <TableCell className="max-w-[300px] text-sm text-muted-foreground">
-                      {entry.details ? (
-                        <span className="line-clamp-2">{entry.details}</span>
-                      ) : (
-                        <span className="text-muted-foreground/50">&mdash;</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                    {/* Expanded changes row */}
+                    {isExpanded && hasChanges && (
+                      <TableRow className="bg-muted/20 hover:bg-muted/20">
+                        <TableCell colSpan={6} className="px-8 py-3">
+                          <div className="rounded-md border bg-white">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b bg-muted/30">
+                                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Campo</th>
+                                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Prima</th>
+                                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Dopo</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {entry.changes!.map((change, i) => (
+                                  <tr key={i} className={i < entry.changes!.length - 1 ? "border-b" : ""}>
+                                    <td className="px-3 py-1.5 font-medium">{change.field}</td>
+                                    <td className="px-3 py-1.5">
+                                      {change.from ? (
+                                        <span className="text-red-600 line-through">{change.from}</span>
+                                      ) : (
+                                        <span className="text-muted-foreground/50">&mdash;</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-1.5">
+                                      {change.to ? (
+                                        <span className="text-green-600">{change.to}</span>
+                                      ) : (
+                                        <span className="text-muted-foreground/50">&mdash;</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
                 );
               })}
             </TableBody>

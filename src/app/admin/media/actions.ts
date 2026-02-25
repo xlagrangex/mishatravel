@@ -16,6 +16,8 @@ import {
   getFolderIdByName,
 } from '@/lib/supabase/queries/media'
 import type { MediaItem, MediaFolder } from '@/lib/types'
+import { logActivity } from '@/lib/supabase/audit'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 type ActionResult =
   | { success: true }
@@ -65,6 +67,15 @@ export async function registerMediaAction(record: {
       ...record,
       folder_id: folderId,
     })
+
+    logActivity({
+      action: 'media.upload',
+      entityType: 'media',
+      entityId: item.id,
+      entityTitle: record.filename,
+      details: `File caricato: ${record.filename}`,
+    }).catch(() => {})
+
     return { success: true, item }
   } catch (err) {
     return {
@@ -92,7 +103,19 @@ export async function updateMediaAction(
 
 export async function deleteMediaAction(id: string): Promise<ActionResult> {
   try {
+    const supabase = createAdminClient()
+    const { data: item } = await supabase.from('media').select('filename').eq('id', id).single()
+
     await deleteMediaRecord(id)
+
+    logActivity({
+      action: 'media.delete',
+      entityType: 'media',
+      entityId: id,
+      entityTitle: item?.filename ?? id,
+      details: `File eliminato: ${item?.filename ?? id}`,
+    }).catch(() => {})
+
     revalidateMedia()
     return { success: true }
   } catch (err) {
@@ -106,6 +129,15 @@ export async function deleteMediaAction(id: string): Promise<ActionResult> {
 export async function bulkDeleteMediaAction(ids: string[]): Promise<ActionResult> {
   try {
     await bulkDeleteMedia(ids)
+
+    logActivity({
+      action: 'media.bulk_delete',
+      entityType: 'media',
+      entityId: ids[0],
+      entityTitle: `${ids.length} file`,
+      details: `Eliminati ${ids.length} file`,
+    }).catch(() => {})
+
     revalidateMedia()
     return { success: true }
   } catch (err) {
@@ -150,6 +182,15 @@ export async function createFolderAction(
 ): Promise<ActionResult> {
   try {
     await createFolder(name, parentId)
+
+    logActivity({
+      action: 'media.folder_created',
+      entityType: 'media',
+      entityId: name,
+      entityTitle: name,
+      details: `Cartella creata: ${name}`,
+    }).catch(() => {})
+
     revalidateMedia()
     return { success: true }
   } catch (err) {
@@ -178,7 +219,19 @@ export async function renameFolderAction(
 
 export async function deleteFolderAction(folderId: string): Promise<ActionResult> {
   try {
+    const supabase = createAdminClient()
+    const { data: folder } = await supabase.from('media_folders').select('name').eq('id', folderId).single()
+
     await deleteFolder(folderId)
+
+    logActivity({
+      action: 'media.folder_deleted',
+      entityType: 'media',
+      entityId: folderId,
+      entityTitle: folder?.name ?? folderId,
+      details: `Cartella eliminata: ${folder?.name ?? folderId}`,
+    }).catch(() => {})
+
     revalidateMedia()
     return { success: true }
   } catch (err) {

@@ -9,6 +9,7 @@ export interface ActivityLogEntry {
   entity_id: string | null
   entity_title: string | null
   details: string | null
+  changes: Array<{ field: string; from?: string; to?: string }> | null
   created_at: string
 }
 
@@ -24,7 +25,7 @@ export async function getEntityHistory(
 
   const { data, error } = await supabase
     .from('user_activity_log')
-    .select('id, user_id, action, entity_type, entity_id, entity_title, details, created_at')
+    .select('id, user_id, action, entity_type, entity_id, entity_title, details, changes, created_at')
     .eq('entity_type', entityType)
     .eq('entity_id', entityId)
     .order('created_at', { ascending: false })
@@ -50,7 +51,7 @@ export async function getRecentActivity(limit = 10): Promise<ActivityLogEntry[]>
 
   const { data, error } = await supabase
     .from('user_activity_log')
-    .select('id, user_id, action, entity_type, entity_id, entity_title, details, created_at')
+    .select('id, user_id, action, entity_type, entity_id, entity_title, details, changes, created_at')
     .not('entity_type', 'is', null)
     .order('created_at', { ascending: false })
     .limit(limit)

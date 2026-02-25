@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { logActivity } from '@/lib/supabase/audit'
+import { logActivity, buildChanges, buildCreateChanges, buildDeleteChanges, TOUR_LABELS } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -199,6 +199,17 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
 
   let tourId: string
 
+  // Fetch old record for change tracking (update path)
+  let oldTourRecord: Record<string, unknown> | null = null
+  if (data.id) {
+    const { data: old } = await supabase
+      .from('tours')
+      .select('title, slug, status, a_partire_da, destination_id, durata_notti, cover_image_url, tipo_voli, prezzo_su_richiesta')
+      .eq('id', data.id)
+      .single()
+    oldTourRecord = old
+  }
+
   try {
     // 3. Upsert main tour row
     if (data.id) {
@@ -361,13 +372,26 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
   }
 
   // 5. Log activity
-  logActivity({
-    action: data.id ? 'tour.update' : 'tour.create',
-    entityType: 'tour',
-    entityId: tourId,
-    entityTitle: data.title,
-    details: `Stato: ${data.status}`,
-  }).catch(() => {})
+  if (data.id && oldTourRecord) {
+    const changes = buildChanges(oldTourRecord, tourRow, TOUR_LABELS)
+    logActivity({
+      action: 'tour.update',
+      entityType: 'tour',
+      entityId: tourId,
+      entityTitle: data.title,
+      details: changes.length ? `Modificati ${changes.length} campi` : 'Aggiornato',
+      changes,
+    }).catch(() => {})
+  } else {
+    logActivity({
+      action: 'tour.create',
+      entityType: 'tour',
+      entityId: tourId,
+      entityTitle: data.title,
+      details: 'Tour creato',
+      changes: buildCreateChanges(tourRow, TOUR_LABELS),
+    }).catch(() => {})
+  }
 
   // 6. Revalidate
   revalidatePath('/admin/tours')
@@ -380,8 +404,12 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
 export async function deleteTourAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  // Fetch title before delete for logging
-  const { data: tourData } = await supabase.from('tours').select('title').eq('id', id).single()
+  // Fetch record before delete for logging
+  const { data: tourData } = await supabase
+    .from('tours')
+    .select('title, slug, status, a_partire_da, destination_id, durata_notti, cover_image_url, tipo_voli, prezzo_su_richiesta')
+    .eq('id', id)
+    .single()
 
   const { error } = await supabase.from('tours').delete().eq('id', id)
 
@@ -394,6 +422,7 @@ export async function deleteTourAction(id: string): Promise<ActionResult> {
     entityType: 'tour',
     entityId: id,
     entityTitle: tourData?.title ?? 'Tour eliminato',
+    changes: tourData ? buildDeleteChanges(tourData, TOUR_LABELS) : undefined,
   }).catch(() => {})
 
   revalidatePath('/admin/tours')
@@ -426,6 +455,7 @@ export async function toggleTourStatus(
     entityId: id,
     entityTitle: tourData?.title ?? '',
     details: `Da ${newStatus === 'published' ? 'draft' : 'published'} a ${newStatus}`,
+    changes: [{ field: 'Stato', from: newStatus === 'published' ? 'draft' : 'published', to: newStatus }],
   }).catch(() => {})
 
   revalidatePath('/admin/tours')

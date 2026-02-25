@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { logActivity } from '@/lib/supabase/audit'
+import { logActivity, buildChanges, buildCreateChanges, buildDeleteChanges, CRUISE_LABELS } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -188,6 +188,17 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
 
   let cruiseId: string
 
+  // Fetch old record for change tracking (update path)
+  let oldCruiseRecord: Record<string, unknown> | null = null
+  if (data.id) {
+    const { data: old } = await supabase
+      .from('cruises')
+      .select('title, slug, status, ship_id, destination_id, cover_image_url')
+      .eq('id', data.id)
+      .single()
+    oldCruiseRecord = old
+  }
+
   try {
     // 3. Upsert main cruise row
     if (data.id) {
@@ -359,13 +370,26 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
   }
 
   // 5. Log activity
-  logActivity({
-    action: data.id ? 'cruise.update' : 'cruise.create',
-    entityType: 'cruise',
-    entityId: cruiseId,
-    entityTitle: data.title,
-    details: `Stato: ${data.status}`,
-  }).catch(() => {})
+  if (data.id && oldCruiseRecord) {
+    const changes = buildChanges(oldCruiseRecord, cruiseRow, CRUISE_LABELS)
+    logActivity({
+      action: 'cruise.update',
+      entityType: 'cruise',
+      entityId: cruiseId,
+      entityTitle: data.title,
+      details: changes.length ? `Modificati ${changes.length} campi` : 'Aggiornato',
+      changes,
+    }).catch(() => {})
+  } else {
+    logActivity({
+      action: 'cruise.create',
+      entityType: 'cruise',
+      entityId: cruiseId,
+      entityTitle: data.title,
+      details: 'Crociera creata',
+      changes: buildCreateChanges(cruiseRow, CRUISE_LABELS),
+    }).catch(() => {})
+  }
 
   // 6. Revalidate
   revalidatePath('/admin/crociere')
@@ -378,7 +402,11 @@ export async function saveCruise(formData: unknown): Promise<ActionResult> {
 export async function deleteCruiseAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  const { data: cruiseData } = await supabase.from('cruises').select('title').eq('id', id).single()
+  const { data: cruiseData } = await supabase
+    .from('cruises')
+    .select('title, slug, status, ship_id, destination_id, cover_image_url')
+    .eq('id', id)
+    .single()
 
   const { error } = await supabase.from('cruises').delete().eq('id', id)
 
@@ -391,6 +419,7 @@ export async function deleteCruiseAction(id: string): Promise<ActionResult> {
     entityType: 'cruise',
     entityId: id,
     entityTitle: cruiseData?.title ?? 'Crociera eliminata',
+    changes: cruiseData ? buildDeleteChanges(cruiseData, CRUISE_LABELS) : undefined,
   }).catch(() => {})
 
   revalidatePath('/admin/crociere')
@@ -423,6 +452,7 @@ export async function toggleCruiseStatus(
     entityId: id,
     entityTitle: cruiseData?.title ?? '',
     details: `Da ${newStatus === 'published' ? 'draft' : 'published'} a ${newStatus}`,
+    changes: [{ field: 'Stato', from: newStatus === 'published' ? 'draft' : 'published', to: newStatus }],
   }).catch(() => {})
 
   revalidatePath('/admin/crociere')

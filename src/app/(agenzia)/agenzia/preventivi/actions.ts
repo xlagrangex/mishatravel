@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { acceptOffer, declineOffer } from "@/lib/supabase/queries/quotes";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logActivity } from "@/lib/supabase/audit";
 import { sendTransactionalEmail, sendAdminNotification } from "@/lib/email/brevo";
 import {
   offerAcceptedConfirmationEmail,
@@ -186,6 +187,14 @@ export async function acceptOfferWithParticipants(
       actor: "agency",
     });
 
+    logActivity({
+      action: 'quote.offer_accepted',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: `Preventivo #${requestId.slice(0, 8)}`,
+      details: `Offerta accettata con ${participantCount} partecipanti (${adultCount} adulti, ${childCount} bambini)`,
+    }).catch(() => {})
+
     try {
       const ctx = await getQuoteEmailContext(requestId);
       if (ctx) {
@@ -227,6 +236,14 @@ export async function declineOfferAction(
   const result = await declineOffer(offerId, requestId, motivation);
 
   if (result.success) {
+    logActivity({
+      action: 'quote.offer_declined',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: `Preventivo #${requestId.slice(0, 8)}`,
+      details: motivation ? `Motivazione: ${motivation}` : undefined,
+    }).catch(() => {})
+
     try {
       const ctx = await getQuoteEmailContext(requestId);
       if (ctx) {
@@ -329,6 +346,14 @@ export async function uploadCounterSignedContract(
       console.error("Error sending counter-signed contract email:", emailErr);
     }
 
+    logActivity({
+      action: 'quote.contract_signed',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: `Preventivo #${requestId.slice(0, 8)}`,
+      details: `Contratto controfirmato: ${fileName}`,
+    }).catch(() => {})
+
     revalidatePath(`/agenzia/preventivi/${requestId}`);
     revalidatePath(`/admin/preventivi/${requestId}`);
     revalidatePath("/admin/preventivi");
@@ -423,6 +448,14 @@ export async function uploadPaymentReceipt(
       console.error("Error sending payment receipt email:", emailErr);
     }
 
+    logActivity({
+      action: 'quote.receipt_uploaded',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: `Preventivo #${requestId.slice(0, 8)}`,
+      details: `Ricevuta pagamento: ${fileName}`,
+    }).catch(() => {})
+
     revalidatePath(`/agenzia/preventivi/${requestId}`);
     revalidatePath(`/admin/preventivi/${requestId}`);
     revalidatePath("/admin/preventivi");
@@ -503,6 +536,14 @@ export async function confirmPaymentAction(
     } catch (emailErr) {
       console.error("Error sending payment confirmed email:", emailErr);
     }
+
+    logActivity({
+      action: 'quote.payment_confirmed_agency',
+      entityType: 'quote',
+      entityId: requestId,
+      entityTitle: `Preventivo #${requestId.slice(0, 8)}`,
+      details: notes?.trim() || undefined,
+    }).catch(() => {})
 
     revalidatePath(`/agenzia/preventivi/${requestId}`);
     revalidatePath(`/admin/preventivi/${requestId}`);
@@ -595,6 +636,14 @@ export async function agencyBulkArchive(
     }));
 
     await admin.from("quote_timeline").insert(timelineRows);
+
+    logActivity({
+      action: 'quote.bulk_archive',
+      entityType: 'quote',
+      entityId: requestIds[0],
+      entityTitle: `${requestIds.length} preventivi`,
+      details: `Archiviati ${requestIds.length} preventivi`,
+    }).catch(() => {})
 
     revalidatePath("/agenzia/preventivi");
     return { success: true };

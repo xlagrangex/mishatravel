@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { logActivity } from '@/lib/supabase/audit'
+import { logActivity, buildChanges, buildCreateChanges, buildDeleteChanges, SHIP_LABELS } from '@/lib/supabase/audit'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -153,6 +153,17 @@ export async function saveShip(formData: unknown): Promise<ActionResult> {
 
   let shipId: string
 
+  // Fetch old record for change tracking (update path)
+  let oldShipRecord: Record<string, unknown> | null = null
+  if (data.id) {
+    const { data: old } = await supabase
+      .from('ships')
+      .select('name, slug, status')
+      .eq('id', data.id)
+      .single()
+    oldShipRecord = old
+  }
+
   try {
     // 3. Upsert main ship row
     if (data.id) {
@@ -268,12 +279,26 @@ export async function saveShip(formData: unknown): Promise<ActionResult> {
   }
 
   // 5. Log activity
-  logActivity({
-    action: data.id ? 'ship.update' : 'ship.create',
-    entityType: 'ship',
-    entityId: shipId,
-    entityTitle: data.name,
-  }).catch(() => {})
+  if (data.id && oldShipRecord) {
+    const changes = buildChanges(oldShipRecord, shipRow, SHIP_LABELS)
+    logActivity({
+      action: 'ship.update',
+      entityType: 'ship',
+      entityId: shipId,
+      entityTitle: data.name,
+      details: changes.length ? `Modificati ${changes.length} campi` : 'Aggiornato',
+      changes,
+    }).catch(() => {})
+  } else {
+    logActivity({
+      action: 'ship.create',
+      entityType: 'ship',
+      entityId: shipId,
+      entityTitle: data.name,
+      details: 'Nave creata',
+      changes: buildCreateChanges(shipRow, SHIP_LABELS),
+    }).catch(() => {})
+  }
 
   // 6. Revalidate
   revalidatePath('/admin/flotta')
@@ -389,6 +414,7 @@ export async function toggleShipStatus(
     entityType: 'ship',
     entityId: id,
     entityTitle: shipData?.name ?? '',
+    changes: [{ field: 'Stato', from: newStatus === 'published' ? 'draft' : 'published', to: newStatus }],
   }).catch(() => {})
 
   revalidatePath('/admin/flotta')
@@ -437,7 +463,11 @@ export async function bulkDeleteShips(ids: string[]): Promise<ActionResult> {
 export async function deleteShipAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  const { data: shipData } = await supabase.from('ships').select('name').eq('id', id).single()
+  const { data: shipData } = await supabase
+    .from('ships')
+    .select('name, slug, status')
+    .eq('id', id)
+    .single()
 
   const { error } = await supabase.from('ships').delete().eq('id', id)
 
@@ -450,6 +480,7 @@ export async function deleteShipAction(id: string): Promise<ActionResult> {
     entityType: 'ship',
     entityId: id,
     entityTitle: shipData?.name ?? 'Nave eliminata',
+    changes: shipData ? buildDeleteChanges(shipData, SHIP_LABELS) : undefined,
   }).catch(() => {})
 
   revalidatePath('/admin/flotta')

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { sendTransactionalEmail } from '@/lib/email/brevo'
+import { logActivity } from '@/lib/supabase/audit'
 import { agencyApprovedEmail, agencyCreatedByAdminEmail, agencyDeletedEmail, agencyDocumentVerifiedEmail } from '@/lib/email/templates'
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string }
@@ -34,12 +35,27 @@ export async function updateAgencyStatus(
 ): Promise<ActionResult> {
   const supabase = createAdminClient()
 
+  const { data: oldAgency } = await supabase
+    .from('agencies')
+    .select('business_name, status')
+    .eq('id', agencyId)
+    .single()
+
   const { error } = await supabase
     .from('agencies')
     .update({ status, updated_at: new Date().toISOString() })
     .eq('id', agencyId)
 
   if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: 'agency.status_change',
+    entityType: 'agency',
+    entityId: agencyId,
+    entityTitle: oldAgency?.business_name ?? agencyId,
+    details: `Stato: ${oldAgency?.status ?? '?'} → ${status}`,
+    changes: [{ field: 'Stato', from: oldAgency?.status ?? undefined, to: status }],
+  }).catch(() => {})
 
   revalidatePath('/admin/agenzie')
   revalidatePath(`/admin/agenzie/${agencyId}`)
@@ -95,6 +111,15 @@ export async function approveAgencyFromDashboard(
     console.error('Error sending agency approved email:', emailErr)
   }
 
+  logActivity({
+    action: 'agency.approved',
+    entityType: 'agency',
+    entityId: agencyId,
+    entityTitle: agency.business_name,
+    details: `Agenzia approvata: ${agency.business_name}`,
+    changes: [{ field: 'Stato', from: 'pending', to: 'active' }],
+  }).catch(() => {})
+
   revalidatePath('/admin')
   revalidatePath('/admin/agenzie')
   revalidatePath(`/admin/agenzie/${agencyId}`)
@@ -142,6 +167,14 @@ export async function deleteAgency(agencyId: string): Promise<ActionResult> {
 
   // 4. Safety: explicit cleanup of user_roles if not cascaded
   await supabase.from('user_roles').delete().eq('user_id', agency.user_id)
+
+  logActivity({
+    action: 'agency.delete',
+    entityType: 'agency',
+    entityId: agencyId,
+    entityTitle: agency.business_name,
+    details: `Agenzia eliminata: ${agency.business_name} (${agency.email})`,
+  }).catch(() => {})
 
   revalidatePath('/admin/agenzie')
   return { success: true }
@@ -210,6 +243,14 @@ export async function createAgencyFromAdmin(
     console.error('Error sending agency created email:', e)
   }
 
+  logActivity({
+    action: 'agency.create',
+    entityType: 'agency',
+    entityId: agency.id,
+    entityTitle: input.business_name,
+    details: `Agenzia creata: ${input.business_name} (${input.email})`,
+  }).catch(() => {})
+
   revalidatePath('/admin/agenzie')
   return { success: true, agencyId: agency.id }
 }
@@ -236,6 +277,7 @@ export async function verifyAgencyDocument(
   if (error) return { success: false, error: error.message }
 
   // Fetch agency info to send notification + email
+  let agencyName: string | null = null
   try {
     const { data: doc } = await supabase
       .from('agency_documents')
@@ -251,6 +293,8 @@ export async function verifyAgencyDocument(
         .single()
 
       if (agency) {
+        agencyName = agency.business_name
+
         // In-app notification
         await supabase.from('notifications').insert({
           user_id: agency.user_id,
@@ -272,6 +316,14 @@ export async function verifyAgencyDocument(
   } catch (e) {
     console.error('Error notifying agency about document verification:', e)
   }
+
+  logActivity({
+    action: 'agency.document_verified',
+    entityType: 'agency',
+    entityId: documentId,
+    entityTitle: agencyName ?? documentId,
+    details: 'Visura camerale verificata',
+  }).catch(() => {})
 
   revalidatePath('/admin/agenzie')
   revalidatePath('/admin')
