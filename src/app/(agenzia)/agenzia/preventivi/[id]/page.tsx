@@ -131,12 +131,56 @@ export default async function PreventivoDetailPage({
         <StatusBadge status={quote.status} />
       </div>
 
-      {/* Action Indicator Banner */}
-      <ActionIndicator
-        variant="banner"
-        status={quote.status}
-        {...getAgencyStatusAction(quote.status)}
-      />
+      {/* Action Indicator Banner — dynamic for contract_sent */}
+      {(() => {
+        if (quote.status === "contract_sent") {
+          const hasCounter = quote.documents?.some(
+            (d) => d.document_type === "contratto_controfirmato"
+          );
+          const hasReceipt = quote.documents?.some(
+            (d) => d.document_type === "ricevuta_pagamento"
+          );
+          const hasPaymentConfirm = quote.timeline.some(
+            (t) =>
+              t.actor === "agency" &&
+              t.action === "Pagamento confermato dall'agenzia"
+          );
+          const allDone = hasCounter && hasReceipt && hasPaymentConfirm;
+
+          if (allDone) {
+            return (
+              <ActionIndicator
+                variant="banner"
+                status={quote.status}
+                message="Tutte le azioni sono state completate. In attesa della conferma da parte del tour operator."
+                actionRequired={false}
+              />
+            );
+          }
+
+          const remaining: string[] = [];
+          if (!hasCounter) remaining.push("il contratto controfirmato");
+          if (!hasReceipt) remaining.push("la ricevuta di pagamento");
+          if (!hasPaymentConfirm) remaining.push("conferma il pagamento");
+
+          return (
+            <ActionIndicator
+              variant="banner"
+              status={quote.status}
+              message={`Azione richiesta: invia ${remaining.join(", ")}`}
+              actionRequired={true}
+            />
+          );
+        }
+
+        return (
+          <ActionIndicator
+            variant="banner"
+            status={quote.status}
+            {...getAgencyStatusAction(quote.status)}
+          />
+        );
+      })()}
 
       {/* Prominent PDF Download */}
       <DownloadPdfButton quoteId={id} />
@@ -154,6 +198,11 @@ export default async function PreventivoDetailPage({
             t.actor === "agency" &&
             t.action === "Pagamento confermato dall'agenzia"
         );
+        const allDone = !!counterContract && !!paymentReceipt && paymentConfirmed;
+
+        // Hide the action cards if all 3 actions are already done
+        if (allDone) return null;
+
         return (
           <ContractSentActions
             requestId={id}

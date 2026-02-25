@@ -1351,6 +1351,19 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
   const normalized = normalizeStatus(quote.status)
   const isTerminal = normalized === 'rejected' || normalized === 'declined'
 
+  // Check if all 3 agency actions are done (for contract_sent phase)
+  const agencyHasCounterContract = quote.documents?.some(
+    (d) => d.document_type === 'contratto_controfirmato'
+  ) ?? false
+  const agencyHasPaymentReceipt = quote.documents?.some(
+    (d) => d.document_type === 'ricevuta_pagamento'
+  ) ?? false
+  const agencyHasConfirmedPayment = quote.timeline.some(
+    (t) => t.actor === 'agency' && t.action === "Pagamento confermato dall'agenzia"
+  )
+  const allAgencyActionsDone =
+    agencyHasCounterContract && agencyHasPaymentReceipt && agencyHasConfirmedPayment
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -1409,8 +1422,8 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
             />
           )}
 
-          {/* contract_sent → Finalize Booking */}
-          {normalized === 'contract_sent' && (
+          {/* contract_sent → Finalize Booking (only when agency completed all 3 actions) */}
+          {normalized === 'contract_sent' && allAgencyActionsDone && (
             <FinalizeBookingButton
               requestId={quote.id}
               onSuccess={handleRefresh}
@@ -1435,12 +1448,36 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
         </div>
       </div>
 
-      {/* Action Indicator Banner */}
-      <ActionIndicator
-        variant="banner"
-        status={quote.status}
-        {...getAdminStatusAction(quote.status)}
-      />
+      {/* Action Indicator Banner — dynamic for contract_sent */}
+      {normalized === 'contract_sent' ? (
+        allAgencyActionsDone ? (
+          <ActionIndicator
+            variant="banner"
+            status={quote.status}
+            message="L'agenzia ha completato tutte le azioni. Puoi confermare la prenotazione."
+            actionRequired={true}
+          />
+        ) : (() => {
+          const missing: string[] = []
+          if (!agencyHasCounterContract) missing.push('contratto controfirmato')
+          if (!agencyHasPaymentReceipt) missing.push('ricevuta di pagamento')
+          if (!agencyHasConfirmedPayment) missing.push('conferma pagamento')
+          return (
+            <ActionIndicator
+              variant="banner"
+              status={quote.status}
+              message={`In attesa dall'agenzia: ${missing.join(', ')}`}
+              actionRequired={false}
+            />
+          )
+        })()
+      ) : (
+        <ActionIndicator
+          variant="banner"
+          status={quote.status}
+          {...getAdminStatusAction(quote.status)}
+        />
+      )}
 
       {/* Workflow Timeline */}
       <Card>
