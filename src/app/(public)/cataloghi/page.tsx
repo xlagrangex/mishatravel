@@ -1,5 +1,5 @@
 import PageHero from "@/components/layout/PageHero";
-import Image from "next/image";
+import PdfViewer from "@/components/PdfViewer";
 import { Button } from "@/components/ui/button";
 import { Download, BookOpen } from "lucide-react";
 import { getPublishedCatalogs } from "@/lib/supabase/queries/catalogs";
@@ -28,68 +28,50 @@ export default async function CataloghiPage() {
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <p className="text-gray-600 leading-relaxed text-lg">
-            Scarica i nostri cataloghi per scoprire tutti gli itinerari, le date di partenza e i
-            prezzi delle nostre proposte di viaggio. Puoi sfogliarli online o scaricarli in formato
-            PDF per consultarli quando vuoi.
+            Sfoglia i nostri cataloghi direttamente online per scoprire tutti gli itinerari, le date
+            di partenza e i prezzi delle nostre proposte di viaggio.
           </p>
         </div>
       </section>
 
       <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 max-w-4xl">
           {cataloghi.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="space-y-16">
               {cataloghi.map((cat) => (
-                <div
-                  key={cat.id}
-                  className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 group"
-                >
-                  {cat.cover_image_url && (
-                    <div className="relative aspect-[3/4] overflow-hidden">
-                      <Image
-                        src={cat.cover_image_url}
-                        alt={cat.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-1">
+                <div key={cat.id}>
+                  <div className="mb-4">
+                    <h3 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)]">
                       {cat.title}
                     </h3>
                     {cat.year && (
-                      <p className="text-sm text-gray-500 mb-4">Edizione {cat.year}</p>
+                      <p className="text-sm text-gray-500 mt-1">Edizione {cat.year}</p>
                     )}
-                    {cat.pdf_url && (
-                      <div className="flex gap-3">
+                  </div>
+
+                  {cat.pdf_url ? (
+                    <>
+                      <PdfViewer url={cat.pdf_url} title={cat.title} />
+                      <div className="mt-4 flex justify-center">
                         <Button
                           asChild
-                          className="flex-1 bg-[#C41E2F] hover:bg-[#A31825] text-white"
+                          className="bg-[#C41E2F] hover:bg-[#A31825] text-white"
                         >
-                          <a href={cat.pdf_url} target="_blank" rel="noopener noreferrer">
+                          <a href={cat.pdf_url} download target="_blank" rel="noopener noreferrer">
                             <Download className="size-4 mr-2" />
                             Scarica PDF
                           </a>
                         </Button>
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="flex-1 border-[#1B2D4F] text-[#1B2D4F] hover:bg-[#1B2D4F] hover:text-white"
-                        >
-                          <a href={cat.pdf_url} target="_blank" rel="noopener noreferrer">
-                            <BookOpen className="size-4 mr-2" />
-                            Sfoglia Online
-                          </a>
-                        </Button>
                       </div>
-                    )}
-                  </div>
+                    </>
+                  ) : (
+                    <p className="text-gray-400 italic">PDF non disponibile</p>
+                  )}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="max-w-2xl mx-auto bg-white rounded-lg p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-lg p-12 text-center border border-gray-100">
               <BookOpen className="size-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">
                 I cataloghi saranno disponibili a breve.
