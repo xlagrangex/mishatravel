@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import TourForm from "@/components/admin/forms/TourForm";
 import ActivityLog from "@/components/admin/ActivityLog";
 import { getTourById } from "@/lib/supabase/queries/tours";
@@ -26,11 +28,16 @@ export default async function ModificaTourPage({ params }: ModificaTourPageProps
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-secondary">
-          Modifica Tour
+          {tour.title}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Modifica i dettagli di &ldquo;{tour.title}&rdquo;
-        </p>
+        <Link
+          href={`/tours/${tour.slug}`}
+          target="_blank"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Vedi anteprima
+        </Link>
       </div>
 
       <ActivityLog entityType="tour" entityId={id} />

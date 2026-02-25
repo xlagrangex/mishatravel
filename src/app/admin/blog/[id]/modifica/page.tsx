@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import BlogPostForm from "@/components/admin/forms/BlogPostForm";
 import ActivityLog from "@/components/admin/ActivityLog";
 import { getBlogPostById, getBlogCategories } from "@/lib/supabase/queries/blog";
@@ -24,11 +26,16 @@ export default async function ModificaArticoloPage({
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-secondary">
-          Modifica Articolo
+          {post.title}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Modifica i dettagli di &ldquo;{post.title}&rdquo;
-        </p>
+        <Link
+          href={`/blog/${post.slug}`}
+          target="_blank"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Vedi anteprima
+        </Link>
       </div>
 
       <ActivityLog entityType="blog" entityId={id} />

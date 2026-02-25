@@ -20,10 +20,10 @@ export default async function ModificaCatalogoPage({
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-secondary">
-          Modifica Catalogo
+          {catalog.title}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Modifica i dettagli di &ldquo;{catalog.title}&rdquo;
+          Modifica catalogo
         </p>
       </div>
 
