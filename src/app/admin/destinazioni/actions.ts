@@ -84,6 +84,71 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
   }
 }
 
+export async function toggleDestinationStatus(
+  id: string,
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  const supabase = createAdminClient()
+
+  const { data: destData } = await supabase.from('destinations').select('name').eq('id', id).single()
+
+  const { error } = await supabase
+    .from('destinations')
+    .update({ status: newStatus })
+    .eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: newStatus === 'published' ? 'destination.publish' : 'destination.unpublish',
+    entityType: 'destination',
+    entityId: id,
+    entityTitle: destData?.name ?? '',
+  }).catch(() => {})
+
+  revalidatePath('/admin/destinazioni')
+  revalidatePath('/destinazioni')
+  revalidatePath('/')
+  return { success: true, id }
+}
+
+export async function bulkSetDestinationStatus(
+  ids: string[],
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessuna destinazione selezionata' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('destinations')
+    .update({ status: newStatus })
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/destinazioni')
+  revalidatePath('/destinazioni')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
+export async function bulkDeleteDestinations(ids: string[]): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessuna destinazione selezionata' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('destinations')
+    .delete()
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/destinazioni')
+  revalidatePath('/destinazioni')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
 export async function deleteDestination(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 

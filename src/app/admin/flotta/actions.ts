@@ -369,6 +369,71 @@ export async function saveShipDecksAndCabins(
   return { success: true }
 }
 
+export async function toggleShipStatus(
+  id: string,
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  const supabase = createAdminClient()
+
+  const { data: shipData } = await supabase.from('ships').select('name').eq('id', id).single()
+
+  const { error } = await supabase
+    .from('ships')
+    .update({ status: newStatus })
+    .eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: newStatus === 'published' ? 'ship.publish' : 'ship.unpublish',
+    entityType: 'ship',
+    entityId: id,
+    entityTitle: shipData?.name ?? '',
+  }).catch(() => {})
+
+  revalidatePath('/admin/flotta')
+  revalidatePath('/flotta')
+  revalidatePath('/')
+  return { success: true, id }
+}
+
+export async function bulkSetShipStatus(
+  ids: string[],
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessuna nave selezionata' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('ships')
+    .update({ status: newStatus })
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/flotta')
+  revalidatePath('/flotta')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
+export async function bulkDeleteShips(ids: string[]): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessuna nave selezionata' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('ships')
+    .delete()
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/flotta')
+  revalidatePath('/flotta')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
 export async function deleteShipAction(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 

@@ -116,6 +116,71 @@ export async function saveBlogPost(formData: z.infer<typeof blogPostSchema>): Pr
 // Delete Blog Post
 // ---------------------------------------------------------------------------
 
+export async function toggleBlogPostStatus(
+  id: string,
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  const supabase = createAdminClient()
+
+  const { data: postData } = await supabase.from('blog_posts').select('title').eq('id', id).single()
+
+  const { error } = await supabase
+    .from('blog_posts')
+    .update({ status: newStatus })
+    .eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  logActivity({
+    action: newStatus === 'published' ? 'blog.publish' : 'blog.unpublish',
+    entityType: 'blog',
+    entityId: id,
+    entityTitle: postData?.title ?? '',
+  }).catch(() => {})
+
+  revalidatePath('/admin/blog')
+  revalidatePath('/blog')
+  revalidatePath('/')
+  return { success: true, id }
+}
+
+export async function bulkSetBlogPostStatus(
+  ids: string[],
+  newStatus: 'published' | 'draft'
+): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessun articolo selezionato' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('blog_posts')
+    .update({ status: newStatus })
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/blog')
+  revalidatePath('/blog')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
+export async function bulkDeleteBlogPosts(ids: string[]): Promise<ActionResult> {
+  if (!ids.length) return { success: false, error: 'Nessun articolo selezionato' }
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('blog_posts')
+    .delete()
+    .in('id', ids)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/blog')
+  revalidatePath('/blog')
+  revalidatePath('/')
+  return { success: true, id: ids[0] }
+}
+
 export async function deleteBlogPost(id: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
