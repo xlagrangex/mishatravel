@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { Shield, BarChart3, Target, Settings2, X } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
@@ -32,12 +31,13 @@ export default function CookieConsentBanner({
         <div className="max-w-5xl mx-auto px-5 sm:px-6 py-5 sm:py-6">
           {/* Header */}
           <div className="flex items-start gap-3 sm:gap-4">
-            <Image
-              src="/images/logo/logo.webp"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/logo/logo-cropped-logo-270x270.png"
               alt="MishaTravel"
               width={48}
               height={48}
-              className="size-10 sm:size-12 object-contain shrink-0"
+              className="size-10 sm:size-12 rounded-lg shrink-0"
             />
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-semibold text-[#1B2D4F] font-[family-name:var(--font-poppins)]">

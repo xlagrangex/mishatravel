@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import LoggedInBanner from "@/components/layout/LoggedInBanner";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AdminEditProvider } from "@/components/admin/AdminEditContext";
+import CookieConsentProvider from "@/components/cookie/CookieConsentProvider";
 import { getAuthContext } from "@/lib/supabase/auth";
 import { getAgencyByUserId } from "@/lib/supabase/queries/agency-dashboard";
 import { getPublishedDestinations, getTourCountsPerDestination } from "@/lib/supabase/queries/destinations";
@@ -55,17 +56,19 @@ export default async function PublicLayout({
   return (
     <AuthProvider user={user} role={role} permissions={permissions}>
       <AdminEditProvider>
-        {user && role && (
-          <LoggedInBanner
-            role={role}
-            email={user.email ?? ""}
-            displayName={displayName}
-          />
-        )}
-        <TopBar />
-        <Header destinationsByArea={destinationsByArea} />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <CookieConsentProvider>
+          {user && role && (
+            <LoggedInBanner
+              role={role}
+              email={user.email ?? ""}
+              displayName={displayName}
+            />
+          )}
+          <TopBar />
+          <Header destinationsByArea={destinationsByArea} />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </CookieConsentProvider>
       </AdminEditProvider>
     </AuthProvider>
   );
