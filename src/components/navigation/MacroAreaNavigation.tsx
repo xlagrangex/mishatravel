@@ -16,7 +16,7 @@ interface MacroAreaNavigationProps {
 
 const AREA_IMAGES: Record<string, string> = {
   Europa: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&h=600&fit=crop",
-  "Medio Oriente": "https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=800&h=600&fit=crop",
+  "Medio Oriente": "https://images.unsplash.com/photo-1579606032821-4e6161c81571?w=800&h=600&fit=crop",
   Asia: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&h=600&fit=crop",
   "Asia Centrale": "https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?w=800&h=600&fit=crop",
   Africa: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&h=600&fit=crop",
@@ -27,7 +27,7 @@ export default function MacroAreaNavigation({ areas, selectedArea, onSelect }: M
   if (areas.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
       {areas.map((area) => {
         const isSelected = selectedArea === area.name;
         const img = area.image || AREA_IMAGES[area.name] || "";
@@ -47,12 +47,12 @@ export default function MacroAreaNavigation({ areas, selectedArea, onSelect }: M
               sizes="(max-width: 768px) 50vw, 25vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-              <h3 className="text-white font-bold text-xl font-[family-name:var(--font-poppins)]">
+            <div className="absolute bottom-0 left-0 right-0 p-3 xl:p-2.5 z-10">
+              <h3 className="text-white font-bold text-lg xl:text-base font-[family-name:var(--font-poppins)] leading-tight">
                 {area.name}
               </h3>
-              <p className="text-white/70 text-sm mt-1">
-                {area.tourCount} {area.tourCount === 1 ? "tour disponibile" : "tour disponibili"}
+              <p className="text-white/70 text-sm xl:text-xs mt-0.5">
+                {area.tourCount} {area.tourCount === 1 ? "tour" : "tour"}
               </p>
             </div>
             {isSelected && (
