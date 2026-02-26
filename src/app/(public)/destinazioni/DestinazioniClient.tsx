@@ -31,39 +31,58 @@ function DestinationMosaicCard({
   tourCount: number;
 }) {
   const imgSrc = dest.cover_image_url || "/images/placeholder.jpg";
+  const hasContent = tourCount > 0;
+
+  const inner = (
+    <>
+      <Image
+        src={imgSrc}
+        alt={dest.name}
+        fill
+        className={`object-cover transition-transform duration-700 ${hasContent ? "group-hover:scale-110" : "grayscale opacity-60"}`}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+      />
+      {/* Overlay */}
+      <div className={`absolute inset-0 bg-gradient-to-t from-[rgba(27,45,79,0.85)] via-[rgba(27,45,79,0.2)] to-transparent ${hasContent ? "opacity-60 group-hover:opacity-90" : "opacity-80"} transition-opacity duration-500`} />
+
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
+        <h3 className={`font-bold text-lg md:text-xl font-[family-name:var(--font-poppins)] drop-shadow-lg ${hasContent ? "text-white" : "text-white/60"}`}>
+          {dest.name}
+        </h3>
+        {hasContent ? (
+          <p className="text-white/80 text-sm mt-1">
+            {tourCount} {tourCount === 1 ? "viaggio disponibile" : "viaggi disponibili"}
+          </p>
+        ) : (
+          <p className="text-white/50 text-sm mt-1">Prossimamente</p>
+        )}
+        {hasContent && (
+          <span className="inline-flex items-center gap-1 text-white text-xs font-medium mt-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+            Scopri di pi&ugrave;
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        )}
+      </div>
+    </>
+  );
+
+  if (!hasContent) {
+    return (
+      <div className="relative block rounded-xl overflow-hidden aspect-[4/3] cursor-default">
+        {inner}
+      </div>
+    );
+  }
 
   return (
     <Link
       href={`/destinazioni/${dest.slug}`}
       className="group relative block rounded-xl overflow-hidden aspect-[4/3]"
     >
-      <Image
-        src={imgSrc}
-        alt={dest.name}
-        fill
-        className="object-cover transition-transform duration-700 group-hover:scale-110"
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-      />
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[rgba(27,45,79,0.85)] via-[rgba(27,45,79,0.2)] to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
-
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
-        <h3 className="text-white font-bold text-lg md:text-xl font-[family-name:var(--font-poppins)] drop-shadow-lg">
-          {dest.name}
-        </h3>
-        {tourCount > 0 && (
-          <p className="text-white/80 text-sm mt-1">
-            {tourCount} {tourCount === 1 ? "viaggio disponibile" : "viaggi disponibili"}
-          </p>
-        )}
-        <span className="inline-flex items-center gap-1 text-white text-xs font-medium mt-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-          Scopri di pi&ugrave;
-          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </span>
-      </div>
+      {inner}
     </Link>
   );
 }

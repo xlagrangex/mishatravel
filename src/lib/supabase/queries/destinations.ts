@@ -229,34 +229,46 @@ export async function getDestinationWithTours(
 }
 
 /**
- * Get tour + cruise counts per destination (published only).
+ * Get tour + cruise counts per destination (published only, with future departures).
+ * A tour/cruise counts only if it has no departures at all OR at least one future departure.
  * Returns a record keyed by destination slug.
  */
 export async function getTourCountsPerDestination(): Promise<Record<string, number>> {
   const supabase = createAdminClient()
+  const today = new Date().toISOString().slice(0, 10)
 
-  // Fetch published tours and cruises with their destination slug
+  // Fetch published tours and cruises with their destination slug + departures
   const [toursResult, cruisesResult] = await Promise.all([
     supabase
       .from('tours')
-      .select('destination:destinations(slug)')
+      .select('destination:destinations(slug), departures:tour_departures(data_partenza)')
       .eq('status', 'published'),
     supabase
       .from('cruises')
-      .select('destination:destinations(slug)')
+      .select('destination:destinations(slug), departures:cruise_departures(data_partenza)')
       .eq('status', 'published'),
   ])
 
   const counts: Record<string, number> = {}
 
   for (const row of toursResult.data ?? []) {
-    const slug = (row as any).destination?.slug
-    if (slug) counts[slug] = (counts[slug] || 0) + 1
+    const r = row as any
+    const slug = r.destination?.slug
+    if (!slug) continue
+    const deps = r.departures ?? []
+    if (deps.length === 0 || deps.some((d: any) => d.data_partenza >= today)) {
+      counts[slug] = (counts[slug] || 0) + 1
+    }
   }
 
   for (const row of cruisesResult.data ?? []) {
-    const slug = (row as any).destination?.slug
-    if (slug) counts[slug] = (counts[slug] || 0) + 1
+    const r = row as any
+    const slug = r.destination?.slug
+    if (!slug) continue
+    const deps = r.departures ?? []
+    if (deps.length === 0 || deps.some((d: any) => d.data_partenza >= today)) {
+      counts[slug] = (counts[slug] || 0) + 1
+    }
   }
 
   return counts
