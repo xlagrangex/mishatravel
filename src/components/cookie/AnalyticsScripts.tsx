@@ -8,8 +8,6 @@ interface AnalyticsScriptsProps {
 }
 
 export default function AnalyticsScripts({ consent }: AnalyticsScriptsProps) {
-  if (!consent) return null
-
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID
   const umamiUrl = process.env.NEXT_PUBLIC_UMAMI_URL
@@ -17,8 +15,8 @@ export default function AnalyticsScripts({ consent }: AnalyticsScriptsProps) {
 
   return (
     <>
-      {/* Umami Analytics (cookieless, self-hosted) */}
-      {consent.analytics && umamiUrl && umamiWebsiteId && (
+      {/* Umami Analytics — cookieless, GDPR compliant, always loaded */}
+      {umamiUrl && umamiWebsiteId && (
         <Script
           src={`${umamiUrl}/script.js`}
           data-website-id={umamiWebsiteId}
@@ -26,8 +24,8 @@ export default function AnalyticsScripts({ consent }: AnalyticsScriptsProps) {
         />
       )}
 
-      {/* Google Analytics 4 */}
-      {consent.analytics && gaId && (
+      {/* Google Analytics 4 — requires cookie consent */}
+      {consent?.analytics && gaId && (
         <>
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
@@ -39,8 +37,8 @@ export default function AnalyticsScripts({ consent }: AnalyticsScriptsProps) {
         </>
       )}
 
-      {/* Meta Pixel */}
-      {consent.marketing && pixelId && (
+      {/* Meta Pixel — requires cookie consent */}
+      {consent?.marketing && pixelId && (
         <Script id="meta-pixel-init" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixelId}');fbq('track','PageView');`}
         </Script>
