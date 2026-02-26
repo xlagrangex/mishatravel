@@ -1,21 +1,23 @@
 /**
- * Umami Analytics API wrapper.
- * Server-side only — uses UMAMI_API_URL and UMAMI_API_TOKEN env vars.
+ * Umami Cloud Analytics API wrapper.
+ * Server-side only — uses UMAMI_API_TOKEN and UMAMI_WEBSITE_ID env vars.
+ * Umami Cloud API: https://api.umami.is/v1/...
+ * Auth header: x-umami-api-key
  */
 
-const API_URL = process.env.UMAMI_API_URL ?? ""
 const API_TOKEN = process.env.UMAMI_API_TOKEN ?? ""
 const WEBSITE_ID = process.env.UMAMI_WEBSITE_ID ?? ""
+const BASE_URL = "https://api.umami.is/v1"
 
 // ── Helpers ──────────────────────────────────────────────
 
 async function umamiGet<T>(path: string, params?: Record<string, string>): Promise<T> {
-  const url = new URL(`${API_URL}/api${path}`)
+  const url = new URL(`${BASE_URL}${path}`)
   if (params) {
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
   }
   const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${API_TOKEN}` },
+    headers: { "x-umami-api-key": API_TOKEN },
     next: { revalidate: 300 }, // cache 5 min
   })
   if (!res.ok) {
@@ -109,5 +111,5 @@ export async function getMetrics(
 
 /** Check if Umami is configured (env vars present) */
 export function isUmamiConfigured(): boolean {
-  return Boolean(API_URL && API_TOKEN && WEBSITE_ID)
+  return Boolean(API_TOKEN && WEBSITE_ID)
 }
