@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MapPin, Ship } from "lucide-react";
 import { parsePrice, stripHtml } from "@/lib/utils";
 import PageHero from "@/components/layout/PageHero";
 import TourCard from "@/components/cards/TourCard";
@@ -27,6 +29,8 @@ export default async function DestinationDetailPage({ params }: { params: Promis
   const { role } = await getAuthContext();
   const isAdmin = role === "super_admin" || role === "admin" || role === "operator";
 
+  const noContent = tours.length === 0 && cruises.length === 0;
+
   return (
     <>
       {isAdmin && <AdminEditSetter url={`/admin/destinazioni/${dest.id}/modifica`} />}
@@ -42,7 +46,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
       {/* Description always visible */}
       {dest.description && (
         <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-[1100px] px-4">
             <p className="text-gray-600">{stripHtml(dest.description)}</p>
           </div>
         </section>
@@ -50,7 +54,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
 
       {tours.length > 0 && (
         <section className={`py-12 ${dest.description ? "bg-gray-50" : "bg-white"}`}>
-          <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-[1100px] px-4">
             <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-8">
               Tour in {dest.name}
             </h2>
@@ -75,7 +79,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
 
       {cruises.length > 0 && (
         <section className={`py-12 ${tours.length > 0 ? "bg-white" : dest.description ? "bg-gray-50" : "bg-white"}`}>
-          <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-[1100px] px-4">
             <h2 className="text-3xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-8">
               Crociere in {dest.name}
             </h2>
@@ -93,6 +97,35 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                   image={cruise.cover_image_url || "/images/placeholder.jpg"}
                 />
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Fallback: no tours and no cruises for this destination */}
+      {noContent && (
+        <section className={`py-16 ${dest.description ? "bg-gray-50" : "bg-white"}`}>
+          <div className="mx-auto max-w-[1100px] px-4 text-center">
+            <p className="text-gray-600 text-lg mb-8">
+              Le partenze per {dest.name} sono in fase di aggiornamento.
+              <br />
+              Nel frattempo, scopri i nostri fantastici tour e crociere verso altre destinazioni!
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/tours"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#C41E2F] px-6 py-3 text-white font-semibold transition-colors hover:bg-[#a3182a]"
+              >
+                <MapPin className="h-5 w-5" />
+                Esplora tutti i Tour
+              </Link>
+              <Link
+                href="/crociere"
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-[#1B2D4F] px-6 py-3 text-[#1B2D4F] font-semibold transition-colors hover:bg-[#1B2D4F] hover:text-white"
+              >
+                <Ship className="h-5 w-5" />
+                Scopri le Crociere
+              </Link>
             </div>
           </div>
         </section>
