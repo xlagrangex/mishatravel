@@ -76,22 +76,54 @@ export interface UmamiPageviewSeries {
   sessions: UmamiPageview[]
 }
 
+// ── Raw API response types (Umami Cloud format) ─────────
+
+interface RawCloudStats {
+  pageviews: number
+  visitors: number
+  visits: number
+  bounces: number
+  totaltime: number
+  comparison: {
+    pageviews: number
+    visitors: number
+    visits: number
+    bounces: number
+    totaltime: number
+  }
+}
+
 // ── API Functions ────────────────────────────────────────
 
 /** Get summary stats for a period (pageviews, visitors, bounces, avg time) */
 export async function getStats(period = "30d"): Promise<UmamiStats> {
   const { startAt, endAt } = dateRange(period)
-  return umamiGet<UmamiStats>(`/websites/${WEBSITE_ID}/stats`, { startAt, endAt })
+  const raw = await umamiGet<RawCloudStats>(`/websites/${WEBSITE_ID}/stats`, { startAt, endAt })
+
+  // Normalize Cloud format → our format
+  const comp = raw.comparison ?? raw
+  return {
+    pageviews: { value: raw.pageviews ?? 0, prev: comp.pageviews ?? 0 },
+    visitors: { value: raw.visitors ?? 0, prev: comp.visitors ?? 0 },
+    visits: { value: raw.visits ?? 0, prev: comp.visits ?? 0 },
+    bounces: { value: raw.bounces ?? 0, prev: comp.bounces ?? 0 },
+    totaltime: { value: raw.totaltime ?? 0, prev: comp.totaltime ?? 0 },
+  }
 }
 
 /** Get pageview + session series for charting */
 export async function getPageviews(period = "30d", unit = "day"): Promise<UmamiPageviewSeries> {
   const { startAt, endAt } = dateRange(period)
-  return umamiGet<UmamiPageviewSeries>(`/websites/${WEBSITE_ID}/pageviews`, {
-    startAt,
-    endAt,
-    unit,
-  })
+  const raw = await umamiGet<{ pageviews: unknown[]; sessions: unknown[] }>(
+    `/websites/${WEBSITE_ID}/pageviews`,
+    { startAt, endAt, unit }
+  )
+
+  // Normalize: Cloud returns [{ x: "2026-02-26", y: 5 }] or [{ date: "...", views: N }]
+  return {
+    pageviews: (raw.pageviews ?? []).map(normalizePoint),
+    sessions: (raw.sessions ?? []).map(normalizePoint),
+  }
 }
 
 /** Get metrics by type: url, referrer, browser, os, device, country, event */
@@ -101,15 +133,35 @@ export async function getMetrics(
   limit = 10
 ): Promise<UmamiMetric[]> {
   const { startAt, endAt } = dateRange(period)
-  return umamiGet<UmamiMetric[]>(`/websites/${WEBSITE_ID}/metrics`, {
+  const raw = await umamiGet<unknown[]>(`/websites/${WEBSITE_ID}/metrics`, {
     startAt,
     endAt,
     type,
     limit: limit.toString(),
   })
+
+  return (raw ?? []).map(normalizeMetric)
 }
 
 /** Check if Umami is configured (env vars present) */
 export function isUmamiConfigured(): boolean {
   return Boolean(API_TOKEN && WEBSITE_ID)
+}
+
+// ── Normalize helpers ────────────────────────────────────
+
+function normalizePoint(item: unknown): UmamiPageview {
+  const obj = item as Record<string, unknown>
+  return {
+    x: String(obj.x ?? obj.date ?? obj.t ?? ""),
+    y: Number(obj.y ?? obj.views ?? obj.visitors ?? obj.value ?? 0),
+  }
+}
+
+function normalizeMetric(item: unknown): UmamiMetric {
+  const obj = item as Record<string, unknown>
+  return {
+    x: String(obj.x ?? obj.value ?? obj.name ?? ""),
+    y: Number(obj.y ?? obj.count ?? obj.views ?? 0),
+  }
 }
