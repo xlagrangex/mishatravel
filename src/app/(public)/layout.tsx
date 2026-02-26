@@ -10,16 +10,19 @@ import CookieConsentProvider from "@/components/cookie/CookieConsentProvider";
 import { getAuthContext } from "@/lib/supabase/auth";
 import { getAgencyByUserId } from "@/lib/supabase/queries/agency-dashboard";
 import { getPublishedDestinations, getTourCountsPerDestination } from "@/lib/supabase/queries/destinations";
+import { getPublishedMacroAreas, getMegaMenuMode } from "@/lib/supabase/queries/macro-areas";
 
 export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [{ user, role, permissions }, destinations, productCounts] = await Promise.all([
+  const [{ user, role, permissions }, destinations, productCounts, macroAreas, megaMenuMode] = await Promise.all([
     getAuthContext(),
     getPublishedDestinations(),
     getTourCountsPerDestination(),
+    getPublishedMacroAreas(),
+    getMegaMenuMode(),
   ]);
 
   let displayName: string | undefined;
@@ -28,7 +31,7 @@ export default async function PublicLayout({
     displayName = agency?.business_name ?? undefined;
   }
 
-  // Group destinations by macro_area for the mega menu (fully dynamic)
+  // Group destinations by macro_area for the mega menu
   const groupedRaw: Record<string, { name: string; slug: string; hasProducts: boolean }[]> = {};
   for (const dest of destinations) {
     const area = dest.macro_area ?? "Altro";
@@ -39,15 +42,33 @@ export default async function PublicLayout({
       hasProducts: (productCounts[dest.slug] ?? 0) > 0,
     });
   }
-  // Sort areas alphabetically, but keep "Percorsi Fluviali" always last
+
   const RIVER_AREA = "Percorsi Fluviali";
-  const sortedAreas = Object.keys(groupedRaw)
-    .filter((a) => groupedRaw[a].length > 0)
-    .sort((a, b) => {
-      if (a === RIVER_AREA) return 1;
-      if (b === RIVER_AREA) return -1;
-      return a.localeCompare(b, "it");
-    });
+  let sortedAreas: string[];
+
+  if (megaMenuMode === "manual") {
+    // Manual mode: use macro_areas table sort_order, only show published areas
+    const maNames = new Set(macroAreas.map((a) => a.name));
+    sortedAreas = macroAreas
+      .map((a) => a.name)
+      .filter((name) => groupedRaw[name]?.length > 0);
+    // Include any areas not in the table (like "Altro") at the end
+    for (const area of Object.keys(groupedRaw)) {
+      if (!maNames.has(area) && groupedRaw[area].length > 0) {
+        sortedAreas.push(area);
+      }
+    }
+  } else {
+    // Dynamic mode: alphabetical, "Percorsi Fluviali" always last
+    sortedAreas = Object.keys(groupedRaw)
+      .filter((a) => groupedRaw[a].length > 0)
+      .sort((a, b) => {
+        if (a === RIVER_AREA) return 1;
+        if (b === RIVER_AREA) return -1;
+        return a.localeCompare(b, "it");
+      });
+  }
+
   const destinationsByArea: Record<string, { name: string; slug: string; hasProducts: boolean }[]> = {};
   for (const area of sortedAreas) {
     destinationsByArea[area] = groupedRaw[area];

@@ -1,5 +1,6 @@
 import { getPublishedToursWithDepartures } from "@/lib/supabase/queries/tours";
 import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
+import { getPublishedMacroAreas } from "@/lib/supabase/queries/macro-areas";
 import {
   tours as mockTours,
   destinations as mockDestinations,
@@ -13,17 +14,21 @@ export const revalidate = 300; // ISR: revalidate every 5 minutes
 export default async function ToursPage() {
   let toursData: Awaited<ReturnType<typeof getPublishedToursWithDepartures>> = [];
   let destinationsData: Awaited<ReturnType<typeof getPublishedDestinations>> = [];
+  let macroAreasData: Awaited<ReturnType<typeof getPublishedMacroAreas>> = [];
 
   try {
-    const [t, d] = await Promise.all([
+    const [t, d, m] = await Promise.all([
       getPublishedToursWithDepartures(),
       getPublishedDestinations(),
+      getPublishedMacroAreas(),
     ]);
     toursData = t;
     destinationsData = d;
+    macroAreasData = m;
   } catch {
     toursData = [];
     destinationsData = [];
+    macroAreasData = [];
   }
 
   // If Supabase returns empty, fallback to mock data
@@ -67,5 +72,13 @@ export default async function ToursPage() {
           macroArea: d.macro_area ?? "Altro",
         }));
 
-  return <ToursPageClient tours={tours} destinations={destinations} />;
+  // Macro areas for navigation boxes (exclude "Percorsi Fluviali" since tours page is for land tours)
+  const macroAreas = macroAreasData
+    .filter((a) => a.name !== "Percorsi Fluviali")
+    .map((a) => ({
+      name: a.name,
+      image: a.cover_image_url || "",
+    }));
+
+  return <ToursPageClient tours={tours} destinations={destinations} macroAreas={macroAreas} />;
 }

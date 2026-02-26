@@ -3,6 +3,22 @@
 // =============================================================================
 
 // -----------------------------------------------------------------------------
+// Macro Areas
+// -----------------------------------------------------------------------------
+
+export interface MacroArea {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  cover_image_url: string | null;
+  sort_order: number;
+  status: 'draft' | 'published';
+  created_at: string;
+  updated_at: string;
+}
+
+// -----------------------------------------------------------------------------
 // Destinations
 // -----------------------------------------------------------------------------
 
@@ -16,6 +32,7 @@ export interface Destination {
   cover_image_url: string | null;
   coordinate: string | null;
   macro_area: string | null;
+  macro_area_id: string | null;
   sort_order: number;
   status: DestinationStatus;
   created_at: string;

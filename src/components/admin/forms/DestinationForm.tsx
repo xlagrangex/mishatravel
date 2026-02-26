@@ -16,7 +16,7 @@ import type { Destination } from "@/lib/types";
 import { saveDestination } from "@/app/admin/destinazioni/actions";
 import MapPicker from "@/components/admin/MapPicker";
 import ImageUpload from "@/components/admin/ImageUpload";
-import { CreatableSelect } from "@/components/ui/creatable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
@@ -26,7 +26,7 @@ import { toast } from "sonner";
 const destinationSchema = z.object({
   name: z.string().min(1, "Il nome è obbligatorio"),
   slug: z.string().min(1, "Lo slug è obbligatorio"),
-  macro_area: z.string().optional(),
+  macro_area_id: z.string().optional(),
   description: z.string().optional(),
   coordinate: z.string().optional(),
   cover_image_url: z.string().optional(),
@@ -62,7 +62,7 @@ function generateSlug(text: string): string {
 
 interface DestinationFormProps {
   initialData?: Destination;
-  macroAreas?: string[];
+  macroAreas?: { id: string; name: string }[];
 }
 
 export default function DestinationForm({ initialData, macroAreas = [] }: DestinationFormProps) {
@@ -78,7 +78,7 @@ export default function DestinationForm({ initialData, macroAreas = [] }: Destin
     defaultValues: {
       name: initialData?.name ?? "",
       slug: initialData?.slug ?? "",
-      macro_area: initialData?.macro_area ?? "",
+      macro_area_id: initialData?.macro_area_id ?? "",
       description: initialData?.description ?? "",
       coordinate: initialData?.coordinate ?? "",
       cover_image_url: initialData?.cover_image_url ?? "",
@@ -173,19 +173,31 @@ export default function DestinationForm({ initialData, macroAreas = [] }: Destin
 
               {/* Area Geografica */}
               <div className="space-y-2">
-                <Label htmlFor="macro_area">Area Geografica</Label>
+                <Label htmlFor="macro_area_id">Area Geografica</Label>
                 <Controller
-                  name="macro_area"
+                  name="macro_area_id"
                   control={control}
                   render={({ field }) => (
-                    <CreatableSelect
+                    <Select
                       value={field.value || ""}
-                      onChange={field.onChange}
-                      options={macroAreas}
-                      placeholder="Seleziona o crea area geografica"
-                    />
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleziona area geografica" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {macroAreas.map((area) => (
+                          <SelectItem key={area.id} value={area.id}>
+                            {area.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Gestisci le macro aree dalla tab &ldquo;Macro Aree&rdquo; nella sezione Destinazioni.
+                </p>
               </div>
 
               {/* Descrizione */}

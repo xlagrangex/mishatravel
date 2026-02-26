@@ -14,15 +14,6 @@ interface MacroAreaNavigationProps {
   onSelect: (area: string) => void;
 }
 
-const AREA_IMAGES: Record<string, string> = {
-  Europa: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&h=600&fit=crop",
-  "Medio Oriente": "https://images.unsplash.com/photo-1579606032821-4e6161c81571?w=800&h=600&fit=crop",
-  Asia: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&h=600&fit=crop",
-  "Asia Centrale": "https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?w=800&h=600&fit=crop",
-  Africa: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&h=600&fit=crop",
-  "America Latina": "https://images.unsplash.com/photo-1526392060635-9d6019884377?w=800&h=600&fit=crop",
-};
-
 export default function MacroAreaNavigation({ areas, selectedArea, onSelect }: MacroAreaNavigationProps) {
   if (areas.length === 0) return null;
 
@@ -30,7 +21,7 @@ export default function MacroAreaNavigation({ areas, selectedArea, onSelect }: M
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
       {areas.map((area) => {
         const isSelected = selectedArea === area.name;
-        const img = area.image || AREA_IMAGES[area.name] || "";
+        const img = area.image || "";
         return (
           <button
             key={area.name}

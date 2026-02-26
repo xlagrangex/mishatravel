@@ -24,11 +24,15 @@ import {
 } from "@/lib/filters";
 import type { TourListItemEnriched } from "@/lib/supabase/queries/tours";
 
-const MACRO_AREAS = ["Europa", "Medio Oriente", "Asia", "Asia Centrale", "Africa", "America Latina"] as const;
+interface MacroAreaItem {
+  name: string;
+  image: string;
+}
 
 interface ToursPageClientProps {
   tours: TourListItemEnriched[];
   destinations: { name: string; slug: string; macroArea: string }[];
+  macroAreas: MacroAreaItem[];
 }
 
 type FilterState = {
@@ -41,7 +45,7 @@ type FilterState = {
   sortBy: SortOption;
 };
 
-export default function ToursPageClient({ tours, destinations }: ToursPageClientProps) {
+export default function ToursPageClient({ tours, destinations, macroAreas }: ToursPageClientProps) {
   const priceBounds = useMemo(() => {
     const prices = tours.map((t) => parsePrice(t.a_partire_da)).filter((p) => p > 0);
     return { min: Math.min(...prices, 0), max: Math.max(...prices, 10000) };
@@ -59,17 +63,17 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
 
   // Macro area infos
   const areaInfos = useMemo(() => {
-    return MACRO_AREAS.map((area) => ({
-      name: area,
-      image: "",
-      tourCount: tours.filter((t) => t.destination_macro_area === area).length,
-    })).filter((a) => a.tourCount > 0 || MACRO_AREAS.includes(a.name as typeof MACRO_AREAS[number]));
-  }, [tours]);
+    return macroAreas.map((area) => ({
+      name: area.name,
+      image: area.image,
+      tourCount: tours.filter((t) => t.destination_macro_area === area.name).length,
+    }));
+  }, [tours, macroAreas]);
 
   // Location options for hero search (macro areas)
   const locationOptions = useMemo(
-    () => MACRO_AREAS.map((a) => ({ value: a, label: a })),
-    [],
+    () => macroAreas.map((a) => ({ value: a.name, label: a.name })),
+    [macroAreas],
   );
 
   // Destination options (filtered by selected macro areas)
@@ -198,10 +202,10 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
       key: "macroAreas",
       label: "Destinazione",
       type: "checkbox" as const,
-      options: MACRO_AREAS.map((a) => ({
-        value: a,
-        label: a,
-        count: tours.filter((t) => t.destination_macro_area === a).length,
+      options: macroAreas.map((a) => ({
+        value: a.name,
+        label: a.name,
+        count: tours.filter((t) => t.destination_macro_area === a.name).length,
       })),
     },
     ...(destOptions.length > 0
@@ -240,7 +244,7 @@ export default function ToursPageClient({ tours, destinations }: ToursPageClient
       label: "Disponibilita",
       type: "toggle" as const,
     },
-  ], [tours, destOptions, priceBounds]);
+  ], [tours, macroAreas, destOptions, priceBounds]);
 
   const sidebarState: Record<string, string[] | [number, number] | boolean> = {
     macroAreas: filters.macroAreas,

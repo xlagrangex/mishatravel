@@ -9,7 +9,7 @@ const destinationSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1, 'Il nome è obbligatorio'),
   slug: z.string().min(1, 'Lo slug è obbligatorio'),
-  macro_area: z.string().optional().nullable(),
+  macro_area_id: z.string().uuid().optional().nullable(),
   description: z.string().optional().nullable(),
   coordinate: z.string().optional().nullable(),
   cover_image_url: z.string().optional().nullable(),
@@ -27,10 +27,22 @@ export async function saveDestination(formData: z.infer<typeof destinationSchema
   const supabase = createAdminClient()
   const { id, ...data } = parsed.data
 
+  // Resolve macro_area_id → legacy macro_area text for backward compat
+  let macroAreaName: string | null = null
+  if (data.macro_area_id) {
+    const { data: maRow } = await supabase
+      .from('macro_areas')
+      .select('name')
+      .eq('id', data.macro_area_id)
+      .single()
+    macroAreaName = maRow?.name ?? null
+  }
+
   // Clean empty strings to null
   const cleanData = {
     ...data,
-    macro_area: data.macro_area || null,
+    macro_area_id: data.macro_area_id || null,
+    macro_area: macroAreaName,
     description: data.description || null,
     coordinate: data.coordinate || null,
     cover_image_url: data.cover_image_url || null,

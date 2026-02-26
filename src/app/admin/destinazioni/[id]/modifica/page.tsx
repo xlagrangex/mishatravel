@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import DestinationForm from "@/components/admin/forms/DestinationForm";
 import ActivityLog from "@/components/admin/ActivityLog";
-import { getDestinationById, getDistinctMacroAreas } from "@/lib/supabase/queries/destinations";
+import { getDestinationById } from "@/lib/supabase/queries/destinations";
+import { getMacroAreaOptions } from "@/lib/supabase/queries/macro-areas";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function ModificaDestinazionePage({
   const { id } = await params;
   const [destination, macroAreas] = await Promise.all([
     getDestinationById(id),
-    getDistinctMacroAreas(),
+    getMacroAreaOptions(),
   ]);
 
   if (!destination) notFound();
