@@ -251,6 +251,7 @@ export async function getMediaFolders(): Promise<MediaFolder[]> {
   const { data, error } = await supabase
     .from('media_folders')
     .select('*')
+    .or('type.eq.image,type.is.null')
     .order('name', { ascending: true })
 
   if (error) throw new Error(`Errore recupero cartelle: ${error.message}`)
@@ -261,7 +262,8 @@ export async function getMediaFolderCounts(): Promise<Record<string, number>> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('media')
-    .select('folder_id')
+    .select('folder_id, mime_type')
+    .not('mime_type', 'eq', 'application/pdf')
 
   if (error) return {}
 
@@ -275,7 +277,8 @@ export async function getMediaFolderCounts(): Promise<Record<string, number>> {
 
 export async function createFolder(
   name: string,
-  parentId?: string | null
+  parentId?: string | null,
+  type: 'image' | 'pdf' = 'image'
 ): Promise<MediaFolder> {
   // Max depth check: 3 levels (root > child > grandchild)
   if (parentId) {
@@ -288,7 +291,7 @@ export async function createFolder(
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('media_folders')
-    .insert({ name, parent_id: parentId ?? null })
+    .insert({ name, parent_id: parentId ?? null, type })
     .select()
     .single()
 
@@ -465,14 +468,50 @@ export function buildFolderTree(
 }
 
 /** Lookup folder_id by bucket name (for backwards compatibility) */
-export async function getFolderIdByName(name: string): Promise<string | null> {
+export async function getFolderIdByName(name: string, type: 'image' | 'pdf' = 'image'): Promise<string | null> {
   const supabase = createAdminClient()
   const { data } = await supabase
     .from('media_folders')
     .select('id')
     .eq('name', name)
+    .eq('type', type)
     .is('parent_id', null)
     .single()
 
   return data?.id ?? null
+}
+
+// ============================================================
+// PDF-specific functions
+// ============================================================
+
+/** Get only PDF folders */
+export async function getPdfFolders(): Promise<MediaFolder[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('media_folders')
+    .select('*')
+    .eq('type', 'pdf')
+    .order('name', { ascending: true })
+
+  if (error) throw new Error(`Errore recupero cartelle PDF: ${error.message}`)
+  return (data ?? []) as MediaFolder[]
+}
+
+/** Get folder counts for PDFs only */
+export async function getPdfFolderCounts(): Promise<Record<string, number>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('media')
+    .select('folder_id')
+    .eq('mime_type', 'application/pdf')
+
+  if (error) return {}
+
+  const counts: Record<string, number> = {}
+  for (const row of data ?? []) {
+    const fid = row.folder_id ?? 'none'
+    counts[fid] = (counts[fid] || 0) + 1
+  }
+  return counts
 }

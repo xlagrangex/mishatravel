@@ -14,6 +14,8 @@ import {
   renameFolder,
   deleteFolder,
   getFolderIdByName,
+  getPdfFolders,
+  getPdfFolderCounts,
 } from '@/lib/supabase/queries/media'
 import type { MediaItem, MediaFolder } from '@/lib/types'
 import { logActivity } from '@/lib/supabase/audit'
@@ -178,10 +180,11 @@ export async function getMediaFolderCountsAction(): Promise<Record<string, numbe
 
 export async function createFolderAction(
   name: string,
-  parentId?: string | null
+  parentId?: string | null,
+  type: 'image' | 'pdf' = 'image'
 ): Promise<ActionResult> {
   try {
-    await createFolder(name, parentId)
+    await createFolder(name, parentId, type)
 
     logActivity({
       action: 'media.folder_created',
@@ -240,4 +243,27 @@ export async function deleteFolderAction(folderId: string): Promise<ActionResult
       error: err instanceof Error ? err.message : 'Errore sconosciuto',
     }
   }
+}
+
+// ============================================================
+// PDF-specific actions
+// ============================================================
+
+export async function getPdfItemsAction(options: {
+  folderId?: string
+  search?: string
+  page?: number
+  pageSize?: number
+  sortBy?: 'created_at' | 'filename' | 'file_size'
+  sortOrder?: 'asc' | 'desc'
+}): Promise<{ items: MediaItem[]; total: number }> {
+  return getMediaItems({ ...options, mimeTypePrefix: 'application/pdf' })
+}
+
+export async function getPdfFoldersAction(): Promise<MediaFolder[]> {
+  return getPdfFolders()
+}
+
+export async function getPdfFolderCountsAction(): Promise<Record<string, number>> {
+  return getPdfFolderCounts()
 }

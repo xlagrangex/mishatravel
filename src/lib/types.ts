@@ -409,6 +409,7 @@ export interface MediaFolder {
   id: string;
   name: string;
   parent_id: string | null;
+  type: 'image' | 'pdf' | null;
   created_at: string;
 }
 
