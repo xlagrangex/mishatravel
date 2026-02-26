@@ -72,7 +72,7 @@ export default async function CataloghiPage() {
                             asChild
                             className="w-full bg-[#C41E2F] hover:bg-[#A31825] text-white"
                           >
-                            <a href={cat.pdf_url} download target="_blank" rel="noopener noreferrer">
+                            <a href={cat.pdf_url} download target="_blank" rel="noopener noreferrer" data-umami-event="catalog_downloaded" data-umami-event-title={cat.title}>
                               <Download className="size-4 mr-2" />
                               Scarica PDF
                             </a>

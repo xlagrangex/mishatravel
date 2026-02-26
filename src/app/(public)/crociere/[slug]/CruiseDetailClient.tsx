@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Check, X, ChevronRight, MapPin as MapPinIcon } from "lucide-react";
@@ -73,6 +73,10 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [configuratorOpen, setConfiguratorOpen] = useState(false);
   const [preselectedDepId, setPreselectedDepId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    window.umami?.track("cruise_viewed", { slug: cruise.slug, ship: cruise.ship?.name });
+  }, [cruise.slug, cruise.ship?.name]);
 
   const priceNum = parsePrice(cruise.a_partire_da) || null;
   const coverImage = cruise.cover_image_url || "/images/placeholder.jpg";

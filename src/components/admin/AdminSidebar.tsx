@@ -24,6 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
+  BarChart3,
   History,
   Settings,
 } from "lucide-react";
@@ -53,6 +54,7 @@ const navItems = [
   { label: "Estratti Conto", href: "/admin/estratti-conto", icon: FileSpreadsheet, pathSegment: "estratti-conto" },
   { label: "Utenti", href: "/admin/utenti", icon: UserCog, pathSegment: "utenti" },
   { type: "separator" as const, label: "Sistema" },
+  { label: "Analytics", href: "/admin/analytics", icon: BarChart3, pathSegment: "analytics" },
   { label: "Storico", href: "/admin/storico", icon: History, pathSegment: "storico" },
   { label: "Impostazioni", href: "/admin/impostazioni", icon: Settings, pathSegment: "impostazioni" },
 ];

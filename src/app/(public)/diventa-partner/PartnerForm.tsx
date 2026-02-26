@@ -67,6 +67,7 @@ export default function PartnerForm() {
       setServerError(result.error);
     } else {
       setSubmitted(true);
+      window.umami?.track("partner_form_submitted");
     }
   };
 

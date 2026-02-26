@@ -75,6 +75,7 @@ export default function ContattiForm() {
       setError(result.error);
     } else {
       setSuccess(true);
+      window.umami?.track("contact_form_submitted");
       reset();
     }
   }
