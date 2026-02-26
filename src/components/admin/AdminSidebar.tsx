@@ -101,12 +101,12 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-white transition-all duration-300",
+        "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border bg-white transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo / Brand */}
-      <div className="flex h-16 items-center justify-between border-b border-border px-4">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
         {!collapsed && (
           <Link href="/admin" className="flex items-center">
             <NextImage
@@ -189,7 +189,7 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
       </nav>
 
       {/* Go to public site */}
-      <div className="border-t border-border px-2 py-2">
+      <div className="shrink-0 border-t border-border px-2 py-2">
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -216,7 +216,7 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
       </div>
 
       {/* Collapse toggle */}
-      <div className="border-t border-border p-2">
+      <div className="shrink-0 border-t border-border p-2">
         <Button
           variant="ghost"
           size="sm"
