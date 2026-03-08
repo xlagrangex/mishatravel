@@ -125,11 +125,6 @@ export async function getPublishedCruises(): Promise<CruiseListItem[]> {
   const today = new Date().toISOString().slice(0, 10)
 
   return (data ?? [])
-    .filter((row: any) => {
-      const deps = row.departures ?? []
-      if (deps.length === 0) return true
-      return deps.some((d: any) => d.data_partenza >= today)
-    })
     .map((row: any) => ({
       id: row.id,
       title: row.title,
@@ -268,11 +263,6 @@ export async function getCruisesForDestination(destinationId: string): Promise<C
   const today = new Date().toISOString().slice(0, 10)
 
   return (data ?? [])
-    .filter((row: any) => {
-      const deps = row.departures ?? []
-      if (deps.length === 0) return true
-      return deps.some((d: any) => d.data_partenza >= today)
-    })
     .map((row: any) => ({
       id: row.id,
       title: row.title,
@@ -332,11 +322,6 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
   const today = new Date().toISOString().slice(0, 10)
 
   return (data ?? [])
-    .filter((row: any) => {
-      const deps = row.departures ?? []
-      if (deps.length === 0) return true
-      return deps.some((d: any) => d.data_partenza >= today)
-    })
     .map((row: any) => ({
       id: row.id,
       title: row.title,
@@ -408,11 +393,6 @@ export async function getPublishedCruisesWithDepartures(): Promise<CruiseListIte
   const today = new Date().toISOString().slice(0, 10)
 
   return (data ?? [])
-    .filter((row: any) => {
-      const deps = row.departures ?? []
-      if (deps.length === 0) return true
-      return deps.some((d: any) => d.data_partenza >= today)
-    })
     .map((row: any) => ({
       id: row.id,
       title: row.title,
@@ -589,11 +569,6 @@ export async function getRelatedCruises(
   const today = new Date().toISOString().slice(0, 10)
 
   return (data ?? [])
-    .filter((row: any) => {
-      const deps = row.departures ?? []
-      if (deps.length === 0) return true
-      return deps.some((d: any) => d.data_partenza >= today)
-    })
     .slice(0, limit)
     .map((row: any) => ({
       id: row.id,

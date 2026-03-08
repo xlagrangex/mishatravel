@@ -81,3 +81,30 @@ export async function markAllAsRead(userId: string): Promise<void> {
     .eq('user_id', userId)
     .eq('is_read', false)
 }
+
+/**
+ * Create a notification for all admin users (super_admin + admin roles).
+ */
+export async function notifyAdmins(opts: {
+  title: string
+  message?: string
+  link?: string
+}): Promise<void> {
+  const supabase = createAdminClient()
+
+  const { data: adminUsers } = await supabase
+    .from('user_roles')
+    .select('user_id')
+    .in('role', ['super_admin', 'admin'])
+
+  if (!adminUsers || adminUsers.length === 0) return
+
+  const rows = adminUsers.map((u) => ({
+    user_id: u.user_id,
+    title: opts.title,
+    message: opts.message ?? null,
+    link: opts.link ?? null,
+  }))
+
+  await supabase.from('notifications').insert(rows)
+}

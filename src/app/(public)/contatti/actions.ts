@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendAdminNotification } from "@/lib/email/brevo";
 import { adminNewContactFormEmail } from "@/lib/email/templates";
+import { notifyAdmins } from "@/lib/supabase/queries/notifications";
 
 export async function submitContactForm(data: {
   nome: string;
@@ -34,21 +35,28 @@ export async function submitContactForm(data: {
       return { error: "Errore durante l'invio del messaggio. Riprova." };
     }
 
-    // Send admin notification email (non-blocking)
+    // Send admin notification email + in-app notification (non-blocking)
     try {
-      await sendAdminNotification(
-        `Nuovo messaggio dal form contatti: ${data.oggetto}`,
-        adminNewContactFormEmail(
-          data.nome,
-          data.cognome,
-          data.email,
-          data.oggetto,
-          data.messaggio,
-          data.telefono
-        )
-      );
+      await Promise.all([
+        sendAdminNotification(
+          `Nuovo messaggio dal form contatti: ${data.oggetto}`,
+          adminNewContactFormEmail(
+            data.nome,
+            data.cognome,
+            data.email,
+            data.oggetto,
+            data.messaggio,
+            data.telefono
+          )
+        ),
+        notifyAdmins({
+          title: `Nuovo messaggio: ${data.oggetto}`,
+          message: `Da ${data.nome} ${data.cognome} (${data.email})`,
+          link: "/admin/messaggi",
+        }),
+      ]);
     } catch (emailErr) {
-      console.error("Error sending admin notification email:", emailErr);
+      console.error("Error sending admin notification:", emailErr);
     }
 
     return { error: null };

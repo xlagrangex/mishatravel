@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendAdminNotification } from "@/lib/email/brevo";
 import { adminNewComplaintEmail } from "@/lib/email/templates";
+import { notifyAdmins } from "@/lib/supabase/queries/notifications";
 
 export async function submitComplaint(data: {
   nome_cognome: string;
@@ -40,16 +41,23 @@ export async function submitComplaint(data: {
     }
 
     try {
-      await sendAdminNotification(
-        `Nuovo reclamo ricevuto - Pratica: ${data.n_pratica || "N/D"}`,
-        adminNewComplaintEmail(
-          data.nome_cognome,
-          data.email,
-          data.n_pratica,
-          data.descrizione,
-          data.destinazione
-        )
-      );
+      await Promise.all([
+        sendAdminNotification(
+          `Nuovo reclamo ricevuto - Pratica: ${data.n_pratica || "N/D"}`,
+          adminNewComplaintEmail(
+            data.nome_cognome,
+            data.email,
+            data.n_pratica,
+            data.descrizione,
+            data.destinazione
+          )
+        ),
+        notifyAdmins({
+          title: `Nuovo reclamo - Pratica: ${data.n_pratica || "N/D"}`,
+          message: `Da ${data.nome_cognome} (${data.email})`,
+          link: "/admin/messaggi",
+        }),
+      ]);
     } catch (emailErr) {
       console.error("Error sending admin notification:", emailErr);
     }

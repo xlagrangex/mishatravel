@@ -178,11 +178,6 @@ export async function getDestinationWithTours(
   const today = new Date().toISOString().slice(0, 10)
 
   const tours: TourListItem[] = (toursResult.data ?? [])
-    .filter((row: any) => {
-      const deps = row.departures ?? []
-      if (deps.length === 0) return true
-      return deps.some((d: any) => d.data_partenza >= today)
-    })
     .map((row: any) => ({
       id: row.id,
       title: row.title,
@@ -203,11 +198,6 @@ export async function getDestinationWithTours(
     }))
 
   const cruises: CruiseListItem[] = (cruisesResult.data ?? [])
-    .filter((row: any) => {
-      const deps = row.departures ?? []
-      if (deps.length === 0) return true
-      return deps.some((d: any) => d.data_partenza >= today)
-    })
     .map((row: any) => ({
       id: row.id,
       title: row.title,
@@ -259,20 +249,14 @@ export async function getTourCountsPerDestination(): Promise<Record<string, numb
     const r = row as any
     const slug = r.destination?.slug
     if (!slug) continue
-    const deps = r.departures ?? []
-    if (deps.length === 0 || deps.some((d: any) => d.data_partenza >= today)) {
-      counts[slug] = (counts[slug] || 0) + 1
-    }
+    counts[slug] = (counts[slug] || 0) + 1
   }
 
   for (const row of cruisesResult.data ?? []) {
     const r = row as any
     const slug = r.destination?.slug
     if (!slug) continue
-    const deps = r.departures ?? []
-    if (deps.length === 0 || deps.some((d: any) => d.data_partenza >= today)) {
-      counts[slug] = (counts[slug] || 0) + 1
-    }
+    counts[slug] = (counts[slug] || 0) + 1
   }
 
   return counts

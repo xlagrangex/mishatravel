@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendAdminNotification } from "@/lib/email/brevo";
 import { adminNewPartnerInquiryEmail } from "@/lib/email/templates";
+import { notifyAdmins } from "@/lib/supabase/queries/notifications";
 
 export async function submitPartnerInquiry(data: {
   nome_cognome: string;
@@ -34,19 +35,26 @@ export async function submitPartnerInquiry(data: {
       return { error: "Errore durante l'invio. Riprova." };
     }
 
-    // Send admin notification (non-blocking)
+    // Send admin notification email + in-app notification (non-blocking)
     try {
-      await sendAdminNotification(
-        `Nuova richiesta partnership: ${data.agenzia}`,
-        adminNewPartnerInquiryEmail(
-          data.nome_cognome,
-          data.agenzia,
-          data.email,
-          data.messaggio,
-          data.citta,
-          data.telefono
-        )
-      );
+      await Promise.all([
+        sendAdminNotification(
+          `Nuova richiesta partnership: ${data.agenzia}`,
+          adminNewPartnerInquiryEmail(
+            data.nome_cognome,
+            data.agenzia,
+            data.email,
+            data.messaggio,
+            data.citta,
+            data.telefono
+          )
+        ),
+        notifyAdmins({
+          title: `Nuova richiesta partnership: ${data.agenzia}`,
+          message: `Da ${data.nome_cognome} (${data.email})`,
+          link: "/admin/messaggi",
+        }),
+      ]);
     } catch (emailErr) {
       console.error("Error sending admin notification:", emailErr);
     }
