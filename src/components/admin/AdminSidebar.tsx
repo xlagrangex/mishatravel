@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import NextImage from "next/image";
 import { usePathname } from "next/navigation";
@@ -30,6 +31,33 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+/** Poll sidebar badge counts from the API every POLL_INTERVAL ms */
+const POLL_INTERVAL = 60_000;
+
+function useBadgeCounts(): Record<string, number> {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  const fetchCounts = useCallback(async () => {
+    try {
+      const res = await fetch("/admin/api/sidebar-counts");
+      if (res.ok) {
+        const data = await res.json();
+        setCounts(data);
+      }
+    } catch {
+      // Silently ignore fetch errors
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCounts();
+    const interval = setInterval(fetchCounts, POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [fetchCounts]);
+
+  return counts;
+}
 
 /**
  * Each nav item either has a href (link) or is a separator.
@@ -62,11 +90,14 @@ const navItems = [
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  badgeCounts?: Record<string, number>;
 }
 
-export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
+export default function AdminSidebar({ collapsed, onToggle, badgeCounts: externalCounts }: AdminSidebarProps) {
   const pathname = usePathname();
   const { canAccess, role } = useUserPermissions();
+  const polledCounts = useBadgeCounts();
+  const badgeCounts = externalCounts ?? polledCounts;
 
   // Filter nav items based on permissions
   const visibleItems = navItems.filter((item) => {
@@ -154,6 +185,8 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
                 : pathname.startsWith(navItem.href);
             const Icon = navItem.icon;
 
+            const badgeCount = badgeCounts[navItem.pathSegment] ?? 0;
+
             const linkContent = (
               <Link
                 href={navItem.href}
@@ -165,8 +198,22 @@ export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps)
                   collapsed && "justify-center px-2"
                 )}
               >
-                <Icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>{navItem.label}</span>}
+                <span className="relative shrink-0">
+                  <Icon className="h-5 w-5" />
+                  {collapsed && badgeCount > 0 && (
+                    <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#C41E2F]" />
+                  )}
+                </span>
+                {!collapsed && (
+                  <>
+                    <span className="flex-1">{navItem.label}</span>
+                    {badgeCount > 0 && (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C41E2F] px-1.5 text-[10px] font-semibold leading-none text-white">
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </span>
+                    )}
+                  </>
+                )}
               </Link>
             );
 
