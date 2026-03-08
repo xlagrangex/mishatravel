@@ -1336,6 +1336,7 @@ export default function QuoteDetailClient({ quote, bankingPresets }: QuoteDetail
 
   const handleRefresh = () => {
     router.refresh()
+    window.dispatchEvent(new Event("sidebar-counts-refresh"))
   }
 
   const handleDeleteDocument = (docId: string) => {

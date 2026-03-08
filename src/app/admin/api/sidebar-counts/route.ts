@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser, getUserRole } from "@/lib/supabase/auth";
 import { getUnreadCount } from "@/lib/supabase/queries/contact-submissions";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   try {
@@ -14,9 +15,20 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const messaggi = await getUnreadCount();
+    const supabase = createAdminClient();
 
-    return NextResponse.json({ messaggi });
+    // Fetch counts in parallel
+    const [messaggi, preventiviResult] = await Promise.all([
+      getUnreadCount(),
+      supabase
+        .from("quote_requests")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["sent", "in_review"]),
+    ]);
+
+    const preventivi = preventiviResult.count ?? 0;
+
+    return NextResponse.json({ messaggi, preventivi });
   } catch (err) {
     console.error("sidebar-counts error:", err);
     return NextResponse.json(

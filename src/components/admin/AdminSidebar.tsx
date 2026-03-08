@@ -53,7 +53,15 @@ function useBadgeCounts(): Record<string, number> {
   useEffect(() => {
     fetchCounts();
     const interval = setInterval(fetchCounts, POLL_INTERVAL);
-    return () => clearInterval(interval);
+
+    // Listen for immediate refresh events (e.g. after marking messages read)
+    const handleRefresh = () => fetchCounts();
+    window.addEventListener("sidebar-counts-refresh", handleRefresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("sidebar-counts-refresh", handleRefresh);
+    };
   }, [fetchCounts]);
 
   return counts;

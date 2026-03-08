@@ -355,12 +355,17 @@ export default function AdminQuotesTable({
 
   const clearSelection = () => setSelectedIds(new Set())
 
+  const refreshSidebarCounts = () => {
+    window.dispatchEvent(new Event("sidebar-counts-refresh"))
+  }
+
   const handleBulkStatusChange = (newStatus: string) => {
     if (!newStatus || visibleSelectedIds.size === 0) return
     startTransition(async () => {
       await bulkUpdateStatus([...visibleSelectedIds], newStatus)
       clearSelection()
       setBulkStatusValue('')
+      refreshSidebarCounts()
     })
   }
 
@@ -369,6 +374,7 @@ export default function AdminQuotesTable({
     startTransition(async () => {
       await bulkArchive([...visibleSelectedIds])
       clearSelection()
+      refreshSidebarCounts()
     })
   }
 
@@ -377,6 +383,7 @@ export default function AdminQuotesTable({
     startTransition(async () => {
       await bulkDelete([...visibleSelectedIds])
       clearSelection()
+      refreshSidebarCounts()
     })
   }
 

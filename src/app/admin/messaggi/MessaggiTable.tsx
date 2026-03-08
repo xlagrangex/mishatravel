@@ -125,12 +125,17 @@ export default function MessaggiTable({ submissions }: MessaggiTableProps) {
   }, [submissions, searchQuery, typeFilter]);
 
   // ---- Actions ----
+  const refreshSidebarCounts = () => {
+    window.dispatchEvent(new Event("sidebar-counts-refresh"));
+  };
+
   const handleToggleRead = (id: string, isRead: boolean) => {
     setActionId(id);
     startTransition(async () => {
       const result = isRead ? await markAsUnread(id) : await markAsRead(id);
       if (result.error) alert(`Errore: ${result.error}`);
       setActionId(null);
+      refreshSidebarCounts();
     });
   };
 
@@ -142,6 +147,7 @@ export default function MessaggiTable({ submissions }: MessaggiTableProps) {
       if (result.error) alert(`Errore: ${result.error}`);
       setActionId(null);
       if (expandedId === id) setExpandedId(null);
+      refreshSidebarCounts();
     });
   };
 
