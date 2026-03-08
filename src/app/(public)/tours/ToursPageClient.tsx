@@ -419,6 +419,7 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
                       duration={tour.durata_notti ?? ""}
                       priceFrom={parsePrice(tour.a_partire_da)}
                       prezzoSuRichiesta={tour.prezzo_su_richiesta}
+                      priceType={(tour.price_type as "da" | "fisso") ?? "da"}
                       image={tour.cover_image_url || "/images/placeholder.jpg"}
                       departures={tour.departures}
                     />

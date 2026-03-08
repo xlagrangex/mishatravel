@@ -19,12 +19,17 @@ type DestItem = { name: string; slug: string; hasProducts: boolean };
 
 type Props = {
   destinationsByArea: Record<string, DestItem[]>;
+  blogEnabled?: boolean;
 };
 
-export default function Header({ destinationsByArea }: Props) {
+export default function Header({ destinationsByArea, blogEnabled = true }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [mobileDestOpen, setMobileDestOpen] = useState(false);
+
+  const navItems = blogEnabled
+    ? mainNavItems
+    : mainNavItems.filter((item) => item.label !== "Blog");
 
   const macroAreas = Object.keys(destinationsByArea).filter(
     (area) => destinationsByArea[area].length > 0
@@ -60,7 +65,7 @@ export default function Header({ destinationsByArea }: Props) {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1">
-          {mainNavItems.map((item) =>
+          {navItems.map((item) =>
             item.label === "Destinazioni" ? (
               <div
                 key={item.href}
@@ -188,7 +193,7 @@ export default function Header({ destinationsByArea }: Props) {
               </SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col py-2 overflow-y-auto max-h-[calc(100vh-80px)]">
-              {mainNavItems.map((item) =>
+              {navItems.map((item) =>
                 item.label === "Destinazioni" ? (
                   <div key={item.href}>
                     <button

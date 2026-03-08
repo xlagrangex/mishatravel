@@ -11,19 +11,23 @@ import { getAuthContext } from "@/lib/supabase/auth";
 import { getAgencyByUserId } from "@/lib/supabase/queries/agency-dashboard";
 import { getPublishedDestinations, getTourCountsPerDestination } from "@/lib/supabase/queries/destinations";
 import { getPublishedMacroAreas, getMegaMenuMode } from "@/lib/supabase/queries/macro-areas";
+import { getSettingsMap } from "@/lib/supabase/queries/settings";
 
 export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [{ user, role, permissions }, destinations, productCounts, macroAreas, megaMenuMode] = await Promise.all([
+  const [{ user, role, permissions }, destinations, productCounts, macroAreas, megaMenuMode, siteSettings] = await Promise.all([
     getAuthContext(),
     getPublishedDestinations(),
     getTourCountsPerDestination(),
     getPublishedMacroAreas(),
     getMegaMenuMode(),
+    getSettingsMap(),
   ]);
+
+  const blogEnabled = siteSettings.blog_enabled !== "false";
 
   let displayName: string | undefined;
   if (user && role === "agency") {
@@ -86,9 +90,9 @@ export default async function PublicLayout({
             />
           )}
           <TopBar />
-          <Header destinationsByArea={destinationsByArea} />
+          <Header destinationsByArea={destinationsByArea} blogEnabled={blogEnabled} />
           <main className="min-h-screen">{children}</main>
-          <Footer />
+          <Footer blogEnabled={blogEnabled} />
         </CookieConsentProvider>
       </AdminEditProvider>
     </AuthProvider>

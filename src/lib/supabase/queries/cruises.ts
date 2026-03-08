@@ -13,6 +13,7 @@ export type CruiseListItem = {
   durata_notti: string | null
   a_partire_da: string | null
   prezzo_su_richiesta: boolean
+  price_type: string
   tipo_crociera: string | null
   status: string
   created_at: string
@@ -43,6 +44,7 @@ export async function getCruises(): Promise<CruiseListItem[]> {
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       tipo_crociera,
       status,
       created_at,
@@ -75,6 +77,7 @@ export async function getCruises(): Promise<CruiseListItem[]> {
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       tipo_crociera: row.tipo_crociera,
       status: row.status,
       created_at: row.created_at,
@@ -103,6 +106,7 @@ export async function getPublishedCruises(): Promise<CruiseListItem[]> {
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       tipo_crociera,
       status,
       created_at,
@@ -134,6 +138,7 @@ export async function getPublishedCruises(): Promise<CruiseListItem[]> {
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       tipo_crociera: row.tipo_crociera,
       status: row.status,
       created_at: row.created_at,
@@ -243,6 +248,7 @@ export async function getCruisesForDestination(destinationId: string): Promise<C
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       tipo_crociera,
       status,
       created_at,
@@ -275,6 +281,7 @@ export async function getCruisesForDestination(destinationId: string): Promise<C
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       tipo_crociera: row.tipo_crociera,
       status: row.status,
       created_at: row.created_at,
@@ -305,6 +312,7 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       tipo_crociera,
       status,
       created_at,
@@ -337,6 +345,7 @@ export async function getCruisesForShip(shipId: string): Promise<CruiseListItem[
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       tipo_crociera: row.tipo_crociera,
       status: row.status,
       created_at: row.created_at,
@@ -378,6 +387,7 @@ export async function getPublishedCruisesWithDepartures(): Promise<CruiseListIte
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       tipo_crociera,
       status,
       created_at,
@@ -411,6 +421,7 @@ export async function getPublishedCruisesWithDepartures(): Promise<CruiseListIte
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       tipo_crociera: row.tipo_crociera,
       status: row.status,
       created_at: row.created_at,
@@ -557,6 +568,7 @@ export async function getRelatedCruises(
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       tipo_crociera,
       status,
       created_at,
@@ -591,6 +603,7 @@ export async function getRelatedCruises(
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       tipo_crociera: row.tipo_crociera,
       status: row.status,
       created_at: row.created_at,

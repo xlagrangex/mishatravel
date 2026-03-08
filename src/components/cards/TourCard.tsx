@@ -9,6 +9,7 @@ interface TourCardProps {
   duration: string;
   priceFrom: number;
   prezzoSuRichiesta?: boolean;
+  priceType?: "da" | "fisso";
   image: string;
   type: "tour";
   departureFrom?: string;
@@ -16,7 +17,7 @@ interface TourCardProps {
 
 function formatDuration(val: string): string {
   const trimmed = val.trim();
-  if (/^\d+$/.test(trimmed)) return `${trimmed} giorni`;
+  if (/^\d+$/.test(trimmed)) return `${trimmed} notti`;
   return trimmed;
 }
 
@@ -27,6 +28,7 @@ export default function TourCard({
   duration,
   priceFrom,
   prezzoSuRichiesta,
+  priceType = "da",
   image,
   departureFrom,
 }: TourCardProps) {
@@ -84,10 +86,11 @@ export default function TourCard({
               <p className="text-base font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
             ) : formattedPrice ? (
               <p className="text-sm text-gray-400">
-                da{" "}
+                {priceType === "da" && <>da{" "}</>}
                 <span className="font-bold text-[#C41E2F] text-2xl">
                   {formattedPrice}
                 </span>
+                <span className="text-xs text-gray-400 ml-1">a persona</span>
               </p>
             ) : null}
           </div>

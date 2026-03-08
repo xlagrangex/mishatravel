@@ -12,6 +12,7 @@ export type TourListItem = {
   durata_notti: string | null
   a_partire_da: string | null
   prezzo_su_richiesta: boolean
+  price_type: string
   status: string
   created_at: string
   destination_name: string | null
@@ -40,6 +41,7 @@ export async function getTours(): Promise<TourListItem[]> {
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       status,
       created_at,
       destination:destinations(name),
@@ -70,6 +72,7 @@ export async function getTours(): Promise<TourListItem[]> {
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
@@ -162,6 +165,7 @@ export async function getPublishedToursWithDepartures(): Promise<TourListItemEnr
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       status,
       created_at,
       destination_id,
@@ -192,6 +196,7 @@ export async function getPublishedToursWithDepartures(): Promise<TourListItemEnr
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       status: row.status,
       created_at: row.created_at,
       destination_id: row.destination_id,
@@ -243,6 +248,7 @@ export async function getPublishedTours(): Promise<TourListItem[]> {
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       status,
       created_at,
       destination:destinations(name),
@@ -272,6 +278,7 @@ export async function getPublishedTours(): Promise<TourListItem[]> {
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
@@ -355,6 +362,7 @@ export async function getToursForDestination(destinationId: string): Promise<Tou
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       status,
       created_at,
       destination:destinations(name),
@@ -385,6 +393,7 @@ export async function getToursForDestination(destinationId: string): Promise<Tou
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
@@ -426,6 +435,7 @@ export async function getRelatedTours(
       durata_notti,
       a_partire_da,
       prezzo_su_richiesta,
+      price_type,
       status,
       created_at,
       destination:destinations(name),
@@ -458,6 +468,7 @@ export async function getRelatedTours(
       durata_notti: row.durata_notti,
       a_partire_da: row.a_partire_da,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
+      price_type: row.price_type ?? 'da',
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,

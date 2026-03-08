@@ -68,6 +68,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                   duration={tour.durata_notti ?? ""}
                   priceFrom={parsePrice(tour.a_partire_da)}
                   prezzoSuRichiesta={tour.prezzo_su_richiesta}
+                  priceType={(tour.price_type as "da" | "fisso") ?? "da"}
                   image={tour.cover_image_url || "/images/placeholder.jpg"}
                   type="tour"
                 />
@@ -94,6 +95,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                   duration={cruise.durata_notti ?? ""}
                   priceFrom={parsePrice(cruise.a_partire_da)}
                   prezzoSuRichiesta={cruise.prezzo_su_richiesta}
+                  priceType={(cruise.price_type as "da" | "fisso") ?? "da"}
                   image={cruise.cover_image_url || "/images/placeholder.jpg"}
                 />
               ))}

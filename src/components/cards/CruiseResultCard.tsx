@@ -14,6 +14,7 @@ interface CruiseResultCardProps {
   duration: string;
   priceFrom: number;
   prezzoSuRichiesta?: boolean;
+  priceType?: "da" | "fisso";
   image: string;
   departures: { data_partenza: string; prezzo_main_deck: number | null }[];
   onCompareToggle?: () => void;
@@ -28,6 +29,7 @@ export default function CruiseResultCard({
   duration,
   priceFrom,
   prezzoSuRichiesta,
+  priceType = "da",
   image,
   departures,
   onCompareToggle,
@@ -93,9 +95,9 @@ export default function CruiseResultCard({
                 <span className="text-lg font-bold text-[#C41E2F]">Prezzo su richiesta</span>
               ) : (
                 <>
-                  <span className="text-xs text-gray-500">da</span>
+                  {priceType === "da" && <span className="text-xs text-gray-500">da</span>}
                   <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(priceFrom)}</span>
-                  <span className="text-xs text-gray-500 ml-1">/ persona</span>
+                  <span className="text-xs text-gray-500 ml-1">a persona</span>
                 </>
               )}
             </div>

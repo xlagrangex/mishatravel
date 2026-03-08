@@ -192,6 +192,7 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                   title={tour.title}
                   priceFrom={priceNum}
                   prezzoSuRichiesta={tour.prezzo_su_richiesta}
+                  priceType={(tour.price_type as "da" | "fisso") ?? "da"}
                   durataNotti={tour.durata_notti}
                   destinationName={destinationName}
                   programmaPdfUrl={tour.programma_pdf_url}
@@ -411,6 +412,7 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                   duration={t.durata_notti ?? ""}
                   priceFrom={parsePrice(t.a_partire_da)}
                   prezzoSuRichiesta={t.prezzo_su_richiesta}
+                  priceType={(t.price_type as "da" | "fisso") ?? "da"}
                   image={t.cover_image_url || "/images/placeholder.jpg"}
                   type="tour"
                 />

@@ -55,6 +55,7 @@ export interface Tour {
   destination_id: string | null;
   a_partire_da: string | null;
   prezzo_su_richiesta: boolean;
+  price_type: string;
   numero_persone: number;
   durata_notti: string | null;
   pensione: PensioneType[];
@@ -241,6 +242,7 @@ export interface Cruise {
   tipo_crociera: TipoCrociera | null;
   a_partire_da: string | null;
   prezzo_su_richiesta: boolean;
+  price_type: string;
   numero_minimo_persone: number | null;
   durata_notti: string | null;
   pensione: PensioneType[];

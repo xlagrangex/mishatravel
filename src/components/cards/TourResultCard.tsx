@@ -13,6 +13,7 @@ interface TourResultCardProps {
   duration: string;
   priceFrom: number;
   prezzoSuRichiesta?: boolean;
+  priceType?: "da" | "fisso";
   image: string;
   departures: { data_partenza: string; prezzo_3_stelle: number | null }[];
   onCompareToggle?: () => void;
@@ -26,6 +27,7 @@ export default function TourResultCard({
   duration,
   priceFrom,
   prezzoSuRichiesta,
+  priceType = "da",
   image,
   departures,
   onCompareToggle,
@@ -90,9 +92,9 @@ export default function TourResultCard({
                 <span className="text-lg font-bold text-[#C41E2F]">Prezzo su richiesta</span>
               ) : (
                 <>
-                  <span className="text-xs text-gray-500">da</span>
+                  {priceType === "da" && <span className="text-xs text-gray-500">da</span>}
                   <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(priceFrom)}</span>
-                  <span className="text-xs text-gray-500 ml-1">/ persona</span>
+                  <span className="text-xs text-gray-500 ml-1">a persona</span>
                 </>
               )}
             </div>

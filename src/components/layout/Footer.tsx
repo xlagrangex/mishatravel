@@ -45,7 +45,10 @@ function FooterLinkList({
   );
 }
 
-export default function Footer() {
+export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }) {
+  const linkRapidi = blogEnabled
+    ? footerLinkRapidi
+    : footerLinkRapidi.filter((l) => l.label !== "Blog");
   return (
     <footer>
       {/* ============================
@@ -99,7 +102,7 @@ export default function Footer() {
             {/* Link columns */}
             <div className="lg:col-span-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10">
-                <FooterLinkList title="Link Rapidi" links={footerLinkRapidi} />
+                <FooterLinkList title="Link Rapidi" links={linkRapidi} />
                 <FooterLinkList
                   title="Pagine Legali"
                   links={footerPagineLegali}

@@ -12,6 +12,7 @@ const settingsSchema = z.object({
   company_phone: z.string(),
   company_address: z.string(),
   company_website: z.string(),
+  blog_enabled: z.string().default('true'),
 })
 
 type ActionResult = { success: true } | { success: false; error: string }
@@ -49,5 +50,6 @@ export async function saveSettings(
   }
 
   revalidatePath('/admin/impostazioni')
+  revalidatePath('/', 'layout')
   return { success: true }
 }

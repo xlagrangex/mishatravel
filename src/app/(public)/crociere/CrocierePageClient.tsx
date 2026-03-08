@@ -429,6 +429,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
                       duration={cruise.durata_notti ?? ""}
                       priceFrom={parsePrice(cruise.a_partire_da)}
                       prezzoSuRichiesta={cruise.prezzo_su_richiesta}
+                      priceType={(cruise.price_type as "da" | "fisso") ?? "da"}
                       image={cruise.cover_image_url || "/images/placeholder.jpg"}
                       departures={cruise.departures}
                     />

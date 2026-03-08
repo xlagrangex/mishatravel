@@ -104,6 +104,7 @@ const cruiseFormSchema = z.object({
   durata_notti: z.string().nullable(),
   a_partire_da: z.string().nullable(),
   prezzo_su_richiesta: z.boolean(),
+  price_type: z.enum(["da", "fisso"]),
   numero_minimo_persone: z.number().nullable(),
   pensione: z.array(z.enum(["no", "mezza", "completa"])),
   tipo_voli: z.string().nullable(),
@@ -241,6 +242,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         durata_notti: initialData.durata_notti,
         a_partire_da: initialData.a_partire_da,
         prezzo_su_richiesta: initialData.prezzo_su_richiesta,
+        price_type: initialData.price_type === "fisso" ? "fisso" : "da",
         numero_minimo_persone: initialData.numero_minimo_persone,
         pensione: initialData.pensione,
         tipo_voli: initialData.tipo_voli,
@@ -290,6 +292,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         durata_notti: null,
         a_partire_da: null,
         prezzo_su_richiesta: false,
+        price_type: "da",
         numero_minimo_persone: null,
         pensione: [],
         tipo_voli: null,
@@ -629,9 +632,9 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
               <Separator />
 
               {/* Prezzo Row */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="a_partire_da">A Partire Da</Label>
+                  <Label htmlFor="a_partire_da">Prezzo</Label>
                   <div className="relative">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
                     <Input
@@ -644,6 +647,24 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                       {...register("a_partire_da")}
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo Prezzo</Label>
+                  <Controller
+                    control={control}
+                    name="price_type"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="da">A partire da</SelectItem>
+                          <SelectItem value="fisso">Prezzo fisso</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <div className="flex items-center gap-3 pt-7">
                   <Controller

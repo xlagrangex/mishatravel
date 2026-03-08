@@ -162,6 +162,7 @@ export default async function ShipDetailPage({ params }: { params: Promise<{ slu
                     duration={c.durata_notti ?? ""}
                     priceFrom={parsePrice(c.a_partire_da)}
                     prezzoSuRichiesta={c.prezzo_su_richiesta}
+                    priceType={(c.price_type as "da" | "fisso") ?? "da"}
                     image={c.cover_image_url || "/images/placeholder.jpg"}
                   />
                 ))}

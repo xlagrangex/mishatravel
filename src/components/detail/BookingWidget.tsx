@@ -22,6 +22,7 @@ interface BookingWidgetBaseProps {
   title: string;
   priceFrom: number | null;
   prezzoSuRichiesta: boolean;
+  priceType?: "da" | "fisso";
   durataNotti: string | null;
   destinationName: string | null;
   programmaPdfUrl: string | null;
@@ -128,6 +129,7 @@ export default function BookingWidget(props: BookingWidgetProps) {
     title,
     priceFrom,
     prezzoSuRichiesta,
+    priceType = "da",
     durataNotti,
     destinationName,
     programmaPdfUrl,
@@ -158,7 +160,7 @@ export default function BookingWidget(props: BookingWidgetProps) {
 
       {/* Price */}
       <div className="bg-gray-50 rounded-lg px-4 py-3 -mx-1">
-        <p className="text-xs text-gray-500 mb-0.5">a partire da</p>
+        <p className="text-xs text-gray-500 mb-0.5">{priceType === "da" ? "a partire da" : "prezzo fisso"}</p>
         <p className="text-2xl font-bold text-[#C41E2F] leading-tight">
           {priceFrom ? formatPrice(priceFrom) : prezzoSuRichiesta ? "Su richiesta" : "N/D"}
         </p>

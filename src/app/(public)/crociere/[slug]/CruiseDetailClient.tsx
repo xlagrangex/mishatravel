@@ -190,6 +190,7 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
                   title={cruise.title}
                   priceFrom={priceNum}
                   prezzoSuRichiesta={cruise.prezzo_su_richiesta}
+                  priceType={(cruise.price_type as "da" | "fisso") ?? "da"}
                   durataNotti={cruise.durata_notti}
                   destinationName={destinationName}
                   programmaPdfUrl={cruise.programma_pdf_url}
@@ -409,6 +410,7 @@ export default function CruiseDetailClient({ cruise, related }: CruiseDetailClie
                   duration={c.durata_notti ?? ""}
                   priceFrom={parsePrice(c.a_partire_da)}
                   prezzoSuRichiesta={c.prezzo_su_richiesta}
+                  priceType={(c.price_type as "da" | "fisso") ?? "da"}
                   image={c.cover_image_url || "/images/placeholder.jpg"}
                 />
               ))}

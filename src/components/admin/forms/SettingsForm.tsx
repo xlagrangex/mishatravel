@@ -9,6 +9,7 @@ import { Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -137,6 +138,7 @@ const settingsSchema = z.object({
   company_phone: z.string(),
   company_address: z.string(),
   company_website: z.string(),
+  blog_enabled: z.string(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -162,6 +164,7 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
       company_phone: initialData.company_phone ?? "",
       company_address: initialData.company_address ?? "",
       company_website: initialData.company_website ?? "",
+      blog_enabled: initialData.blog_enabled ?? "true",
     },
   });
 
@@ -291,6 +294,34 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
               id="company_website"
               placeholder="https://mishatravel.com"
               {...register("company_website")}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Visibility */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Visibilit&agrave; Sezioni</CardTitle>
+          <CardDescription>
+            Attiva o disattiva intere sezioni del sito pubblico.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Blog</Label>
+              <p className="text-xs text-muted-foreground">
+                Mostra o nascondi la sezione Blog dal menu di navigazione e dal footer.
+              </p>
+            </div>
+            <Switch
+              checked={watch("blog_enabled") === "true"}
+              onCheckedChange={(checked) =>
+                setValue("blog_enabled", checked ? "true" : "false", {
+                  shouldValidate: true,
+                })
+              }
             />
           </div>
         </CardContent>
