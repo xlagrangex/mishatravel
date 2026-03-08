@@ -71,7 +71,7 @@ function formatDuration(durata: string | null): string | null {
   if (!durata) return null;
   const nights = extractNights(durata);
   if (nights !== null) {
-    return `${nights + 1} giorni / ${nights} notti`;
+    return `${nights} notti`;
   }
   return durata;
 }

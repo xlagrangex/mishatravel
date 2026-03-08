@@ -226,9 +226,9 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
       label: "Durata",
       type: "checkbox" as const,
       options: [
-        { value: "5-7", label: "5-7 giorni" },
-        { value: "8-12", label: "8-12 giorni" },
-        { value: "13+", label: "13+ giorni" },
+        { value: "5-7", label: "5-7 notti" },
+        { value: "8-12", label: "8-12 notti" },
+        { value: "13+", label: "13+ notti" },
       ],
     },
     {
@@ -300,7 +300,7 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
       const to = filters.dateRange[1] ? formatDateIT(filters.dateRange[1]) : "...";
       c.push({ key: "dateRange", label: `${from} – ${to}`, value: "dateRange" });
     }
-    filters.durations.forEach((d) => c.push({ key: "durations", label: d + " giorni", value: d }));
+    filters.durations.forEach((d) => c.push({ key: "durations", label: d + " notti", value: d }));
     return c;
   }, [filters]);
 

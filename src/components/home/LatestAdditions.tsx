@@ -5,7 +5,7 @@ import { parsePrice } from "@/lib/utils";
 
 function formatDuration(val: string): string {
   const trimmed = val.trim();
-  if (/^\d+$/.test(trimmed)) return `${trimmed} giorni`;
+  if (/^\d+$/.test(trimmed)) return `${trimmed} notti`;
   return trimmed;
 }
 import SectionReveal from "./SectionReveal";
@@ -119,6 +119,7 @@ export default function LatestAdditions({
                             <span className="font-bold text-[#C41E2F] text-xl">
                               &euro;{price.toLocaleString("it-IT")}
                             </span>
+                            <span className="text-xs text-gray-400 ml-1">a persona</span>
                           </p>
                         ) : null}
                       </div>

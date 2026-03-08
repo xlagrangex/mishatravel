@@ -18,9 +18,9 @@ const CRUISE_DURATION_OPTIONS = [
 
 const TOUR_DURATION_OPTIONS = [
   { value: "", label: "Qualsiasi durata" },
-  { value: "5-7", label: "5-7 giorni" },
-  { value: "8-12", label: "8-12 giorni" },
-  { value: "13+", label: "13+ giorni" },
+  { value: "5-7", label: "5-7 notti" },
+  { value: "8-12", label: "8-12 notti" },
+  { value: "13+", label: "13+ notti" },
 ];
 
 export default function HeroSearchBar({ variant, locationOptions, onSearch }: HeroSearchBarProps) {
