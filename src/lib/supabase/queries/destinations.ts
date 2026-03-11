@@ -133,6 +133,8 @@ export async function getDestinationWithTours(
         a_partire_da,
         prezzo_su_richiesta,
         price_type,
+        prezzo_listino,
+        prezzo_offerta,
         status,
         created_at,
         destination:destinations(name),
@@ -155,6 +157,8 @@ export async function getDestinationWithTours(
         a_partire_da,
         prezzo_su_richiesta,
         price_type,
+        prezzo_listino,
+        prezzo_offerta,
         tipo_crociera,
         status,
         created_at,
@@ -190,6 +194,8 @@ export async function getDestinationWithTours(
       destination_name: row.destination?.name ?? null,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
       price_type: row.price_type ?? 'da',
+      prezzo_listino: row.prezzo_listino ?? null,
+      prezzo_offerta: row.prezzo_offerta ?? null,
       next_departure_date: (row.departures ?? [])
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
@@ -212,6 +218,8 @@ export async function getDestinationWithTours(
       destination_name: row.destination?.name ?? null,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
       price_type: row.price_type ?? 'da',
+      prezzo_listino: row.prezzo_listino ?? null,
+      prezzo_offerta: row.prezzo_offerta ?? null,
       next_departure_date: (row.departures ?? [])
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]

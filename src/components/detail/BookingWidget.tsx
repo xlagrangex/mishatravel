@@ -23,6 +23,8 @@ interface BookingWidgetBaseProps {
   priceFrom: number | null;
   prezzoSuRichiesta: boolean;
   priceType?: "da" | "fisso";
+  prezzoListino?: number | null;
+  prezzoOfferta?: number | null;
   durataNotti: string | null;
   destinationName: string | null;
   programmaPdfUrl: string | null;
@@ -159,13 +161,41 @@ export default function BookingWidget(props: BookingWidgetProps) {
       </div>
 
       {/* Price */}
-      <div className="bg-gray-50 rounded-lg px-4 py-3 -mx-1">
-        <p className="text-xs text-gray-500 mb-0.5">{priceType === "da" ? "a partire da" : "prezzo fisso"}</p>
-        <p className="text-2xl font-bold text-[#C41E2F] leading-tight">
-          {priceFrom ? formatPrice(priceFrom) : prezzoSuRichiesta ? "Su richiesta" : "N/D"}
-        </p>
-        <p className="text-xs text-gray-400">per persona</p>
-      </div>
+      {(() => {
+        const pListino = props.prezzoListino;
+        const pOfferta = props.prezzoOfferta;
+        const hasDiscount =
+          !prezzoSuRichiesta &&
+          pListino != null && pListino > 0 &&
+          pOfferta != null && pOfferta > 0 &&
+          pOfferta < pListino;
+        const discountPct = hasDiscount
+          ? Math.round((1 - pOfferta / pListino) * 100)
+          : 0;
+        const effectivePrice = pOfferta || pListino || priceFrom;
+
+        return (
+          <div className="bg-gray-50 rounded-lg px-4 py-3 -mx-1">
+            <div className="flex items-center justify-between mb-0.5">
+              <p className="text-xs text-gray-500">{priceType === "da" ? "a partire da" : "prezzo fisso"}</p>
+              {hasDiscount && discountPct > 0 && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#C41E2F] text-white">
+                  -{discountPct}%
+                </span>
+              )}
+            </div>
+            {hasDiscount && (
+              <p className="text-sm text-gray-400 line-through leading-tight">
+                {formatPrice(pListino)}
+              </p>
+            )}
+            <p className="text-2xl font-bold text-[#C41E2F] leading-tight">
+              {effectivePrice ? formatPrice(effectivePrice) : prezzoSuRichiesta ? "Su richiesta" : "N/D"}
+            </p>
+            <p className="text-xs text-gray-400">per persona</p>
+          </div>
+        );
+      })()}
 
       {/* Info grid - 2 columns */}
       <div className="grid grid-cols-2 gap-3">

@@ -430,6 +430,8 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
                       priceFrom={parsePrice(cruise.a_partire_da)}
                       prezzoSuRichiesta={cruise.prezzo_su_richiesta}
                       priceType={(cruise.price_type as "da" | "fisso") ?? "da"}
+                      prezzoListino={cruise.prezzo_listino}
+                      prezzoOfferta={cruise.prezzo_offerta}
                       image={cruise.cover_image_url || "/images/placeholder.jpg"}
                       departures={cruise.departures}
                     />

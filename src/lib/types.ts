@@ -56,6 +56,8 @@ export interface Tour {
   a_partire_da: string | null;
   prezzo_su_richiesta: boolean;
   price_type: string;
+  prezzo_listino: number | null;
+  prezzo_offerta: number | null;
   numero_persone: number;
   durata_notti: string | null;
   pensione: PensioneType[];
@@ -243,6 +245,8 @@ export interface Cruise {
   a_partire_da: string | null;
   prezzo_su_richiesta: boolean;
   price_type: string;
+  prezzo_listino: number | null;
+  prezzo_offerta: number | null;
   numero_minimo_persone: number | null;
   durata_notti: string | null;
   pensione: PensioneType[];

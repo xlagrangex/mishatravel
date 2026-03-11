@@ -10,6 +10,8 @@ interface TourCardProps {
   priceFrom: number;
   prezzoSuRichiesta?: boolean;
   priceType?: "da" | "fisso";
+  prezzoListino?: number | null;
+  prezzoOfferta?: number | null;
   image: string;
   type: "tour";
   departureFrom?: string;
@@ -21,6 +23,14 @@ function formatDuration(val: string): string {
   return trimmed;
 }
 
+const fmtEur = (n: number) =>
+  new Intl.NumberFormat("it-IT", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(n);
+
 export default function TourCard({
   slug,
   title,
@@ -29,17 +39,26 @@ export default function TourCard({
   priceFrom,
   prezzoSuRichiesta,
   priceType = "da",
+  prezzoListino,
+  prezzoOfferta,
   image,
   departureFrom,
 }: TourCardProps) {
-  const formattedPrice = prezzoSuRichiesta
-    ? null
-    : new Intl.NumberFormat("it-IT", {
-        style: "currency",
-        currency: "EUR",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(priceFrom);
+  const hasDiscount =
+    !prezzoSuRichiesta &&
+    prezzoListino != null &&
+    prezzoListino > 0 &&
+    prezzoOfferta != null &&
+    prezzoOfferta > 0 &&
+    prezzoOfferta < prezzoListino;
+
+  const discountPct = hasDiscount
+    ? Math.round((1 - prezzoOfferta / prezzoListino) * 100)
+    : 0;
+
+  const effectivePrice = prezzoOfferta || prezzoListino || priceFrom;
+  const formattedPrice =
+    prezzoSuRichiesta || !effectivePrice ? null : fmtEur(effectivePrice);
 
   return (
     <Link href={`/tours/${slug}`} className="group h-full">
@@ -54,11 +73,18 @@ export default function TourCard({
             quality={60}
             sizes="(max-width: 640px) 95vw, (max-width: 1024px) 45vw, 30vw"
           />
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 left-3 flex gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#1B2D4F] text-white">
               Tour
             </span>
           </div>
+          {hasDiscount && discountPct > 0 && (
+            <div className="absolute top-3 right-3">
+              <span className="text-xs font-bold px-2 py-1 rounded-md bg-[#C41E2F] text-white">
+                -{discountPct}%
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -85,13 +111,20 @@ export default function TourCard({
             {prezzoSuRichiesta ? (
               <p className="text-base font-semibold text-[#C41E2F]">Prezzo su richiesta</p>
             ) : formattedPrice ? (
-              <p className="text-sm text-gray-400">
-                {priceType === "da" && <>da{" "}</>}
-                <span className="font-bold text-[#C41E2F] text-2xl">
-                  {formattedPrice}
-                </span>
-                <span className="text-xs text-gray-400 ml-1">a persona</span>
-              </p>
+              <div>
+                {hasDiscount && (
+                  <p className="text-sm text-gray-400 line-through">
+                    {fmtEur(prezzoListino)}
+                  </p>
+                )}
+                <p className="text-sm text-gray-400">
+                  {priceType === "da" && <>da{" "}</>}
+                  <span className="font-bold text-[#C41E2F] text-2xl">
+                    {formattedPrice}
+                  </span>
+                  <span className="text-xs text-gray-400 ml-1">a persona</span>
+                </p>
+              </div>
             ) : null}
           </div>
         </div>

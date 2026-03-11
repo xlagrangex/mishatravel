@@ -213,9 +213,15 @@ export async function reactivateUser(userId: string): Promise<ActionResult> {
 export async function deleteUser(userId: string): Promise<ActionResult> {
   const supabase = createAdminClient()
 
-  // Delete from user_roles and operator_permissions (cascade should handle it, but be explicit)
+  // Explicit cleanup of tables that reference auth.users
+  // (cascade should handle most, but be explicit for safety)
   await supabase.from('operator_permissions').delete().eq('user_id', userId)
   await supabase.from('user_roles').delete().eq('user_id', userId)
+  await supabase.from('notifications').delete().eq('user_id', userId)
+
+  // Nullify FK references that use ON DELETE SET NULL
+  await supabase.from('agency_documents').update({ verified_by: null }).eq('verified_by', userId)
+  await supabase.from('user_activity_log').update({ user_id: null }).eq('user_id', userId)
 
   // Hard-delete auth user so the email can be re-registered
   const { error } = await supabase.auth.admin.deleteUser(userId, false)

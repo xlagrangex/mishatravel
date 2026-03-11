@@ -15,11 +15,21 @@ interface CruiseResultCardProps {
   priceFrom: number;
   prezzoSuRichiesta?: boolean;
   priceType?: "da" | "fisso";
+  prezzoListino?: number | null;
+  prezzoOfferta?: number | null;
   image: string;
   departures: { data_partenza: string; prezzo_main_deck: number | null }[];
   onCompareToggle?: () => void;
   isCompared?: boolean;
 }
+
+const fmtEur = (n: number) =>
+  new Intl.NumberFormat("it-IT", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(n);
 
 export default function CruiseResultCard({
   slug,
@@ -30,12 +40,28 @@ export default function CruiseResultCard({
   priceFrom,
   prezzoSuRichiesta,
   priceType = "da",
+  prezzoListino,
+  prezzoOfferta,
   image,
   departures,
   onCompareToggle,
   isCompared,
 }: CruiseResultCardProps) {
   const nextDep = getNextDeparture(departures);
+
+  const hasDiscount =
+    !prezzoSuRichiesta &&
+    prezzoListino != null &&
+    prezzoListino > 0 &&
+    prezzoOfferta != null &&
+    prezzoOfferta > 0 &&
+    prezzoOfferta < prezzoListino;
+
+  const discountPct = hasDiscount
+    ? Math.round((1 - prezzoOfferta / prezzoListino) * 100)
+    : 0;
+
+  const effectivePrice = prezzoOfferta || prezzoListino || priceFrom;
 
   return (
     <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -49,7 +75,12 @@ export default function CruiseResultCard({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 280px"
           />
-          <Badge className="absolute top-3 left-3 bg-[#C41E2F] text-white">Crociera</Badge>
+          <div className="absolute top-3 left-3 flex gap-1.5">
+            <Badge className="bg-[#C41E2F] text-white">Crociera</Badge>
+            {hasDiscount && discountPct > 0 && (
+              <Badge className="bg-[#1B2D4F] text-white">-{discountPct}%</Badge>
+            )}
+          </div>
           {onCompareToggle && (
             <button
               onClick={(e) => { e.preventDefault(); onCompareToggle(); }}
@@ -95,8 +126,11 @@ export default function CruiseResultCard({
                 <span className="text-lg font-bold text-[#C41E2F]">Prezzo su richiesta</span>
               ) : (
                 <>
+                  {hasDiscount && (
+                    <span className="text-sm text-gray-400 line-through mr-2">{fmtEur(prezzoListino)}</span>
+                  )}
                   {priceType === "da" && <span className="text-xs text-gray-500">da</span>}
-                  <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(priceFrom)}</span>
+                  <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(effectivePrice)}</span>
                   <span className="text-xs text-gray-500 ml-1">a persona</span>
                 </>
               )}

@@ -99,6 +99,8 @@ const tourFormSchema = z.object({
   a_partire_da: z.string().nullable(),
   prezzo_su_richiesta: z.boolean(),
   price_type: z.enum(["da", "fisso"]),
+  prezzo_listino: z.coerce.number().nullable(),
+  prezzo_offerta: z.coerce.number().nullable(),
   numero_persone: z.number().min(1),
   durata_notti: z.string().nullable(),
   pensione: z.array(z.enum(["no", "mezza", "completa"])),
@@ -178,6 +180,8 @@ export default function TourForm({ initialData, destinations = [], localities = 
         a_partire_da: initialData.a_partire_da,
         prezzo_su_richiesta: initialData.prezzo_su_richiesta,
         price_type: initialData.price_type === "fisso" ? "fisso" : "da",
+        prezzo_listino: initialData.prezzo_listino,
+        prezzo_offerta: initialData.prezzo_offerta,
         numero_persone: initialData.numero_persone,
         durata_notti: initialData.durata_notti,
         pensione: initialData.pensione,
@@ -227,6 +231,8 @@ export default function TourForm({ initialData, destinations = [], localities = 
         a_partire_da: null,
         prezzo_su_richiesta: false,
         price_type: "da",
+        prezzo_listino: null,
+        prezzo_offerta: null,
         numero_persone: 30,
         durata_notti: null,
         pensione: [],
@@ -258,7 +264,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<TourFormValues>({
-    resolver: zodResolver(tourFormSchema),
+    resolver: zodResolver(tourFormSchema) as any,
     defaultValues,
   });
 
@@ -479,21 +485,37 @@ export default function TourForm({ initialData, destinations = [], localities = 
               <Separator />
 
               {/* Prezzo Row */}
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-4">
                 <div className="space-y-2">
-                  <Label htmlFor="a_partire_da">Prezzo</Label>
+                  <Label htmlFor="prezzo_listino">Prezzo di Listino</Label>
                   <div className="relative">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
                     <Input
-                      id="a_partire_da"
+                      id="prezzo_listino"
+                      type="number"
+                      step="any"
+                      min="0"
+                      className="pl-7"
+                      placeholder="1490"
+                      {...register("prezzo_listino")}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prezzo_offerta">Prezzo in Offerta</Label>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                    <Input
+                      id="prezzo_offerta"
                       type="number"
                       step="any"
                       min="0"
                       className="pl-7"
                       placeholder="1290"
-                      {...register("a_partire_da")}
+                      {...register("prezzo_offerta")}
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground">Lascia vuoto se non in offerta</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Tipo Prezzo</Label>
@@ -530,6 +552,8 @@ export default function TourForm({ initialData, destinations = [], localities = 
                   </Label>
                 </div>
               </div>
+              {/* Hidden field for backward compat */}
+              <input type="hidden" {...register("a_partire_da")} />
 
               {/* Numero Persone & Durata */}
               <div className="grid gap-4 sm:grid-cols-2">

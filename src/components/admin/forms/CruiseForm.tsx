@@ -105,6 +105,8 @@ const cruiseFormSchema = z.object({
   a_partire_da: z.string().nullable(),
   prezzo_su_richiesta: z.boolean(),
   price_type: z.enum(["da", "fisso"]),
+  prezzo_listino: z.coerce.number().nullable(),
+  prezzo_offerta: z.coerce.number().nullable(),
   numero_minimo_persone: z.number().nullable(),
   pensione: z.array(z.enum(["no", "mezza", "completa"])),
   tipo_voli: z.string().nullable(),
@@ -243,6 +245,8 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         a_partire_da: initialData.a_partire_da,
         prezzo_su_richiesta: initialData.prezzo_su_richiesta,
         price_type: initialData.price_type === "fisso" ? "fisso" : "da",
+        prezzo_listino: initialData.prezzo_listino,
+        prezzo_offerta: initialData.prezzo_offerta,
         numero_minimo_persone: initialData.numero_minimo_persone,
         pensione: initialData.pensione,
         tipo_voli: initialData.tipo_voli,
@@ -293,6 +297,8 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
         a_partire_da: null,
         prezzo_su_richiesta: false,
         price_type: "da",
+        prezzo_listino: null,
+        prezzo_offerta: null,
         numero_minimo_persone: null,
         pensione: [],
         tipo_voli: null,
@@ -319,7 +325,7 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
     getValues,
     formState: { errors, isSubmitting },
   } = useForm<CruiseFormValues>({
-    resolver: zodResolver(cruiseFormSchema),
+    resolver: zodResolver(cruiseFormSchema) as any,
     defaultValues,
   });
 
@@ -632,21 +638,37 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
               <Separator />
 
               {/* Prezzo Row */}
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-4">
                 <div className="space-y-2">
-                  <Label htmlFor="a_partire_da">Prezzo</Label>
+                  <Label htmlFor="prezzo_listino">Prezzo di Listino</Label>
                   <div className="relative">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
                     <Input
-                      id="a_partire_da"
+                      id="prezzo_listino"
                       type="number"
                       step="any"
                       min="0"
                       className="pl-7"
                       placeholder="1490"
-                      {...register("a_partire_da")}
+                      {...register("prezzo_listino")}
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prezzo_offerta">Prezzo in Offerta</Label>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                    <Input
+                      id="prezzo_offerta"
+                      type="number"
+                      step="any"
+                      min="0"
+                      className="pl-7"
+                      placeholder="1290"
+                      {...register("prezzo_offerta")}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Lascia vuoto se non in offerta</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Tipo Prezzo</Label>
@@ -683,6 +705,8 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                   </Label>
                 </div>
               </div>
+              {/* Hidden field for backward compat */}
+              <input type="hidden" {...register("a_partire_da")} />
 
               {/* Numero Minimo Persone & Durata */}
               <div className="grid gap-4 sm:grid-cols-2">
