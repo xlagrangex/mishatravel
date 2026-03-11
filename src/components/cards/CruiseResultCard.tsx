@@ -78,7 +78,7 @@ export default function CruiseResultCard({
           <div className="absolute top-3 left-3 flex gap-1.5">
             <Badge className="bg-[#C41E2F] text-white">Crociera</Badge>
             {hasDiscount && discountPct > 0 && (
-              <Badge className="bg-[#1B2D4F] text-white">-{discountPct}%</Badge>
+              <Badge className="bg-[#C41E2F] text-white text-sm font-extrabold px-3 py-1 shadow-md">-{discountPct}%</Badge>
             )}
           </div>
           {onCompareToggle && (

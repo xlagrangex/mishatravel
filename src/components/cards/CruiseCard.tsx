@@ -79,7 +79,7 @@ export default function CruiseCard({
           </div>
           {hasDiscount && discountPct > 0 && (
             <div className="absolute top-3 right-3">
-              <span className="text-xs font-bold px-2 py-1 rounded-md bg-[#C41E2F] text-white">
+              <span className="text-sm font-extrabold px-3 py-1.5 rounded-lg bg-[#C41E2F] text-white shadow-md">
                 -{discountPct}%
               </span>
             </div>

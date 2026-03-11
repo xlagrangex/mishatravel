@@ -76,7 +76,7 @@ export default function TourResultCard({
           <div className="absolute top-3 left-3 flex gap-1.5">
             <Badge className="bg-gray-800 text-white">Tour</Badge>
             {hasDiscount && discountPct > 0 && (
-              <Badge className="bg-[#C41E2F] text-white">-{discountPct}%</Badge>
+              <Badge className="bg-[#C41E2F] text-white text-sm font-extrabold px-3 py-1 shadow-md">-{discountPct}%</Badge>
             )}
           </div>
           {onCompareToggle && (

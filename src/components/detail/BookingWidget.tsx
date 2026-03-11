@@ -179,7 +179,7 @@ export default function BookingWidget(props: BookingWidgetProps) {
             <div className="flex items-center justify-between mb-0.5">
               <p className="text-xs text-gray-500">{priceType === "da" ? "a partire da" : "prezzo fisso"}</p>
               {hasDiscount && discountPct > 0 && (
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#C41E2F] text-white">
+                <span className="text-sm font-extrabold px-3 py-1 rounded-lg bg-[#C41E2F] text-white shadow-md">
                   -{discountPct}%
                 </span>
               )}
