@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { sendTransactionalEmail } from "@/lib/email/brevo";
 
-// Vercel Cron runs this 3x/day: 9:00, 14:00, 21:00 Rome time (7, 12, 19 UTC)
-// Early reminders only send at 9AM. From May 5 onward: ALL three times.
+// Vercel Cron runs once/day at 9:00 AM Rome time (7:00 UTC).
+// On multi-email days (May 5-8), ALL emails for that day are sent at once.
 
 const RECIPIENTS = [
   { email: "vincenzopetronebiz@gmail.com", name: "Vincenzo" },
@@ -13,7 +13,6 @@ const DEADLINE = new Date("2025-05-09");
 
 type Reminder = {
   daysBeforeDeadline: number;
-  morningOnly?: boolean; // if true, only send at the 7 UTC (9AM Rome) slot
   subject: string;
   html: string;
 };
@@ -22,7 +21,6 @@ const REMINDERS: Reminder[] = [
   // ============ FASE 1: Avvertimenti (1x/giorno, solo mattina) ============
   {
     daysBeforeDeadline: 21, // April 18
-    morningOnly: true,
     subject: "Vincenzo, segna in agenda: Supabase Pro scade il 9 maggio",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; background: #f0f7ff; border-radius: 12px; border: 1px solid #bdd7ff;">
@@ -41,7 +39,6 @@ const REMINDERS: Reminder[] = [
   },
   {
     daysBeforeDeadline: 17, // April 22
-    morningOnly: true,
     subject: "Hai segnato la data? No, vero? Lo sapevo.",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; background: #f9f9f9; border-radius: 12px;">
@@ -61,7 +58,6 @@ const REMINDERS: Reminder[] = [
   },
   {
     daysBeforeDeadline: 13, // April 26
-    morningOnly: true,
     subject: "Vincenzo, svegliati. 13 giorni a buttare $25.",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; background: #fff8e1; border-radius: 12px; border: 2px solid #ffb300;">
@@ -84,7 +80,6 @@ const REMINDERS: Reminder[] = [
   },
   {
     daysBeforeDeadline: 10, // April 29
-    morningOnly: true,
     subject: "Sei incredibile. Nel senso peggiore.",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; background: #fce4ec; border-radius: 12px; border: 2px solid #e91e63;">
@@ -104,7 +99,6 @@ const REMINDERS: Reminder[] = [
   },
   {
     daysBeforeDeadline: 8, // May 1
-    morningOnly: true,
     subject: "1 MAGGIO e tu non disdici neanche Supabase. Merda.",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; background: #e8f5e9; border-radius: 12px; border: 2px solid #4caf50;">
@@ -369,10 +363,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const now = new Date();
-  const utcHour = now.getUTCHours();
-
-  const today = new Date(now);
+  const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
   const deadlineCopy = new Date(DEADLINE);
@@ -386,40 +377,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Past deadline, no reminder sent", daysLeft });
   }
 
-  // Determine which time slot we're in: morning(7), afternoon(12), evening(19)
-  let slot: "morning" | "afternoon" | "evening";
-  if (utcHour < 10) slot = "morning";
-  else if (utcHour < 16) slot = "afternoon";
-  else slot = "evening";
-
-  // Find all reminders for today's daysLeft
+  // Find ALL reminders for today
   const todayReminders = REMINDERS.filter((r) => r.daysBeforeDeadline === daysLeft);
 
   if (todayReminders.length === 0) {
     return NextResponse.json({ message: "No reminder today", daysLeft });
   }
 
-  // Morning-only reminders: only send at morning slot
-  if (todayReminders[0].morningOnly && slot !== "morning") {
-    return NextResponse.json({ message: "Morning-only reminder, skipping this slot", daysLeft, slot });
+  // Send ALL emails for today (on bombardment days this means 3 emails at once)
+  const results: { subject: string; sent: boolean }[] = [];
+  for (const reminder of todayReminders) {
+    const sent = await sendTransactionalEmail(RECIPIENTS, reminder.subject, reminder.html);
+    results.push({ subject: reminder.subject, sent });
   }
-
-  // For multi-email days: pick the right one based on slot
-  let reminder: Reminder;
-  if (todayReminders.length === 1) {
-    reminder = todayReminders[0];
-  } else if (todayReminders.length === 3) {
-    reminder = slot === "morning" ? todayReminders[0] : slot === "afternoon" ? todayReminders[1] : todayReminders[2];
-  } else {
-    reminder = todayReminders[0];
-  }
-
-  const sent = await sendTransactionalEmail(RECIPIENTS, reminder.subject, reminder.html);
 
   return NextResponse.json({
-    sent,
     daysLeft,
-    slot,
-    subject: reminder.subject,
+    emailsSent: results.length,
+    results,
   });
 }

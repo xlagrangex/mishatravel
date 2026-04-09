@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/supabase-reminder",
-      "schedule": "0 7,12,19 * * *"
+      "schedule": "0 7 * * *"
     }
   ]
 }
