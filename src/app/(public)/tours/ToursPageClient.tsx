@@ -371,7 +371,7 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
             </aside>
 
             {/* Results */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 max-w-3xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
                   <MobileFilterSheet

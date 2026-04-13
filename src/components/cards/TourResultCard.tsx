@@ -126,9 +126,9 @@ export default function TourResultCard({
                   {hasDiscount && (
                     <span className="text-sm text-gray-400 line-through mr-2">{fmtEur(prezzoListino)}</span>
                   )}
-                  {priceType === "da" && <span className="text-xs text-gray-500">da</span>}
-                  <span className="text-2xl font-bold text-[#C41E2F] ml-1">{formatPrice(effectivePrice)}</span>
-                  <span className="text-xs text-gray-500 ml-1">a persona</span>
+                  {priceType === "da" && <span className="text-sm text-gray-500">da</span>}
+                  <span className="text-3xl font-bold text-[#C41E2F] ml-1">{formatPrice(effectivePrice)}</span>
+                  <span className="text-sm text-gray-500 ml-1">a persona</span>
                 </>
               )}
             </div>
