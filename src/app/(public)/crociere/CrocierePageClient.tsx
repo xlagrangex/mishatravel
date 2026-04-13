@@ -36,11 +36,11 @@ const RIVER_COUNTRIES: Record<string, string> = {
 };
 
 const CRUISE_FAQ = [
-  { question: "Cosa e incluso nel prezzo della crociera?", answer: "Il prezzo include la cabina, pensione completa a bordo (colazione, pranzo, cena), escursioni guidate in italiano come da programma, tasse portuali e assicurazione base. I voli e i trasferimenti possono essere inclusi o opzionali a seconda dell'itinerario." },
+  { question: "Cos'è incluso nel prezzo della crociera?", answer: "Il prezzo include la cabina, pensione completa a bordo (colazione, pranzo, cena), escursioni come da programma, tasse portuali e assicurazione base. I voli e i trasferimenti possono essere inclusi o opzionali a seconda dell'itinerario." },
   { question: "Serve il passaporto per le crociere fluviali?", answer: "Per le crociere in Europa e sufficiente la carta d'identita valida per l'espatrio per i cittadini italiani. Per destinazioni extra-UE verificate i requisiti specifici al momento della prenotazione." },
-  { question: "Come funziona l'imbarco?", answer: "L'imbarco avviene nel pomeriggio del primo giorno nel porto di partenza indicato nel programma. Il nostro accompagnatore vi accogliera al punto di ritrovo per guidarvi sulla nave." },
+  { question: "Come funziona l'imbarco?", answer: "L'imbarco avviene nel pomeriggio del primo giorno nel porto di partenza indicato nel programma. Riceverete tutte le informazioni e i documenti necessari prima della partenza." },
   { question: "Posso scegliere la cabina?", answer: "Si, al momento della prenotazione potete indicare la vostra preferenza. Le cabine sono disponibili su diversi ponti (main deck, middle deck, superior deck) con relative differenze di prezzo e vista." },
-  { question: "Qual e la dimensione delle navi?", answer: "Le nostre navi fluviali sono boutique, con un massimo di 80-180 passeggeri. Questo garantisce un'atmosfera intima e un servizio personalizzato, molto diverso dalle grandi navi da crociera oceaniche." },
+  { question: "Qual è la dimensione delle navi?", answer: "Le dimensioni variano a seconda della nave: controllate la scheda tecnica della singola nave per i dettagli specifici. In generale, le navi fluviali sono più piccole rispetto alle grandi navi da crociera oceaniche e garantiscono un servizio più personalizzato e un'atmosfera intima." },
 ];
 
 interface CrocierePageClientProps {
@@ -351,7 +351,7 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
             </h1>
             <p className="text-white/80 text-lg mb-8 max-w-2xl">
               Crociere da 4 a 11 notti lungo Danubio, Douro, Reno, Senna e altri itinerari esclusivi.
-              Navi boutique, pensione completa e accompagnatore italiano.
+              Navi boutique, pensione completa e un servizio personalizzato.
             </p>
             <HeroSearchBar
               variant="cruise"
