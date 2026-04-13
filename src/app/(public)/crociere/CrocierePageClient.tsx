@@ -9,7 +9,6 @@ import HeroSearchBar from "@/components/search/HeroSearchBar";
 import RiverNavigation from "@/components/navigation/RiverNavigation";
 import FilterSidebar, { type FilterGroup } from "@/components/filters/FilterSidebar";
 import FilterChips from "@/components/filters/FilterChips";
-import SortDropdown from "@/components/filters/SortDropdown";
 import MobileFilterSheet from "@/components/filters/MobileFilterSheet";
 import CruiseResultCard from "@/components/cards/CruiseResultCard";
 import FleetStrip from "@/components/shared/FleetStrip";
@@ -21,7 +20,6 @@ import {
   getNextDeparture,
   departureOverlapsRange,
   formatDateIT,
-  type SortOption,
 } from "@/lib/filters";
 import type { CruiseListItemEnriched } from "@/lib/supabase/queries/cruises";
 
@@ -56,7 +54,6 @@ type FilterState = {
   priceRange: [number, number];
   ship: string[];
   availabilityOnly: boolean;
-  sortBy: SortOption;
 };
 
 export default function CrocierePageClient({ cruises, ships, destinations }: CrocierePageClientProps) {
@@ -73,7 +70,6 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
     priceRange: [priceBounds.min, priceBounds.max],
     ship: [],
     availabilityOnly: false,
-    sortBy: "prezzo-asc",
   });
 
   // Build river info from destinations + cruises
@@ -164,21 +160,11 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
       result = result.filter((c) => c.departures.some((d) => d.data_partenza >= now));
     }
 
-    // Sort
+    // Sort by next departure date
     result.sort((a, b) => {
-      const priceA = parsePrice(a.a_partire_da);
-      const priceB = parsePrice(b.a_partire_da);
-      switch (filters.sortBy) {
-        case "prezzo-asc": return priceA - priceB;
-        case "prezzo-desc": return priceB - priceA;
-        case "durata": return parseDurationNights(a.durata_notti) - parseDurationNights(b.durata_notti);
-        case "prossima-partenza": {
-          const dA = getNextDeparture(a.departures)?.data_partenza ?? "9999";
-          const dB = getNextDeparture(b.departures)?.data_partenza ?? "9999";
-          return dA.localeCompare(dB);
-        }
-        default: return 0;
-      }
+      const dA = getNextDeparture(a.departures)?.data_partenza ?? "9999";
+      const dB = getNextDeparture(b.departures)?.data_partenza ?? "9999";
+      return dA.localeCompare(dB);
     });
 
     return result;
@@ -274,7 +260,6 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
       priceRange: [priceBounds.min, priceBounds.max],
       ship: [],
       availabilityOnly: false,
-      sortBy: "prezzo-asc",
     });
   }, [priceBounds]);
 
@@ -408,7 +393,6 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
                     {filteredCruises.length === 1 ? "crociera trovata" : "crociere trovate"}
                   </p>
                 </div>
-                <SortDropdown value={filters.sortBy} onChange={(v) => setFilters((p) => ({ ...p, sortBy: v }))} />
               </div>
 
               {/* Active chips */}

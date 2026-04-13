@@ -9,7 +9,6 @@ import HeroSearchBar from "@/components/search/HeroSearchBar";
 import MacroAreaNavigation from "@/components/navigation/MacroAreaNavigation";
 import FilterSidebar, { type FilterGroup } from "@/components/filters/FilterSidebar";
 import FilterChips from "@/components/filters/FilterChips";
-import SortDropdown from "@/components/filters/SortDropdown";
 import MobileFilterSheet from "@/components/filters/MobileFilterSheet";
 import TourResultCard from "@/components/cards/TourResultCard";
 import DepartureTimeline from "@/components/shared/DepartureTimeline";
@@ -20,7 +19,6 @@ import {
   getNextDeparture,
   departureOverlapsRange,
   formatDateIT,
-  type SortOption,
 } from "@/lib/filters";
 import type { TourListItemEnriched } from "@/lib/supabase/queries/tours";
 
@@ -42,7 +40,6 @@ type FilterState = {
   durations: string[];
   priceRange: [number, number];
   availabilityOnly: boolean;
-  sortBy: SortOption;
 };
 
 export default function ToursPageClient({ tours, destinations, macroAreas }: ToursPageClientProps) {
@@ -58,7 +55,6 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
     durations: [],
     priceRange: [priceBounds.min, priceBounds.max],
     availabilityOnly: false,
-    sortBy: "prezzo-asc",
   });
 
   // Macro area infos
@@ -154,21 +150,11 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
       result = result.filter((t) => t.departures.some((d) => d.data_partenza >= now));
     }
 
-    // Sort
+    // Sort by next departure date
     result.sort((a, b) => {
-      const priceA = parsePrice(a.a_partire_da);
-      const priceB = parsePrice(b.a_partire_da);
-      switch (filters.sortBy) {
-        case "prezzo-asc": return priceA - priceB;
-        case "prezzo-desc": return priceB - priceA;
-        case "durata": return parseDurationNights(a.durata_notti) - parseDurationNights(b.durata_notti);
-        case "prossima-partenza": {
-          const dA = getNextDeparture(a.departures)?.data_partenza ?? "9999";
-          const dB = getNextDeparture(b.departures)?.data_partenza ?? "9999";
-          return dA.localeCompare(dB);
-        }
-        default: return 0;
-      }
+      const dA = getNextDeparture(a.departures)?.data_partenza ?? "9999";
+      const dB = getNextDeparture(b.departures)?.data_partenza ?? "9999";
+      return dA.localeCompare(dB);
     });
 
     return result;
@@ -267,7 +253,6 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
       durations: [],
       priceRange: [priceBounds.min, priceBounds.max],
       availabilityOnly: false,
-      sortBy: "prezzo-asc",
     });
   }, [priceBounds]);
 
@@ -401,7 +386,6 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
                     {filteredTours.length === 1 ? "tour trovato" : "tour trovati"}
                   </p>
                 </div>
-                <SortDropdown value={filters.sortBy} onChange={(v) => setFilters((p) => ({ ...p, sortBy: v }))} />
               </div>
 
               <div className="mb-4">
