@@ -191,14 +191,14 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
       </div>
 
       {/* ============================
-          Credits BizStudio — thin red band with divider
+          Credits BizStudio — white pill on red background
          ============================ */}
-      <div className="bg-[#8B1520] border-t border-white/15 py-3">
+      <div className="bg-[#8B1520] border-t border-white/15 py-4 flex justify-center">
         <a
           href="https://bizstudio.it"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 group/biz transition-all duration-300"
+          className="group/biz inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-300"
         >
           <Image
             src="https://i.ibb.co/XkFvvj94/favicon.png"
@@ -206,12 +206,12 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
             width={16}
             height={16}
             unoptimized
-            className="w-4 h-4 opacity-70 group-hover/biz:opacity-100 transition-opacity"
+            className="w-4 h-4 opacity-90 group-hover/biz:opacity-100 transition-opacity"
           />
-          <span className="text-white/60 text-xs group-hover/biz:text-white transition-colors inline-flex items-center">
+          <span className="text-[#1B2D4F] text-xs inline-flex items-center">
             Sito realizzato con
             <Heart
-              className="size-3 mx-1 text-white group-hover/biz:text-red-200 transition-colors fill-current"
+              className="size-3 mx-1 text-[#C41E2F] fill-current"
               aria-hidden="true"
             />
             da&nbsp;
