@@ -59,7 +59,17 @@ export default function TourResultCard({
     ? Math.round((1 - prezzoOfferta / prezzoListino) * 100)
     : 0;
 
-  const effectivePrice = prezzoOfferta || prezzoListino || priceFrom;
+  // Fallback: if aggregate prices are all empty, take the minimum from
+  // future departures so the card never shows €0 when a price was entered
+  // only at departure level.
+  const today = new Date().toISOString().slice(0, 10);
+  const departurePrices = departures
+    .filter((d) => d.data_partenza >= today && d.prezzo_3_stelle != null && d.prezzo_3_stelle > 0)
+    .map((d) => d.prezzo_3_stelle as number);
+  const minFromDepartures = departurePrices.length > 0 ? Math.min(...departurePrices) : 0;
+
+  const effectivePrice = prezzoOfferta || prezzoListino || priceFrom || minFromDepartures;
+  const showOnRequest = !prezzoSuRichiesta && effectivePrice <= 0;
 
   return (
     <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -119,7 +129,7 @@ export default function TourResultCard({
           {/* Price + CTA */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
             <div>
-              {prezzoSuRichiesta ? (
+              {prezzoSuRichiesta || showOnRequest ? (
                 <span className="text-lg font-bold text-[#C41E2F]">Prezzo su richiesta</span>
               ) : (
                 <>

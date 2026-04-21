@@ -361,6 +361,8 @@ export default function QuotePdfDocument({
     no: "Senza pasti",
     mezza: "Mezza pensione",
     completa: "Pensione completa",
+    colazione: "Prima colazione",
+    come_programma: "Trattamento come da programma",
   };
   const pensioneLabel =
     data.pensione.map((p) => pensioneMap[p] ?? p).join(", ") || null;

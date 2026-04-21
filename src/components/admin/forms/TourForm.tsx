@@ -103,7 +103,7 @@ const tourFormSchema = z.object({
   prezzo_offerta: z.coerce.number().nullable(),
   numero_persone: z.number().min(1),
   durata_notti: z.string().nullable(),
-  pensione: z.array(z.enum(["no", "mezza", "completa"])),
+  pensione: z.array(z.enum(["no", "mezza", "completa", "colazione", "come_programma"])),
   tipo_voli: z.string().nullable(),
   cover_image_url: z.string().nullable(),
   status: z.enum(["draft", "published"]),
@@ -583,8 +583,10 @@ export default function TourForm({ initialData, destinations = [], localities = 
                   {(
                     [
                       { value: "no", label: "No" },
+                      { value: "colazione", label: "Prima Colazione" },
                       { value: "mezza", label: "Mezza Pensione" },
                       { value: "completa", label: "Pensione Completa" },
+                      { value: "come_programma", label: "Trattamento come da programma" },
                     ] as const
                   ).map(({ value, label }) => (
                     <div key={value} className="flex items-center gap-2">

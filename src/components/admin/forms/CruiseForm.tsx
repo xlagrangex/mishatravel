@@ -108,7 +108,7 @@ const cruiseFormSchema = z.object({
   prezzo_listino: z.coerce.number().nullable(),
   prezzo_offerta: z.coerce.number().nullable(),
   numero_minimo_persone: z.number().nullable(),
-  pensione: z.array(z.enum(["no", "mezza", "completa"])),
+  pensione: z.array(z.enum(["no", "mezza", "completa", "colazione", "come_programma"])),
   tipo_voli: z.string().nullable(),
   note_importanti: z.string().nullable(),
   nota_penali: z.string().nullable(),
@@ -739,8 +739,10 @@ export default function CruiseForm({ initialData, ships = [], destinations = [],
                   {(
                     [
                       { value: "no", label: "No" },
+                      { value: "colazione", label: "Prima Colazione" },
                       { value: "mezza", label: "Mezza Pensione" },
                       { value: "completa", label: "Pensione Completa" },
+                      { value: "come_programma", label: "Trattamento come da programma" },
                     ] as const
                   ).map(({ value, label }) => (
                     <div key={value} className="flex items-center gap-2">

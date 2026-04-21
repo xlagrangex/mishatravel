@@ -44,7 +44,7 @@ export interface Destination {
 // -----------------------------------------------------------------------------
 
 export type TourStatus = 'draft' | 'published';
-export type PensioneType = 'no' | 'mezza' | 'completa';
+export type PensioneType = 'no' | 'mezza' | 'completa' | 'colazione' | 'come_programma';
 
 export interface Tour {
   id: string;

@@ -26,6 +26,8 @@ function formatPensione(pensione: string[]): string | null {
     completa: "Pensione Completa",
     mezza: "Mezza Pensione",
     no: "Senza Pensione",
+    colazione: "Prima Colazione",
+    come_programma: "Trattamento come da programma",
   };
   return pensione.map((p) => labels[p] || p).join(", ");
 }
