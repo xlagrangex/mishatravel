@@ -117,45 +117,54 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
           </div>
 
           {/* Divider */}
-          <div className="border-t border-white/20 mt-14 pt-10" />
+          <div className="border-t border-white/20 mt-14 pt-12" />
 
           {/* Contacts heading */}
-          <h3 className="text-center font-bold text-white text-xl md:text-2xl uppercase tracking-wider mb-8 font-[family-name:var(--font-poppins)]">
-            I nostri contatti
-          </h3>
+          <div className="text-center mb-10">
+            <h3 className="font-bold text-white text-2xl md:text-3xl uppercase tracking-wider font-[family-name:var(--font-poppins)]">
+              I nostri contatti
+            </h3>
+            <div className="mx-auto mt-4 h-[3px] w-16 bg-white/60 rounded-full" />
+          </div>
 
           {/* Contact row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {footerContacts.map((contact) => (
               <div
                 key={contact.title}
-                className="group/card rounded-lg p-4 -m-4 hover:bg-white/5 transition-all duration-300"
+                className="group/card relative rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/30 p-8 lg:p-10 transition-all duration-300 hover:-translate-y-1"
               >
-                <h5 className="font-semibold text-base text-white mb-3 font-[family-name:var(--font-poppins)] group-hover/card:translate-x-0.5 transition-transform duration-300">
+                <h5 className="font-bold text-lg lg:text-xl text-white mb-6 font-[family-name:var(--font-poppins)]">
                   {contact.title}
                 </h5>
-                <div className="space-y-2 text-[15px] text-white/85">
+                <div className="space-y-4">
                   {contact.phones.map((phone) => (
-                    <p key={phone} className="flex items-center gap-2.5">
-                      <Phone className="size-4 shrink-0 text-white/60" />
-                      <a
-                        href={`tel:${phone.replace(/\s/g, "")}`}
-                        className="hover:text-white transition-colors duration-300"
-                      >
+                    <a
+                      key={phone}
+                      href={`tel:${phone.replace(/\s/g, "")}`}
+                      className="flex items-center gap-4 group/link"
+                    >
+                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 group-hover/link:bg-white group-hover/link:text-[#A31825] text-white transition-all duration-300 shrink-0">
+                        <Phone className="size-4" />
+                      </span>
+                      <span className="text-[17px] font-semibold text-white/95 group-hover/link:text-white transition-colors duration-300 tracking-wide">
                         {phone}
-                      </a>
-                    </p>
+                      </span>
+                    </a>
                   ))}
                   {contact.emails.map((email) => (
-                    <p key={email} className="flex items-center gap-2.5">
-                      <Mail className="size-4 shrink-0 text-white/60" />
-                      <a
-                        href={`mailto:${email}`}
-                        className="hover:text-white transition-colors duration-300"
-                      >
+                    <a
+                      key={email}
+                      href={`mailto:${email}`}
+                      className="flex items-center gap-4 group/link"
+                    >
+                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 group-hover/link:bg-white group-hover/link:text-[#A31825] text-white transition-all duration-300 shrink-0">
+                        <Mail className="size-4" />
+                      </span>
+                      <span className="text-sm text-white/85 group-hover/link:text-white transition-colors duration-300 break-all">
                         {email}
-                      </a>
-                    </p>
+                      </span>
+                    </a>
                   ))}
                 </div>
               </div>
@@ -165,7 +174,7 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
       </div>
 
       {/* ============================
-          Bottom Bar: Legal + Credits
+          Legal bar: company info + cookies
          ============================ */}
       <div className="bg-[#8B1520] text-white/75">
         <div className="container mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
@@ -176,20 +185,50 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
           </p>
           <div className="flex items-center gap-3">
             <CookieSettingsButton />
-            <span className="text-white/40">|</span>
-            <p>
-              Sito realizzato da{" "}
-              <a
-                href="https://bizstudio.it"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-white transition-colors duration-300"
-              >
-                Biz Studio
-              </a>
-            </p>
           </div>
         </div>
+      </div>
+
+      {/* ============================
+          Credits BizStudio — contrast black band
+         ============================ */}
+      <div className="bg-black py-5">
+        <a
+          href="https://bizstudio.it"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 group/biz transition-all duration-300"
+        >
+          <Image
+            src="https://i.ibb.co/XkFvvj94/favicon.png"
+            alt="BizStudio"
+            width={20}
+            height={20}
+            unoptimized
+            className="w-5 h-5 opacity-70 group-hover/biz:opacity-100 transition-opacity"
+          />
+          <span className="text-white/50 text-xs group-hover/biz:text-white/90 transition-colors">
+            Sito realizzato da{" "}
+            <span
+              style={{
+                fontStyle: "italic",
+                fontWeight: 200,
+                letterSpacing: "-0.05em",
+                textTransform: "uppercase",
+              }}
+            >
+              Biz
+            </span>{" "}
+            <span
+              style={{
+                fontWeight: 700,
+                letterSpacing: "-0.05em",
+              }}
+            >
+              Studio
+            </span>
+          </span>
+        </a>
       </div>
     </footer>
   );
