@@ -191,47 +191,75 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
       </div>
 
       {/* ============================
-          Credits BizStudio — thin red band with divider
+          Credits BizStudio — red band with hover slide-up reveal
          ============================ */}
       <div className="bg-[#8B1520] border-t border-white/15 py-3">
         <a
           href="https://bizstudio.it"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 group/biz transition-all duration-300"
+          className="flex items-center justify-center gap-2 group/biz"
         >
           <Image
             src="https://i.ibb.co/XkFvvj94/favicon.png"
             alt="BizStudio"
-            width={28}
-            height={28}
+            width={21}
+            height={21}
             unoptimized
-            className="w-7 h-7 opacity-100"
+            className="w-[21px] h-[21px] transition-all duration-300 group-hover/biz:brightness-125 group-hover/biz:scale-110"
           />
-          <span className="text-white text-xs inline-flex items-center">
-            Sito realizzato con
-            <Heart
-              className="size-3 mx-1 text-white fill-current"
-              aria-hidden="true"
-            />
-            da&nbsp;
+          <span className="relative overflow-hidden h-5 block">
             <span
-              style={{
-                fontStyle: "italic",
-                fontWeight: 200,
-                letterSpacing: "-0.05em",
-                textTransform: "uppercase",
-              }}
+              aria-hidden="false"
+              className="inline-flex items-center h-5 text-white/85 text-xs transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/biz:-translate-y-full"
             >
-              Biz
+              Sito realizzato con
+              <Heart className="size-3 mx-1 text-white fill-current" aria-hidden="true" />
+              da&nbsp;
+              <span
+                style={{
+                  fontStyle: "italic",
+                  fontWeight: 200,
+                  letterSpacing: "-0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Biz
+              </span>
+              <span
+                style={{
+                  fontWeight: 700,
+                  letterSpacing: "-0.05em",
+                }}
+              >
+                Studio
+              </span>
             </span>
             <span
-              style={{
-                fontWeight: 700,
-                letterSpacing: "-0.05em",
-              }}
+              aria-hidden="true"
+              className="absolute left-0 top-0 inline-flex items-center h-5 text-white text-xs translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/biz:translate-y-0 whitespace-nowrap"
             >
-              Studio
+              Sito realizzato con
+              <Heart className="size-3 mx-1 text-white fill-current" aria-hidden="true" />
+              da&nbsp;
+              <span
+                style={{
+                  fontStyle: "italic",
+                  fontWeight: 200,
+                  letterSpacing: "-0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Biz
+              </span>
+              <span
+                style={{
+                  fontWeight: 700,
+                  letterSpacing: "-0.05em",
+                }}
+              >
+                Studio
+              </span>
             </span>
           </span>
         </a>
