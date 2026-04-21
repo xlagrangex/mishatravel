@@ -48,3 +48,6 @@ scraped-data/
 *.tsbuildinfo
 next-env.d.ts
 frontend/
+
+# Claude Code runtime artifacts
+.claude/
