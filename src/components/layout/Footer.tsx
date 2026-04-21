@@ -7,7 +7,19 @@ import {
   Facebook,
   Instagram,
   Heart,
+  Headset,
+  Briefcase,
+  Calculator,
+  ArrowUpRight,
+  type LucideIcon,
 } from "lucide-react";
+
+function getContactIcon(title: string): LucideIcon {
+  const t = title.toLowerCase();
+  if (t.includes("booking") || t.includes("programmazione")) return Headset;
+  if (t.includes("contabil")) return Calculator;
+  return Briefcase;
+}
 import {
   footerContacts,
   footerLinkRapidi,
@@ -120,56 +132,80 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
           {/* Divider */}
           <div className="border-t border-white/20 mt-14 pt-12" />
 
-          {/* Contacts heading */}
-          <div className="text-center mb-10">
-            <h3 className="font-bold text-white text-2xl md:text-3xl uppercase tracking-wider font-[family-name:var(--font-poppins)]">
-              I nostri contatti
-            </h3>
-            <div className="mx-auto mt-4 h-[3px] w-16 bg-white/60 rounded-full" />
-          </div>
-
           {/* Contact row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {footerContacts.map((contact) => (
-              <div
-                key={contact.title}
-                className="group/card relative rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/30 p-8 lg:p-10 transition-all duration-300 hover:-translate-y-1"
-              >
-                <h5 className="font-bold text-lg lg:text-xl text-white mb-6 font-[family-name:var(--font-poppins)]">
-                  {contact.title}
-                </h5>
-                <div className="space-y-4">
-                  {contact.phones.map((phone) => (
-                    <a
-                      key={phone}
-                      href={`tel:${phone.replace(/\s/g, "")}`}
-                      className="flex items-center gap-4 group/link"
-                    >
-                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 group-hover/link:bg-white group-hover/link:text-[#A31825] text-white transition-all duration-300 shrink-0">
-                        <Phone className="size-4" />
-                      </span>
-                      <span className="text-[17px] font-semibold text-white/95 group-hover/link:text-white transition-colors duration-300 tracking-wide">
-                        {phone}
-                      </span>
-                    </a>
-                  ))}
-                  {contact.emails.map((email) => (
-                    <a
-                      key={email}
-                      href={`mailto:${email}`}
-                      className="flex items-center gap-4 group/link"
-                    >
-                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 group-hover/link:bg-white group-hover/link:text-[#A31825] text-white transition-all duration-300 shrink-0">
-                        <Mail className="size-4" />
-                      </span>
-                      <span className="text-sm text-white/85 group-hover/link:text-white transition-colors duration-300 break-all">
-                        {email}
-                      </span>
-                    </a>
-                  ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+            {footerContacts.map((contact) => {
+              const Icon = getContactIcon(contact.title);
+              return (
+                <div
+                  key={contact.title}
+                  className="group/card relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.08] to-white/[0.02] hover:border-white/40 hover:from-white/[0.14] hover:to-white/[0.04] p-7 lg:p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl"
+                >
+                  {/* Decorative glow in corner */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white/10 blur-3xl transition-opacity duration-500 opacity-60 group-hover/card:opacity-100"
+                  />
+                  {/* Giant watermark icon */}
+                  <Icon
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -bottom-6 -right-6 size-44 text-white/5 group-hover/card:text-white/10 transition-colors duration-500"
+                    strokeWidth={1}
+                  />
+
+                  <div className="relative">
+                    {/* Icon badge */}
+                    <div className="mb-5 inline-flex items-center justify-center size-12 rounded-xl bg-white text-[#A31825] shadow-lg shadow-black/20 group-hover/card:scale-105 transition-transform duration-500">
+                      <Icon className="size-6" strokeWidth={2.2} />
+                    </div>
+
+                    {/* Department name */}
+                    <h5 className="font-bold text-[17px] text-white font-[family-name:var(--font-poppins)] leading-snug mb-5">
+                      {contact.title}
+                    </h5>
+
+                    {/* Divider */}
+                    <div className="h-px bg-white/20 mb-5" />
+
+                    {/* Contacts */}
+                    <div className="space-y-3">
+                      {contact.phones.map((phone) => (
+                        <a
+                          key={phone}
+                          href={`tel:${phone.replace(/\s/g, "")}`}
+                          className="flex items-center gap-3 group/link"
+                        >
+                          <Phone className="size-4 text-white/70 group-hover/link:text-white shrink-0 transition-colors" strokeWidth={2} />
+                          <span className="text-base font-semibold text-white group-hover/link:text-white transition-colors tracking-wide">
+                            {phone}
+                          </span>
+                        </a>
+                      ))}
+                      {contact.emails.map((email) => (
+                        <a
+                          key={email}
+                          href={`mailto:${email}`}
+                          className="flex items-center gap-3 group/link"
+                        >
+                          <Mail className="size-4 text-white/70 group-hover/link:text-white shrink-0 transition-colors" strokeWidth={2} />
+                          <span className="text-base font-semibold text-white group-hover/link:text-white transition-colors break-all">
+                            {email}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+
+                    {/* CTA arrow — shows on hover */}
+                    <div className="mt-6 flex items-center justify-end">
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="size-5 text-white/40 group-hover/card:text-white group-hover/card:translate-x-1 group-hover/card:-translate-y-1 transition-all duration-500"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -208,10 +244,33 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
             unoptimized
             className="w-[21px] h-[21px] transition-all duration-300 group-hover/biz:brightness-125 group-hover/biz:scale-110"
           />
-          <span className="relative overflow-hidden h-5 block">
+          <span className="relative overflow-hidden h-5 inline-flex items-center whitespace-nowrap">
+            {/* Sizing ghost: keeps the wrapper at the correct intrinsic width */}
+            <span className="invisible inline-flex items-center text-xs" aria-hidden="true">
+              Sito realizzato con
+              <Heart className="size-3 mx-1 fill-current" aria-hidden="true" />
+              da&nbsp;
+              <span
+                style={{
+                  fontStyle: "italic",
+                  fontWeight: 200,
+                  letterSpacing: "-0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Biz
+              </span>
+              <span
+                style={{
+                  fontWeight: 700,
+                  letterSpacing: "-0.05em",
+                }}
+              >
+                Studio
+              </span>
+            </span>
             <span
-              aria-hidden="false"
-              className="inline-flex items-center h-5 text-white/85 text-xs transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/biz:-translate-y-full"
+              className="absolute inset-0 inline-flex items-center text-white/85 text-xs transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/biz:-translate-y-full"
             >
               Sito realizzato con
               <Heart className="size-3 mx-1 text-white fill-current" aria-hidden="true" />
@@ -237,7 +296,7 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
             </span>
             <span
               aria-hidden="true"
-              className="absolute left-0 top-0 inline-flex items-center h-5 text-white text-xs translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/biz:translate-y-0 whitespace-nowrap"
+              className="absolute inset-0 inline-flex items-center text-white text-xs translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/biz:translate-y-0"
             >
               Sito realizzato con
               <Heart className="size-3 mx-1 text-white fill-current" aria-hidden="true" />
