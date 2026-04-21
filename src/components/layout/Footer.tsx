@@ -7,19 +7,7 @@ import {
   Facebook,
   Instagram,
   Heart,
-  Headset,
-  Briefcase,
-  Calculator,
-  ArrowUpRight,
-  type LucideIcon,
 } from "lucide-react";
-
-function getContactIcon(title: string): LucideIcon {
-  const t = title.toLowerCase();
-  if (t.includes("booking") || t.includes("programmazione")) return Headset;
-  if (t.includes("contabil")) return Calculator;
-  return Briefcase;
-}
 import {
   footerContacts,
   footerLinkRapidi,
@@ -133,79 +121,47 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
           <div className="border-t border-white/20 mt-14 pt-12" />
 
           {/* Contact row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-            {footerContacts.map((contact) => {
-              const Icon = getContactIcon(contact.title);
-              return (
-                <div
-                  key={contact.title}
-                  className="group/card relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.08] to-white/[0.02] hover:border-white/40 hover:from-white/[0.14] hover:to-white/[0.04] p-7 lg:p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl"
-                >
-                  {/* Decorative glow in corner */}
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white/10 blur-3xl transition-opacity duration-500 opacity-60 group-hover/card:opacity-100"
-                  />
-                  {/* Giant watermark icon */}
-                  <Icon
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -bottom-6 -right-6 size-44 text-white/5 group-hover/card:text-white/10 transition-colors duration-500"
-                    strokeWidth={1}
-                  />
-
-                  <div className="relative">
-                    {/* Icon badge */}
-                    <div className="mb-5 inline-flex items-center justify-center size-12 rounded-xl bg-white text-[#A31825] shadow-lg shadow-black/20 group-hover/card:scale-105 transition-transform duration-500">
-                      <Icon className="size-6" strokeWidth={2.2} />
-                    </div>
-
-                    {/* Department name */}
-                    <h5 className="font-bold text-[17px] text-white font-[family-name:var(--font-poppins)] leading-snug mb-5">
-                      {contact.title}
-                    </h5>
-
-                    {/* Divider */}
-                    <div className="h-px bg-white/20 mb-5" />
-
-                    {/* Contacts */}
-                    <div className="space-y-3">
-                      {contact.phones.map((phone) => (
-                        <a
-                          key={phone}
-                          href={`tel:${phone.replace(/\s/g, "")}`}
-                          className="flex items-center gap-3 group/link"
-                        >
-                          <Phone className="size-4 text-white/70 group-hover/link:text-white shrink-0 transition-colors" strokeWidth={2} />
-                          <span className="text-base font-semibold text-white group-hover/link:text-white transition-colors tracking-wide">
-                            {phone}
-                          </span>
-                        </a>
-                      ))}
-                      {contact.emails.map((email) => (
-                        <a
-                          key={email}
-                          href={`mailto:${email}`}
-                          className="flex items-center gap-3 group/link"
-                        >
-                          <Mail className="size-4 text-white/70 group-hover/link:text-white shrink-0 transition-colors" strokeWidth={2} />
-                          <span className="text-base font-semibold text-white group-hover/link:text-white transition-colors break-all">
-                            {email}
-                          </span>
-                        </a>
-                      ))}
-                    </div>
-
-                    {/* CTA arrow — shows on hover */}
-                    <div className="mt-6 flex items-center justify-end">
-                      <ArrowUpRight
-                        aria-hidden="true"
-                        className="size-5 text-white/40 group-hover/card:text-white group-hover/card:translate-x-1 group-hover/card:-translate-y-1 transition-all duration-500"
-                      />
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            {footerContacts.map((contact) => (
+              <div
+                key={contact.title}
+                className="group/card relative rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/30 p-8 lg:p-10 transition-all duration-300 hover:-translate-y-1"
+              >
+                <h5 className="font-bold text-lg lg:text-xl text-white mb-6 font-[family-name:var(--font-poppins)]">
+                  {contact.title}
+                </h5>
+                <div className="space-y-4">
+                  {contact.phones.map((phone) => (
+                    <a
+                      key={phone}
+                      href={`tel:${phone.replace(/\s/g, "")}`}
+                      className="flex items-center gap-4 group/link"
+                    >
+                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 group-hover/link:bg-white group-hover/link:text-[#A31825] text-white transition-all duration-300 shrink-0">
+                        <Phone className="size-4" />
+                      </span>
+                      <span className="text-base font-semibold text-white group-hover/link:text-white transition-colors tracking-wide">
+                        {phone}
+                      </span>
+                    </a>
+                  ))}
+                  {contact.emails.map((email) => (
+                    <a
+                      key={email}
+                      href={`mailto:${email}`}
+                      className="flex items-center gap-4 group/link"
+                    >
+                      <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 group-hover/link:bg-white group-hover/link:text-[#A31825] text-white transition-all duration-300 shrink-0">
+                        <Mail className="size-4" />
+                      </span>
+                      <span className="text-base font-semibold text-white group-hover/link:text-white transition-colors break-all">
+                        {email}
+                      </span>
+                    </a>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       </div>
