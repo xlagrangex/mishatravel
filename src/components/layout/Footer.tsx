@@ -203,10 +203,10 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
           <Image
             src="https://i.ibb.co/XkFvvj94/favicon.png"
             alt="BizStudio"
-            width={16}
-            height={16}
+            width={28}
+            height={28}
             unoptimized
-            className="w-4 h-4 opacity-100 brightness-0 invert"
+            className="w-7 h-7 opacity-100"
           />
           <span className="text-white text-xs inline-flex items-center">
             Sito realizzato con
