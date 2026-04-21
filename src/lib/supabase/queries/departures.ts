@@ -45,6 +45,8 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         status,
         durata_notti,
         a_partire_da,
+        prezzo_listino,
+        prezzo_offerta,
         prezzo_su_richiesta,
         destination:destinations(name)
       )
@@ -72,6 +74,8 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         status,
         durata_notti,
         a_partire_da,
+        prezzo_listino,
+        prezzo_offerta,
         prezzo_su_richiesta,
         destination:destinations(name)
       )
@@ -84,10 +88,17 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
     throw new Error(`Failed to fetch cruise departures: ${cruiseError.message}`)
   }
 
+  // Pick the first positive price from a list of candidates, else null.
+  const firstPositive = (vals: (number | null | undefined)[]): number | null => {
+    for (const v of vals) {
+      if (v != null && Number(v) > 0) return Number(v)
+    }
+    return null
+  }
+
   // Map tour departures to unified shape
   const tourItems: UnifiedDeparture[] = (tourDeps ?? []).map((row: any) => {
     const psr = !!row.tour.prezzo_su_richiesta
-    const depPrice = row.prezzo_3_stelle != null ? Number(row.prezzo_3_stelle) : null
     const basePrice = row.tour.a_partire_da != null ? Number(row.tour.a_partire_da) : null
     return {
       id: row.id,
@@ -96,7 +107,14 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
       slug: row.tour.slug,
       destination_name: row.tour.destination?.name ?? null,
       date: row.data_partenza ?? '',
-      price: psr ? null : (depPrice ?? basePrice),
+      price: psr
+        ? null
+        : firstPositive([
+            row.prezzo_3_stelle,
+            row.tour.prezzo_offerta,
+            row.tour.prezzo_listino,
+            basePrice,
+          ]),
       prezzoSuRichiesta: psr,
       duration: row.tour.durata_notti ?? null,
       basePath: '/tours',
@@ -106,7 +124,6 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
   // Map cruise departures to unified shape
   const cruiseItems: UnifiedDeparture[] = (cruiseDeps ?? []).map((row: any) => {
     const psr = !!row.cruise.prezzo_su_richiesta
-    const depPrice = row.prezzo_main_deck != null ? Number(row.prezzo_main_deck) : null
     const basePrice = row.cruise.a_partire_da != null ? Number(row.cruise.a_partire_da) : null
     return {
       id: row.id,
@@ -115,7 +132,14 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
       slug: row.cruise.slug,
       destination_name: row.cruise.destination?.name ?? null,
       date: row.data_partenza ?? '',
-      price: psr ? null : (depPrice ?? basePrice),
+      price: psr
+        ? null
+        : firstPositive([
+            row.prezzo_main_deck,
+            row.cruise.prezzo_offerta,
+            row.cruise.prezzo_listino,
+            basePrice,
+          ]),
       prezzoSuRichiesta: psr,
       duration: row.cruise.durata_notti ?? null,
       basePath: '/crociere',

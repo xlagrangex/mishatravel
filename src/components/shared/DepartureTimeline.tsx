@@ -63,8 +63,14 @@ export default function DepartureTimeline({
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-xs text-gray-500">da </span>
-                <span className="text-lg font-bold text-[#C41E2F]">{formatPrice(dep.price)}</span>
+                {dep.price > 0 ? (
+                  <>
+                    <span className="text-xs text-gray-500">da </span>
+                    <span className="text-lg font-bold text-[#C41E2F]">{formatPrice(dep.price)}</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-bold text-[#C41E2F]">Su richiesta</span>
+                )}
               </div>
             </Link>
           ))}

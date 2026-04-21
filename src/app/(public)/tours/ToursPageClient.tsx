@@ -175,7 +175,14 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
             date: d.data_partenza,
             destination: t.destination_name ?? "",
             duration: t.durata_notti ?? "",
-            price: d.prezzo_3_stelle ?? parsePrice(t.a_partire_da),
+            price:
+              d.prezzo_3_stelle && d.prezzo_3_stelle > 0
+                ? d.prezzo_3_stelle
+                : t.prezzo_offerta && t.prezzo_offerta > 0
+                ? t.prezzo_offerta
+                : t.prezzo_listino && t.prezzo_listino > 0
+                ? t.prezzo_listino
+                : parsePrice(t.a_partire_da),
           })),
       )
       .sort((a, b) => a.date.localeCompare(b.date))

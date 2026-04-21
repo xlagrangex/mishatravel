@@ -185,7 +185,14 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
             date: d.data_partenza,
             destination: c.destination_name ?? "",
             duration: c.durata_notti ?? "",
-            price: d.prezzo_main_deck ?? parsePrice(c.a_partire_da),
+            price:
+              d.prezzo_main_deck && d.prezzo_main_deck > 0
+                ? d.prezzo_main_deck
+                : c.prezzo_offerta && c.prezzo_offerta > 0
+                ? c.prezzo_offerta
+                : c.prezzo_listino && c.prezzo_listino > 0
+                ? c.prezzo_listino
+                : parsePrice(c.a_partire_da),
           })),
       )
       .sort((a, b) => a.date.localeCompare(b.date))

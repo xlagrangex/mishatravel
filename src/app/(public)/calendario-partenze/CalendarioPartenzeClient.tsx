@@ -110,7 +110,7 @@ export default function CalendarioPartenzeClient({ departures }: CalendarioParte
     new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long", year: "numeric" }).format(new Date(dateStr));
 
   const formatPrice = (price: number | null) => {
-    if (price == null) return "Su richiesta";
+    if (price == null || price <= 0) return "Su richiesta";
     return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(price);
   };
 
