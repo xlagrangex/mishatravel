@@ -354,15 +354,15 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
       {/* Tabs: Date e Prezzi / Supplementi / Condizioni */}
       <section id="date-prezzi" className="py-10 bg-gray-50/50">
         <div className="container mx-auto px-4">
-          <Tabs defaultValue="prezzi" className="w-full">
-            <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto flex-wrap">
-              <TabsTrigger value="prezzi" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#C41E2F] data-[state=active]:text-[#C41E2F] px-4 py-3">
+          <Tabs defaultValue="prezzi" className="w-full max-w-3xl mx-auto">
+            <TabsList className="w-full justify-center gap-2 border-b rounded-none bg-transparent p-0 h-auto flex-wrap">
+              <TabsTrigger value="prezzi" className="flex-none rounded-none border-b-2 border-transparent data-[state=active]:border-[#C41E2F] data-[state=active]:text-[#C41E2F] px-5 py-3">
                 Date e Prezzi
               </TabsTrigger>
-              <TabsTrigger value="supplementi" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#C41E2F] data-[state=active]:text-[#C41E2F] px-4 py-3">
+              <TabsTrigger value="supplementi" className="flex-none rounded-none border-b-2 border-transparent data-[state=active]:border-[#C41E2F] data-[state=active]:text-[#C41E2F] px-5 py-3">
                 Supplementi
               </TabsTrigger>
-              <TabsTrigger value="condizioni" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#C41E2F] data-[state=active]:text-[#C41E2F] px-4 py-3">
+              <TabsTrigger value="condizioni" className="flex-none rounded-none border-b-2 border-transparent data-[state=active]:border-[#C41E2F] data-[state=active]:text-[#C41E2F] px-5 py-3">
                 Condizioni
               </TabsTrigger>
             </TabsList>
@@ -372,8 +372,6 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                 type="tour"
                 departures={tour.departures ?? []}
                 onRequestQuote={(depId) => openConfigurator(depId)}
-                priceLabel1={tour.price_label_1}
-                priceLabel2={tour.price_label_2}
               />
             </TabsContent>
 

@@ -11,8 +11,6 @@ interface TourDepartureRow {
   id: string;
   from_city: string;
   data_partenza: string;
-  prezzo_3_stelle: number | null;
-  prezzo_4_stelle: string | null;
 }
 
 interface CruiseDepartureRow {
@@ -25,8 +23,6 @@ interface TourPricingTableProps {
   type: "tour";
   departures: TourDepartureRow[];
   onRequestQuote: (departureId: string) => void;
-  priceLabel1?: string;
-  priceLabel2?: string;
   cabins?: never;
   shipDecks?: never;
   departurePrices?: never;
@@ -116,12 +112,7 @@ export default function PricingTable(props: PricingTableProps) {
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Partenza da</th>
             <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
-            {type === "tour" ? (
-              <>
-                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{props.priceLabel1 || "Comfort"}</th>
-                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{props.priceLabel2 || "Deluxe"}</th>
-              </>
-            ) : (
+            {type === "tour" ? null : (
               cabinColumns.map(({ cabin, deck }) => (
                 <th key={cabin.id} className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   <div>{shortCabinLabel(cabin, deck)}</div>
@@ -139,16 +130,7 @@ export default function PricingTable(props: PricingTableProps) {
             <tr key={dep.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
               <td className="py-3.5 px-4 text-sm text-gray-700">{dep.from_city}</td>
               <td className="py-3.5 px-4 text-sm text-gray-700">{formatDate(dep.data_partenza)}</td>
-              {type === "tour" ? (
-                <>
-                  <td className="py-3.5 px-4 text-sm font-semibold text-[#C41E2F]">
-                    {fmtPrice((dep as TourDepartureRow).prezzo_3_stelle)}
-                  </td>
-                  <td className="py-3.5 px-4 text-sm font-semibold text-[#C41E2F]">
-                    {fmtPrice((dep as TourDepartureRow).prezzo_4_stelle)}
-                  </td>
-                </>
-              ) : (
+              {type === "tour" ? null : (
                 cabinColumns.map(({ cabin }) => {
                   const depPrices = priceMap.get(dep.id);
                   const prezzo = depPrices?.get(cabin.id) ?? null;

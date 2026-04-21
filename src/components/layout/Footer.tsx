@@ -191,29 +191,30 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
       </div>
 
       {/* ============================
-          Credits BizStudio — contrast black band
+          Credits BizStudio — thin red band with divider
          ============================ */}
-      <div className="bg-black py-5">
+      <div className="bg-[#8B1520] border-t border-white/15 py-3">
         <a
           href="https://bizstudio.it"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 group/biz transition-all duration-300"
+          className="flex items-center justify-center gap-1.5 group/biz transition-all duration-300"
         >
           <Image
             src="https://i.ibb.co/XkFvvj94/favicon.png"
             alt="BizStudio"
-            width={20}
-            height={20}
+            width={16}
+            height={16}
             unoptimized
-            className="w-5 h-5 opacity-70 group-hover/biz:opacity-100 transition-opacity"
+            className="w-4 h-4 opacity-70 group-hover/biz:opacity-100 transition-opacity"
           />
-          <span className="text-white/50 text-xs group-hover/biz:text-white/90 transition-colors inline-flex items-center gap-1.5">
+          <span className="text-white/60 text-xs group-hover/biz:text-white transition-colors inline-flex items-center">
             Sito realizzato con
             <Heart
-              className="size-3.5 text-[#C41E2F] group-hover/biz:text-red-400 transition-colors fill-current"
+              className="size-3 mx-1 text-white group-hover/biz:text-red-200 transition-colors fill-current"
               aria-hidden="true"
             />
+            da&nbsp;
             <span
               style={{
                 fontStyle: "italic",
