@@ -6,6 +6,7 @@ import {
   MapPin,
   Facebook,
   Instagram,
+  Heart,
 } from "lucide-react";
 import {
   footerContacts,
@@ -207,8 +208,12 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
             unoptimized
             className="w-5 h-5 opacity-70 group-hover/biz:opacity-100 transition-opacity"
           />
-          <span className="text-white/50 text-xs group-hover/biz:text-white/90 transition-colors">
-            Sito realizzato da{" "}
+          <span className="text-white/50 text-xs group-hover/biz:text-white/90 transition-colors inline-flex items-center gap-1.5">
+            Sito realizzato con
+            <Heart
+              className="size-3.5 text-[#C41E2F] group-hover/biz:text-red-400 transition-colors fill-current"
+              aria-hidden="true"
+            />
             <span
               style={{
                 fontStyle: "italic",
@@ -218,7 +223,7 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
               }}
             >
               Biz
-            </span>{" "}
+            </span>
             <span
               style={{
                 fontWeight: 700,
