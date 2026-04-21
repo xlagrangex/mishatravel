@@ -1744,39 +1744,24 @@ export const topBarLinks: TopBarLink[] = [
 
 export const footerContactColumns: FooterColumn[] = [
   {
-    title: "I nostri contatti",
+    title: "Booking e programmazione",
     lines: [
-      "Piazza Grimaldi 1-3",
-      "16124 Genova",
-      "Tel: +39 010 8994000",
-      "info@mishatravel.com",
-    ],
-  },
-  {
-    title: "Reparto Agenzia",
-    lines: [
-      "Piazza Grimaldi 1-3",
-      "16124 Genova",
       "Tel: +39 010 8994000",
       "booking@mishatravel.com",
     ],
   },
   {
-    title: "Ufficio Commerciale",
+    title: "Agenzia viaggi",
     lines: [
-      "Piazza Grimaldi 1-3",
-      "16124 Genova",
-      "Tel: +39 010 8994000",
+      "Tel: +39 010 2461630",
       "agenzia@mishatravel.com",
     ],
   },
   {
-    title: "Ufficio Crociere",
+    title: "Contabilità",
     lines: [
-      "Piazza Grimaldi 1-3",
-      "16124 Genova",
-      "Tel: +39 010 8994000",
-      "programmazione@mishatravel.com",
+      "Tel: +39 010 2461634",
+      "contabilita@mishatravel.com",
     ],
   },
 ];

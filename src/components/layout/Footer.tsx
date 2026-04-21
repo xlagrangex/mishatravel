@@ -119,8 +119,13 @@ export default function Footer({ blogEnabled = true }: { blogEnabled?: boolean }
           {/* Divider */}
           <div className="border-t border-white/20 mt-14 pt-10" />
 
+          {/* Contacts heading */}
+          <h3 className="text-center font-bold text-white text-xl md:text-2xl uppercase tracking-wider mb-8 font-[family-name:var(--font-poppins)]">
+            I nostri contatti
+          </h3>
+
           {/* Contact row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {footerContacts.map((contact) => (
               <div
                 key={contact.title}
