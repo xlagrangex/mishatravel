@@ -41,7 +41,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { displayPrice } from "@/lib/format";
+import { displayCascadedPrice } from "@/lib/format";
 import type { TourListItem } from "@/lib/supabase/queries/tours";
 import {
   deleteTourAction,
@@ -362,7 +362,11 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
                       </span>
                     ) : (
                       <span className="text-[#C41E2F]">
-                        {displayPrice(tour.a_partire_da)}
+                        {displayCascadedPrice(
+                          tour.prezzo_offerta,
+                          tour.prezzo_listino,
+                          tour.a_partire_da,
+                        )}
                       </span>
                     )}
                   </TableCell>

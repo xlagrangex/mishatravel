@@ -208,7 +208,7 @@ export default function AdminPartenzeClient({
     }).format(new Date(dateStr));
 
   const formatPrice = (price: number | null) => {
-    if (price == null) return "N/D";
+    if (price == null || price <= 0) return "N/D";
     return new Intl.NumberFormat("it-IT", {
       style: "currency",
       currency: "EUR",

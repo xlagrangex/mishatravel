@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { displayPrice } from "@/lib/format";
+import { displayCascadedPrice } from "@/lib/format";
 import type { CruiseListItem } from "@/lib/supabase/queries/cruises";
 import {
   deleteCruiseAction,
@@ -344,7 +344,7 @@ export default function CrociereTable({ cruises }: CrociereTableProps) {
                   <TableCell className="text-sm font-medium whitespace-nowrap">
                     {cruise.prezzo_su_richiesta
                       ? <span className="text-muted-foreground">Su richiesta</span>
-                      : <span className="text-[#C41E2F]">{displayPrice(cruise.a_partire_da)}</span>
+                      : <span className="text-[#C41E2F]">{displayCascadedPrice(cruise.prezzo_offerta, cruise.prezzo_listino, cruise.a_partire_da)}</span>
                     }
                   </TableCell>
 

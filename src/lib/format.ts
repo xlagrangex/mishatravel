@@ -54,3 +54,33 @@ function formatEur(n: number): string {
   const rounded = Math.round(n);
   return `€ ${rounded.toLocaleString("it-IT")}`;
 }
+
+/**
+ * Display price with fallback cascade for admin list tables.
+ * Priority: prezzoOfferta → prezzoListino → aPartireDa.
+ * A value of 0 is treated as "missing" (same rule as the public cards).
+ * Returns "—" when no positive price is found.
+ */
+export function displayCascadedPrice(
+  prezzoOfferta: number | null | undefined,
+  prezzoListino: number | null | undefined,
+  aPartireDa: string | number | null | undefined,
+): string {
+  if (prezzoOfferta != null && prezzoOfferta > 0) return formatEur(prezzoOfferta);
+  if (prezzoListino != null && prezzoListino > 0) return formatEur(prezzoListino);
+
+  if (aPartireDa != null) {
+    if (typeof aPartireDa === "number") {
+      if (aPartireDa > 0) return formatEur(aPartireDa);
+    } else {
+      const cleaned = aPartireDa.trim().replace(/€/g, "").replace(/\s*a persona\b/gi, "").trim();
+      const num = cleaned
+        ? parseFloat(cleaned.replace(/\./g, "").replace(",", "."))
+        : NaN;
+      if (!isNaN(num) && num > 0) return formatEur(num);
+      if (cleaned && isNaN(num)) return cleaned;
+    }
+  }
+
+  return "—";
+}
