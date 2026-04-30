@@ -29,7 +29,7 @@ const tourSchema = z.object({
   prezzo_offerta: z.coerce.number().nullable().default(null),
   numero_persone: z.coerce.number().int().min(1).default(2),
   durata_notti: z.string().nullable().default(null),
-  pensione: z.array(z.enum(['no', 'mezza', 'completa'])).default([]),
+  pensione: z.array(z.enum(['no', 'mezza', 'completa', 'colazione', 'come_programma'])).default([]),
   tipo_voli: z.string().nullable().default(null),
   note_importanti: z.string().nullable().default(null),
   nota_penali: z.string().nullable().default(null),
