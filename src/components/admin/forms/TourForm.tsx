@@ -195,7 +195,15 @@ export default function TourForm({ initialData, destinations = [], localities = 
           localita: d.localita,
           descrizione: d.descrizione,
         })),
-        hotel_groups: [], // TODO: Group hotels by localita from initialData
+        hotel_groups: (() => {
+          const groups = new Map<string, { localita: string; hotels: { nome_albergo: string; stelle: number }[] }>();
+          for (const h of initialData.hotels) {
+            const key = h.localita ?? "";
+            if (!groups.has(key)) groups.set(key, { localita: key, hotels: [] });
+            groups.get(key)!.hotels.push({ nome_albergo: h.nome_albergo, stelle: h.stelle });
+          }
+          return Array.from(groups.values());
+        })(),
         departures: initialData.departures.map((d) => ({
           from_city: d.from_city,
           data_partenza: d.data_partenza,
