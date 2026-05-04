@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Check, X, ChevronRight, MapPin as MapPinIcon } from "lucide-react";
+import { Check, X, ChevronRight, MapPin as MapPinIcon, Hotel as HotelIcon, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -29,6 +29,7 @@ import type {
   TourGalleryItem,
   TourDeparture,
   TourSupplement,
+  TourHotel,
 } from "@/lib/types";
 import type { TourListItem } from "@/lib/supabase/queries/tours";
 import type { MapLocation } from "@/components/maps/ItineraryMap";
@@ -132,17 +133,30 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
     setConfiguratorOpen(true);
   }, []);
 
+  // Hotels grouped by localita (preserving insertion order)
+  const hotelGroups = useMemo(() => {
+    const map = new Map<string, TourHotel[]>();
+    for (const h of tour.hotels ?? []) {
+      const key = (h.localita ?? "").trim();
+      if (!key) continue;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(h);
+    }
+    return Array.from(map.entries()).map(([localita, hotels]) => ({ localita, hotels }));
+  }, [tour.hotels]);
+
   // Section nav items
   const sections = useMemo(() => {
     const items = [
       { id: "panoramica", label: "Panoramica" },
       { id: "itinerario", label: "Itinerario" },
+      ...(hotelGroups.length > 0 ? [{ id: "hotel", label: "Hotel" }] : []),
       { id: "incluso-escluso", label: "Incluso / Escluso" },
       { id: "date-prezzi", label: "Date e Prezzi" },
       { id: "condizioni", label: "Condizioni" },
     ];
     return items;
-  }, []);
+  }, [hotelGroups.length]);
 
   const handleAccordionChange = useCallback(
     (value: string) => {
@@ -304,6 +318,53 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
             )}
           </div>
         </section>
+
+        {/* Hotels */}
+        {hotelGroups.length > 0 && (
+          <section id="hotel" className="py-10">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-2 flex items-center gap-2">
+                <HotelIcon className="size-6 text-[#C41E2F]" /> Hotel previsti
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">
+                Strutture selezionate per il tour, suddivise per località. Possibili sostituzioni con
+                hotel di pari categoria.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {hotelGroups.map((group) => (
+                  <div
+                    key={group.localita}
+                    className="bg-white border border-gray-200 rounded-xl p-5"
+                  >
+                    <h3 className="text-lg font-semibold text-[#1B2D4F] mb-3 flex items-center gap-2">
+                      <MapPinIcon className="size-4 text-[#C41E2F]" />
+                      {group.localita}
+                    </h3>
+                    <ul className="space-y-2">
+                      {group.hotels.map((h, i) => (
+                        <li
+                          key={h.id || i}
+                          className="flex items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="text-gray-700">
+                            {h.nome_albergo || <span className="italic text-gray-400">Hotel da definire</span>}
+                          </span>
+                          {h.stelle ? (
+                            <span className="flex items-center gap-0.5 shrink-0">
+                              {Array.from({ length: h.stelle }).map((_, idx) => (
+                                <Star key={idx} className="size-3.5 fill-amber-400 text-amber-400" />
+                              ))}
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Incluso / Escluso */}
         <section id="incluso-escluso" className="py-10">

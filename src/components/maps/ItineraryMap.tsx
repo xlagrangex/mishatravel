@@ -55,6 +55,11 @@ const ACTIVE_ICON = L.icon({
 // MapController — handles fitBounds + fly to active pin
 // ---------------------------------------------------------------------------
 
+function isMapReady(map: L.Map): boolean {
+  const size = map.getSize();
+  return size.x > 0 && size.y > 0;
+}
+
 function MapController({
   locations,
   activeIndex,
@@ -66,26 +71,35 @@ function MapController({
   const didFitRef = useRef(false);
 
   useEffect(() => {
-    if (!didFitRef.current && locations.length > 0) {
-      const valid = locations.filter(
-        (l) => Number.isFinite(l.coords[0]) && Number.isFinite(l.coords[1])
-      );
-      if (valid.length > 0) {
-        const bounds = L.latLngBounds(valid.map((l) => l.coords));
-        map.fitBounds(bounds, { padding: [40, 40] });
-      }
+    if (didFitRef.current || locations.length === 0) return;
+    if (!isMapReady(map)) return;
+    const valid = locations.filter(
+      (l) => Number.isFinite(l.coords[0]) && Number.isFinite(l.coords[1])
+    );
+    if (valid.length === 0) {
       didFitRef.current = true;
+      return;
+    }
+    try {
+      const bounds = L.latLngBounds(valid.map((l) => l.coords));
+      map.fitBounds(bounds, { padding: [40, 40] });
+      didFitRef.current = true;
+    } catch (err) {
+      console.warn("[ItineraryMap] fitBounds failed:", err);
     }
   }, [map, locations]);
 
   useEffect(() => {
-    if (activeIndex !== null && locations[activeIndex]) {
-      const [lat, lng] = locations[activeIndex].coords;
-      if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        map.flyTo([lat, lng], Math.max(map.getZoom(), 8), {
-          duration: 0.8,
-        });
-      }
+    if (activeIndex === null || !locations[activeIndex]) return;
+    if (!isMapReady(map)) return;
+    const [lat, lng] = locations[activeIndex].coords;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const currentZoom = map.getZoom();
+    const targetZoom = Number.isFinite(currentZoom) ? Math.max(currentZoom, 8) : 8;
+    try {
+      map.flyTo([lat, lng], targetZoom, { duration: 0.8 });
+    } catch (err) {
+      console.warn("[ItineraryMap] flyTo failed:", err);
     }
   }, [activeIndex, map, locations]);
 
