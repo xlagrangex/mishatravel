@@ -137,11 +137,12 @@ export async function getDestinationWithTours(
         prezzo_offerta,
         status,
         created_at,
-        destination:destinations(name),
+        destination:destinations!destination_id(name),
+        destination_2:destinations!destination_id_2(name),
         departures:tour_departures(data_partenza)
       `
       )
-      .eq('destination_id', dest.id)
+      .or(`destination_id.eq.${dest.id},destination_id_2.eq.${dest.id}`)
       .eq('status', 'published')
       .order('created_at', { ascending: false }),
 
@@ -192,6 +193,7 @@ export async function getDestinationWithTours(
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
+      destination_name_2: row.destination_2?.name ?? null,
       prezzo_su_richiesta: row.prezzo_su_richiesta ?? false,
       price_type: row.price_type ?? 'da',
       prezzo_listino: row.prezzo_listino ?? null,
@@ -243,7 +245,9 @@ export async function getTourCountsPerDestination(): Promise<Record<string, numb
   const [toursResult, cruisesResult] = await Promise.all([
     supabase
       .from('tours')
-      .select('destination:destinations(slug), departures:tour_departures(data_partenza)')
+      .select(
+        'destination:destinations!destination_id(slug), destination_2:destinations!destination_id_2(slug), departures:tour_departures(data_partenza)',
+      )
       .eq('status', 'published'),
     supabase
       .from('cruises')
@@ -255,9 +259,12 @@ export async function getTourCountsPerDestination(): Promise<Record<string, numb
 
   for (const row of toursResult.data ?? []) {
     const r = row as any
-    const slug = r.destination?.slug
-    if (!slug) continue
-    counts[slug] = (counts[slug] || 0) + 1
+    if (r.destination?.slug) {
+      counts[r.destination.slug] = (counts[r.destination.slug] || 0) + 1
+    }
+    if (r.destination_2?.slug) {
+      counts[r.destination_2.slug] = (counts[r.destination_2.slug] || 0) + 1
+    }
   }
 
   for (const row of cruisesResult.data ?? []) {

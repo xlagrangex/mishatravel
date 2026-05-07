@@ -82,7 +82,10 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
       .map((d) => ({
         value: d.name,
         label: d.name,
-        count: tours.filter((t) => t.destination_name === d.name).length,
+        count: tours.filter(
+          (t) =>
+            t.destination_name === d.name || t.destination_name_2 === d.name,
+        ).length,
       }))
       .filter((d) => d.count > 0);
   }, [destinations, tours, filters.macroAreas]);
@@ -93,12 +96,20 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
 
     // Macro area filter
     if (filters.macroAreas.length > 0) {
-      result = result.filter((t) => filters.macroAreas.includes(t.destination_macro_area ?? ""));
+      result = result.filter(
+        (t) =>
+          filters.macroAreas.includes(t.destination_macro_area ?? "") ||
+          filters.macroAreas.includes(t.destination_macro_area_2 ?? ""),
+      );
     }
 
     // Destination filter
     if (filters.destinations.length > 0) {
-      result = result.filter((t) => filters.destinations.includes(t.destination_name ?? ""));
+      result = result.filter(
+        (t) =>
+          filters.destinations.includes(t.destination_name ?? "") ||
+          filters.destinations.includes(t.destination_name_2 ?? ""),
+      );
     }
 
     // Date range filter
@@ -173,7 +184,9 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
             basePath: "/tours",
             type: "tour" as const,
             date: d.data_partenza,
-            destination: t.destination_name ?? "",
+            destination: [t.destination_name, t.destination_name_2]
+              .filter(Boolean)
+              .join(" + "),
             duration: t.durata_notti ?? "",
             price:
               d.prezzo_3_stelle && d.prezzo_3_stelle > 0
@@ -406,7 +419,9 @@ export default function ToursPageClient({ tours, destinations, macroAreas }: Tou
                       key={tour.id}
                       slug={tour.slug}
                       title={tour.title}
-                      destination={tour.destination_name ?? ""}
+                      destination={[tour.destination_name, tour.destination_name_2]
+                        .filter(Boolean)
+                        .join(" + ")}
                       duration={tour.durata_notti ?? ""}
                       priceFrom={parsePrice(tour.a_partire_da)}
                       prezzoSuRichiesta={tour.prezzo_su_richiesta}

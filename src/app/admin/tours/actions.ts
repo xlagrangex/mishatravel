@@ -22,6 +22,7 @@ const tourSchema = z.object({
   title: z.string().min(1, 'Il titolo e obbligatorio'),
   slug: z.string().min(1, 'Lo slug e obbligatorio'),
   destination_id: z.string().uuid().nullable().default(null),
+  destination_id_2: z.string().uuid().nullable().default(null),
   a_partire_da: z.string().nullable().default(null),
   prezzo_su_richiesta: z.boolean().default(false),
   price_type: z.enum(['da', 'fisso']).default('da'),
@@ -182,6 +183,7 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
     title: data.title,
     slug: data.slug,
     destination_id: emptyToNull(data.destination_id),
+    destination_id_2: emptyToNull(data.destination_id_2),
     a_partire_da: emptyToNull(data.a_partire_da),
     prezzo_su_richiesta: data.prezzo_su_richiesta,
     price_type: data.price_type,
@@ -210,7 +212,7 @@ export async function saveTour(formData: unknown): Promise<ActionResult> {
   if (data.id) {
     const { data: old } = await supabase
       .from('tours')
-      .select('title, slug, status, a_partire_da, destination_id, durata_notti, cover_image_url, tipo_voli, prezzo_su_richiesta')
+      .select('title, slug, status, a_partire_da, destination_id, destination_id_2, durata_notti, cover_image_url, tipo_voli, prezzo_su_richiesta')
       .eq('id', data.id)
       .single()
     oldTourRecord = old
@@ -500,6 +502,7 @@ export async function duplicateTourAction(id: string): Promise<ActionResult> {
         title: `${tour.title} (copia)`,
         slug: newSlug,
         destination_id: tour.destination_id,
+        destination_id_2: tour.destination_id_2,
         a_partire_da: tour.a_partire_da,
         prezzo_su_richiesta: tour.prezzo_su_richiesta,
         price_type: tour.price_type ?? 'da',

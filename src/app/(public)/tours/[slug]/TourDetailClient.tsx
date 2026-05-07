@@ -82,7 +82,9 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
 
   const priceNum = parsePrice(tour.a_partire_da) || null;
   const coverImage = tour.cover_image_url || "/images/placeholder.jpg";
-  const destinationName = tour.destination?.name ?? "";
+  const destinationName = [tour.destination?.name, tour.destination_2?.name]
+    .filter(Boolean)
+    .join(" + ");
 
   const includedItems = (tour.inclusions ?? []).filter((i) => i.is_included);
   const excludedItems = (tour.inclusions ?? []).filter((i) => !i.is_included);
@@ -469,7 +471,9 @@ export default function TourDetailClient({ tour, related }: TourDetailClientProp
                   key={t.slug}
                   slug={t.slug}
                   title={t.title}
-                  destination={t.destination_name ?? ""}
+                  destination={[t.destination_name, t.destination_name_2]
+                    .filter(Boolean)
+                    .join(" + ")}
                   duration={t.durata_notti ?? ""}
                   priceFrom={parsePrice(t.a_partire_da)}
                   prezzoSuRichiesta={t.prezzo_su_richiesta}

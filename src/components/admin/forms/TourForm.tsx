@@ -96,6 +96,7 @@ const tourFormSchema = z.object({
   title: z.string().min(1, "Il titolo è obbligatorio"),
   slug: z.string().min(1, "Lo slug è obbligatorio"),
   destination_id: z.string().nullable(),
+  destination_id_2: z.string().nullable(),
   a_partire_da: z.string().nullable(),
   prezzo_su_richiesta: z.boolean(),
   price_type: z.enum(["da", "fisso"]),
@@ -136,7 +137,16 @@ const tourFormSchema = z.object({
   // Tab 8: Gallery & PDF (placeholder)
   gallery_urls: z.array(z.string()),
   programma_pdf_url: z.string().nullable(),
-});
+}).refine(
+  (data) =>
+    !data.destination_id_2 ||
+    !data.destination_id ||
+    data.destination_id_2 !== data.destination_id,
+  {
+    message: "La destinazione secondaria deve essere diversa dalla principale",
+    path: ["destination_id_2"],
+  }
+);
 
 type TourFormValues = z.infer<typeof tourFormSchema>;
 
@@ -177,6 +187,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
         title: initialData.title,
         slug: initialData.slug,
         destination_id: initialData.destination_id,
+        destination_id_2: initialData.destination_id_2 ?? null,
         a_partire_da: initialData.a_partire_da,
         prezzo_su_richiesta: initialData.prezzo_su_richiesta,
         price_type: initialData.price_type === "fisso" ? "fisso" : "da",
@@ -236,6 +247,7 @@ export default function TourForm({ initialData, destinations = [], localities = 
         title: "",
         slug: "",
         destination_id: null,
+        destination_id_2: null,
         a_partire_da: null,
         prezzo_su_richiesta: false,
         price_type: "da",
@@ -474,21 +486,69 @@ export default function TourForm({ initialData, destinations = [], localities = 
                 )}
               </div>
 
-              {/* Destinazione */}
-              <div className="space-y-2">
-                <Label>Destinazione</Label>
-                <Controller
-                  control={control}
-                  name="destination_id"
-                  render={({ field }) => (
-                    <DestinationSelect
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      destinations={destinations}
-                    />
+              {/* Destinazione principale + secondaria */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Destinazione principale</Label>
+                  <Controller
+                    control={control}
+                    name="destination_id"
+                    render={({ field }) => (
+                      <DestinationSelect
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        destinations={destinations.filter(
+                          (d) => d.id !== watch("destination_id_2"),
+                        )}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>
+                      Destinazione secondaria{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (opzionale)
+                      </span>
+                    </Label>
+                    {watch("destination_id_2") && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
+                        onClick={() => setValue("destination_id_2", null)}
+                      >
+                        Rimuovi
+                      </Button>
+                    )}
+                  </div>
+                  <Controller
+                    control={control}
+                    name="destination_id_2"
+                    render={({ field }) => (
+                      <DestinationSelect
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        destinations={destinations.filter(
+                          (d) => d.id !== watch("destination_id"),
+                        )}
+                      />
+                    )}
+                  />
+                  {errors.destination_id_2 && (
+                    <p className="text-sm text-destructive">
+                      {errors.destination_id_2.message}
+                    </p>
                   )}
-                />
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Usa la destinazione secondaria per tour che attraversano due paesi
+                (es. Giappone + Corea del Sud). Il tour apparir&agrave; in entrambe
+                le pagine destinazione.
+              </p>
 
               <Separator />
 

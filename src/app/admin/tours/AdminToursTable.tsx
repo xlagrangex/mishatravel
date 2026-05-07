@@ -72,7 +72,8 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
     return tours.filter(
       (t) =>
         t.title.toLowerCase().includes(q) ||
-        (t.destination_name ?? "").toLowerCase().includes(q),
+        (t.destination_name ?? "").toLowerCase().includes(q) ||
+        (t.destination_name_2 ?? "").toLowerCase().includes(q),
     );
   }, [searchQuery, tours]);
 
@@ -344,7 +345,9 @@ export default function AdminToursTable({ tours }: AdminToursTableProps) {
 
                   {/* Destination */}
                   <TableCell className="text-muted-foreground">
-                    {tour.destination_name ?? "\u2014"}
+                    {[tour.destination_name, tour.destination_name_2]
+                      .filter(Boolean)
+                      .join(" + ") || "\u2014"}
                   </TableCell>
 
                   {/* Duration */}

@@ -66,7 +66,9 @@ export default async function HomePage() {
                     key={tour.slug}
                     slug={tour.slug}
                     title={tour.title}
-                    destination={tour.destination_name ?? ""}
+                    destination={[tour.destination_name, tour.destination_name_2]
+                      .filter(Boolean)
+                      .join(" + ")}
                     duration={tour.durata_notti ?? ""}
                     priceFrom={parsePrice(tour.a_partire_da)}
                     prezzoSuRichiesta={tour.prezzo_su_richiesta}

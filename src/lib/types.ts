@@ -53,6 +53,7 @@ export interface Tour {
   content: string | null;
   cover_image_url: string | null;
   destination_id: string | null;
+  destination_id_2: string | null;
   a_partire_da: string | null;
   prezzo_su_richiesta: boolean;
   price_type: string;
@@ -701,6 +702,7 @@ export type TourWithRelations = Tour & {
   gallery: TourGalleryItem[];
   optional_excursions: TourOptionalExcursion[];
   destination: Destination | null;
+  destination_2: Destination | null;
 };
 
 export type CruiseWithRelations = Cruise & {

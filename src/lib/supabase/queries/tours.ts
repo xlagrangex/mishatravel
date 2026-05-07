@@ -18,6 +18,7 @@ export type TourListItem = {
   status: string
   created_at: string
   destination_name: string | null
+  destination_name_2: string | null
   next_departure_date: string | null
   last_departure_date: string | null
 }
@@ -48,7 +49,8 @@ export async function getTours(): Promise<TourListItem[]> {
       prezzo_offerta,
       status,
       created_at,
-      destination:destinations(name),
+      destination:destinations!destination_id(name),
+      destination_2:destinations!destination_id_2(name),
       departures:tour_departures(data_partenza)
     `
     )
@@ -82,6 +84,7 @@ export async function getTours(): Promise<TourListItem[]> {
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
+      destination_name_2: row.destination_2?.name ?? null,
       next_departure_date: futureDeps[0]?.data_partenza ?? null,
       last_departure_date: allDeps[0]?.data_partenza ?? null,
     }
@@ -110,7 +113,8 @@ export async function getTourById(id: string) {
       penalties:tour_penalties(*),
       gallery:tour_gallery(*),
       optional_excursions:tour_optional_excursions(*),
-      destination:destinations(id, name, slug)
+      destination:destinations!destination_id(id, name, slug),
+      destination_2:destinations!destination_id_2(id, name, slug)
     `
     )
     .eq('id', id)
@@ -151,6 +155,9 @@ export type TourListItemEnriched = TourListItem & {
   destination_id: string | null
   destination_macro_area: string | null
   destination_slug: string | null
+  destination_id_2: string | null
+  destination_macro_area_2: string | null
+  destination_slug_2: string | null
   departures: { id: string; data_partenza: string; prezzo_3_stelle: number | null; from_city: string | null }[]
 }
 
@@ -177,7 +184,9 @@ export async function getPublishedToursWithDepartures(): Promise<TourListItemEnr
       status,
       created_at,
       destination_id,
-      destination:destinations(name, slug, macro_area),
+      destination_id_2,
+      destination:destinations!destination_id(name, slug, macro_area),
+      destination_2:destinations!destination_id_2(name, slug, macro_area),
       departures:tour_departures(id, data_partenza, prezzo_3_stelle, from_city)
     `
     )
@@ -208,6 +217,10 @@ export async function getPublishedToursWithDepartures(): Promise<TourListItemEnr
       destination_name: row.destination?.name ?? null,
       destination_slug: row.destination?.slug ?? null,
       destination_macro_area: row.destination?.macro_area ?? null,
+      destination_id_2: row.destination_id_2,
+      destination_name_2: row.destination_2?.name ?? null,
+      destination_slug_2: row.destination_2?.slug ?? null,
+      destination_macro_area_2: row.destination_2?.macro_area ?? null,
       departures: row.departures ?? [],
       next_departure_date: (row.departures ?? [])
         .filter((d: any) => d.data_partenza >= today)
@@ -258,7 +271,8 @@ export async function getPublishedTours(): Promise<TourListItem[]> {
       prezzo_offerta,
       status,
       created_at,
-      destination:destinations(name),
+      destination:destinations!destination_id(name),
+      destination_2:destinations!destination_id_2(name),
       departures:tour_departures(data_partenza)
     `
     )
@@ -286,6 +300,7 @@ export async function getPublishedTours(): Promise<TourListItem[]> {
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
+      destination_name_2: row.destination_2?.name ?? null,
       next_departure_date: (row.departures ?? [])
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
@@ -316,7 +331,8 @@ export async function getTourBySlug(slug: string) {
       penalties:tour_penalties(*),
       gallery:tour_gallery(*),
       optional_excursions:tour_optional_excursions(*),
-      destination:destinations(id, name, slug)
+      destination:destinations!destination_id(id, name, slug),
+      destination_2:destinations!destination_id_2(id, name, slug)
     `
     )
     .eq('slug', slug)
@@ -371,11 +387,12 @@ export async function getToursForDestination(destinationId: string): Promise<Tou
       prezzo_offerta,
       status,
       created_at,
-      destination:destinations(name),
+      destination:destinations!destination_id(name),
+      destination_2:destinations!destination_id_2(name),
       departures:tour_departures(data_partenza)
     `
     )
-    .eq('destination_id', destinationId)
+    .or(`destination_id.eq.${destinationId},destination_id_2.eq.${destinationId}`)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
 
@@ -400,6 +417,7 @@ export async function getToursForDestination(destinationId: string): Promise<Tou
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
+      destination_name_2: row.destination_2?.name ?? null,
       next_departure_date: (row.departures ?? [])
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
@@ -418,14 +436,21 @@ export async function getRelatedTours(
 ): Promise<TourListItem[]> {
   const supabase = createAdminClient()
 
-  // First fetch the current tour to get its destination_id
+  // First fetch the current tour to get its destinations
   const { data: current } = await supabase
     .from('tours')
-    .select('id, destination_id')
+    .select('id, destination_id, destination_id_2')
     .eq('slug', slug)
     .single()
 
-  if (!current?.destination_id) return []
+  const destIds = [current?.destination_id, current?.destination_id_2].filter(
+    (x): x is string => Boolean(x),
+  )
+  if (destIds.length === 0) return []
+
+  const orFilter = destIds
+    .flatMap((id) => [`destination_id.eq.${id}`, `destination_id_2.eq.${id}`])
+    .join(',')
 
   const { data, error } = await supabase
     .from('tours')
@@ -443,13 +468,14 @@ export async function getRelatedTours(
       prezzo_offerta,
       status,
       created_at,
-      destination:destinations(name),
+      destination:destinations!destination_id(name),
+      destination_2:destinations!destination_id_2(name),
       departures:tour_departures(data_partenza)
     `
     )
-    .eq('destination_id', current.destination_id)
+    .or(orFilter)
     .eq('status', 'published')
-    .neq('id', current.id)
+    .neq('id', current!.id)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -474,6 +500,7 @@ export async function getRelatedTours(
       status: row.status,
       created_at: row.created_at,
       destination_name: row.destination?.name ?? null,
+      destination_name_2: row.destination_2?.name ?? null,
       next_departure_date: (row.departures ?? [])
         .filter((d: any) => d.data_partenza >= today)
         .sort((a: any, b: any) => a.data_partenza.localeCompare(b.data_partenza))[0]
