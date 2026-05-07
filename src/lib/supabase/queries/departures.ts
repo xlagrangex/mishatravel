@@ -48,7 +48,8 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
         prezzo_listino,
         prezzo_offerta,
         prezzo_su_richiesta,
-        destination:destinations(name)
+        destination:destinations!destination_id(name),
+        destination_2:destinations!destination_id_2(name)
       )
     `
     )
@@ -105,7 +106,9 @@ export async function getAllDepartures(): Promise<UnifiedDeparture[]> {
       type: 'tour' as const,
       title: row.tour.title,
       slug: row.tour.slug,
-      destination_name: row.tour.destination?.name ?? null,
+      destination_name: [row.tour.destination?.name, row.tour.destination_2?.name]
+        .filter(Boolean)
+        .join(' + ') || null,
       date: row.data_partenza ?? '',
       price: psr
         ? null
@@ -197,7 +200,8 @@ export async function getAdminDepartures(): Promise<{
         title,
         status,
         durata_notti,
-        destination:destinations(name)
+        destination:destinations!destination_id(name),
+        destination_2:destinations!destination_id_2(name)
       )
     `
     )
@@ -236,7 +240,9 @@ export async function getAdminDepartures(): Promise<{
     type: 'tour' as const,
     parent_id: row.tour.id,
     title: row.tour.title,
-    destination_name: row.tour.destination?.name ?? null,
+    destination_name: [row.tour.destination?.name, row.tour.destination_2?.name]
+      .filter(Boolean)
+      .join(' + ') || null,
     date: row.data_partenza ?? '',
     price: row.prezzo_3_stelle != null ? Number(row.prezzo_3_stelle) : null,
     duration: row.tour.durata_notti ?? null,
