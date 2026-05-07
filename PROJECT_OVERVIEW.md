@@ -338,6 +338,8 @@ Dopo l'accettazione:
 
 Pannello di amministrazione completo accessibile solo allo staff di MishaTravel. Layout con sidebar di navigazione, header con notifiche.
 
+**Compressione automatica degli upload**: ogni immagine caricata da admin/operatore (in qualunque sezione: tour, crociere, navi, blog, cataloghi, media, profilo agenzia) viene processata server-side da `sharp` prima di finire su Supabase Storage. Resize a max 1920 px sul lato lungo, qualita 87 con encoder mozjpeg per i JPEG e PNG ottimizzato lossless. L'admin non si accorge di nulla (solo ~1s in piu di latenza all'upload), ma garantisce che lo Storage non si gonfi mai con file pesanti.
+
 #### 4.4.1 Dashboard Admin (/admin/dashboard)
 
 - **Statistiche**: Numero tour attivi, crociere attive, agenzie registrate, richieste in attesa
@@ -676,4 +678,4 @@ L'interfaccia e interamente in **italiano**. Non e prevista al momento una versi
 ---
 
 *Documento aggiornato al: 7 Maggio 2026*
-*Versione piano: v1.8*
+*Versione piano: v1.9*

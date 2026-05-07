@@ -8,9 +8,9 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | █████████████████████░ 99% |
-| **Sprint Corrente** | Sprint 12 completato. Sprint 0-9+11+12 completati, Sprint 10 al 90% (manca solo deploy produzione). |
-| **Task Completate** | 86 / ~87 |
+| **Progresso Totale** | █████████████████████░ 96% |
+| **Sprint Corrente** | Sprint 13 (Compressione Upload). Storage cleanup completato (1.04 GB→646 MB). Mancano task 13.2 + 13.3 per garanzia futura. |
+| **Task Completate** | 87 / ~90 |
 | **Task In Corso** | 0 |
 | **Task Bloccate** | 1 (Task 10.5 serve accesso DNS dominio). |
 | **Ultima Attivita** | 2026-05-07 |
@@ -34,6 +34,7 @@
 | 10 | SEO, Performance, Deploy | 🟡 In corso | █████████░ 90% | Task 10.1, 10.2, 10.3, 10.4 completate. Solo 10.5 (deploy produzione - serve DNS) rimasta. |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 | 12 | Tour con Destinazione Secondaria | ✅ Completato | ██████████ 100% | destination_id_2 + form admin + query OR-match + visualizzazione "X + Y" su tutto il sito. |
+| 13 | Compressione Automatica Upload + Storage Cleanup | 🟡 In corso | █████████░ 67% | Cleanup massivo (1.04 GB→646 MB) + Backup R2 OK. Manca route handler server-side. |
 
 ---
 
@@ -195,6 +196,14 @@
 | 12.5 | Query pubbliche aggiornate | ✅ Completata | 2026-05-07 | tutti i join su destinations disambiguati con `!destination_id` / `!destination_id_2`. `getDestinationWithTours`, `getRelatedTours`, `getToursForDestination` usano OR-match. `getTourCountsPerDestination` conta su entrambe. |
 | 12.6 | Visualizzazione frontend (card, dettaglio, filtri) | ✅ Completata | 2026-05-07 | Hero/breadcrumb dettaglio tour, TourCard homepage, ToursPageClient (filtro+chip+card+upcoming) e AdminToursTable mostrano "X + Y". Filtri macro/destinazione matchano su entrambe. |
 
+### SPRINT 13 - Compressione Automatica Upload + Storage Cleanup
+
+| ID | Task | Stato | Data Completamento | Note/Errori |
+|----|------|-------|--------------------|-------------|
+| 13.1 | Script compressione massiva storage esistente | ✅ Completata | 2026-05-07 | `scripts/backup-and-compress-storage.ts` con 3 fasi (analyze, backup R2, compress). Backup 1246 file su R2. Compressione 745 file JPG/PNG (q=87, mozjpeg, max 1920px). Risultato: 1.04 GB → 646 MB (-38%). 0 errori. |
+| 13.2 | Route handler upload immagini server-side | ⚪ Da fare | - | `/api/admin/upload-image` con sharp + admin client + auth check. Resize 1920 + q87 garantito. |
+| 13.3 | Integrazione ImageUpload + rimozione convertToWebP client | ⚪ Da fare | - | Rimuovere conversione canvas, sostituire uploadToStorage diretto con fetch al route handler. |
+
 ---
 
 ## Registro Errori e Problemi
@@ -212,6 +221,20 @@
 ## Storico Modifiche al Piano
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
+
+### Modifica #9 - Compressione Automatica all'Upload + Storage Cleanup
+- **Data**: 2026-05-07
+- **File modificati**: SPRINT_PLAN.md, PROJECT_OVERVIEW.md, CHANGELOG.md, CLAUDE.md
+- **Richiesto da**: Utente (Vincenzo)
+- **Motivo**: Lo Storage Supabase aveva sforato il limite Free di 1 GB (era a 1.04 GB). Cause: 913 immagini WordPress importate raw senza ricompressione + il componente ImageUpload lato client non faceva resize, quindi anche i nuovi upload restavano pesanti. Serve (1) liberare spazio sui file esistenti, (2) prevenire il problema in futuro con una compressione automatica server-side garantita ad ogni upload.
+- **Cosa e cambiato**:
+  - **Cleanup massivo**: script `scripts/backup-and-compress-storage.ts` con 3 fasi (analyze, backup R2, compress in place). Backup integrale degli originali su Cloudflare R2 (bucket `mishatravel-backup`, 10 GB free, zero egress fee). Compressione su 745 file JPG/PNG con sharp + mozjpeg (q=87, max 1920px). Risparmio reale: 420 MB. Storage: 1.04 GB -> 646 MB (sotto il limite Free).
+  - **Compressione automatica nuovo upload**: nuovo Route Handler `/api/admin/upload-image` server-side che riceve i file dal componente ImageUpload, li passa a sharp (q=87, resize 1920px max, mozjpeg) prima dell'upload su Supabase Storage. Garanzia che da oggi nessun file pesante puo entrare in Storage indipendentemente dal device dell'admin.
+  - **Rimozione convertToWebP client-side**: la conversione canvas in browser era best-effort (no resize, dipendeva dal device) ed e ora ridondante. Tolta.
+  - **Credenziali R2**: aggiunte a CREDENTIALS.md e .env.local (R2_ACCOUNT_ID, R2_BUCKET_NAME, R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY).
+  - **SPRINT_PLAN.md**: aggiunto Sprint 13 con task 13.1 (script compressione storage), 13.2 (route handler upload server-side), 13.3 (rimozione conversione client + integrazione).
+  - **PROJECT_OVERVIEW.md**: aggiunta nota sulla compressione automatica nella sezione admin upload.
+- **Versione piano**: v1.9
 
 ### Modifica #8 - Tour con Destinazione Secondaria
 - **Data**: 2026-05-07
@@ -467,5 +490,5 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 ---
 
 *Ultimo aggiornamento: 2026-02-22*
-*Versione piano: v1.8*
+*Versione piano: v1.9*
 *Ultimo aggiornamento: 2026-05-07*

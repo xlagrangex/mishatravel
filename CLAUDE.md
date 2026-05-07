@@ -267,11 +267,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 12 completato al 100%. Sprint 0-9+11+12 completati, Sprint 10 al 90%.
-- **Ultima azione**: Sprint 12 chiuso. Migration `010_tour_secondary_destination.sql` applicata; form admin, query e visualizzazione pubbliche supportano tour con doppia destinazione (es. "Giappone + Corea del Sud"). Build OK.
-- **Prossimo step**: Task 10.5 (deploy produzione su Vercel - serve accesso DNS dominio)
+- **Sprint corrente**: Sprint 13 (Compressione Upload). Task 13.1 completata (cleanup massivo storage 1.04 GB → 646 MB). Sprint 0-9+11+12 completati, Sprint 10 al 90%.
+- **Ultima azione**: Modifica #9 registrata. Cleanup storage Supabase tramite script con backup R2 + compressione sharp (q=87, max 1920px). Risparmio 420 MB. Pianificate task 13.2 (route handler upload server-side) e 13.3 (integrazione ImageUpload).
+- **Prossimo step**: Task 13.2 (creare `/api/admin/upload-image` route handler con sharp)
 - **Bloccanti**: Task 10.5 bloccata da accesso DNS dominio.
-- **Progresso totale**: 99% (86/~87 task completate).
+- **Progresso totale**: 96% (87/~90 task completate).
 
 ---
 
@@ -333,4 +333,4 @@ MISHATRAVEL/
 ---
 
 *Ultimo aggiornamento: 2026-05-07*
-*Versione piano: v1.8*
+*Versione piano: v1.9*

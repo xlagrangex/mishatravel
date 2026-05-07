@@ -771,6 +771,36 @@
 
 ---
 
+## SPRINT 13 - Compressione Automatica Upload + Storage Cleanup
+
+### TASK 13.1 - Script compressione massiva storage esistente
+- **Cosa**: Script `scripts/backup-and-compress-storage.ts` con 3 fasi:
+  - **analyze**: inventario read-only di tutti i bucket Supabase (file, dimensioni, top file)
+  - **backup**: streaming cloud-to-cloud Supabase → Cloudflare R2 (`mishatravel-backup`), no disco locale, sentinel file di completamento
+  - **compress**: download da Supabase, sharp con resize 1920 + qualita 87 + mozjpeg, upsert in place. Salta WebP/SVG, salta file < 80 KB, salta se compresso >= originale.
+- **Dipendenze**: nessuna
+- **Acceptance**: storage Supabase sotto 1 GB, 0 errori, originali integri su R2
+
+### TASK 13.2 - Route handler upload immagini server-side
+- **Cosa**: Nuovo endpoint `src/app/api/admin/upload-image/route.ts` che:
+  - Riceve POST FormData con campi `file` (Blob) e `bucket` (string)
+  - Auth check tramite `getCurrentUser` + ruolo admin/operatore
+  - Decode FormData, passa `file` a sharp con stessi parametri dello script (q=87, mozjpeg, max 1920px, withoutEnlargement)
+  - Upload via `createAdminClient()` su Supabase Storage con path sanitizzato `${Date.now()}_${sanitized}`
+  - Registra su `media` DB tramite `registerMediaAction`
+  - Ritorna `{ url, originalSize, compressedSize, mime }` o `{ error }` 4xx/5xx
+- **Dipendenze**: 13.1 (riusa logica sharp)
+
+### TASK 13.3 - Integrazione ImageUpload + rimozione convertToWebP client
+- **Cosa**: Modificare `src/components/admin/ImageUpload.tsx`:
+  - Rimuovere helper `convertToWebP` e relative dipendenze canvas (era best-effort, non resize, ridondante)
+  - Sostituire `uploadToStorage` (chiamata diretta a Supabase Storage) con `fetch('/api/admin/upload-image', { method: 'POST', body: FormData })`
+  - Mantenere registerMediaAction lato server (gia inclusa nel route handler)
+  - Aggiornare la logica progress per riflettere il singolo round-trip server-side
+- **Dipendenze**: 13.2
+
+---
+
 ## Note Operative
 
 1. **Ogni sprint produce qualcosa di testabile**: L'utente puo verificare il progresso ad ogni sprint.
@@ -782,5 +812,5 @@
 ---
 
 *Piano creato il: 21 Febbraio 2026*
-*Totale task: ~78 task atomiche*
-*Versione piano: v1.8*
+*Totale task: ~81 task atomiche*
+*Versione piano: v1.9*
