@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -15,7 +14,6 @@ import {
   FolderOpen,
 } from "lucide-react";
 import MediaPicker from "@/components/admin/MediaPicker";
-import { registerMediaAction } from "@/app/admin/media/actions";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,8 +55,9 @@ interface UploadingFile {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/svg+xml";
-const DEFAULT_MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-const WEBP_QUALITY = 0.82;
+// 4 MB: Vercel Functions accept up to 4.5 MB request body. The route handler
+// resizes/recompresses, so files this big are normal source uploads.
+const DEFAULT_MAX_SIZE = 4 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -69,36 +68,6 @@ function formatBytes(bytes: number): string {
 let idCounter = 0;
 function uid(): string {
   return `img-upload-${Date.now()}-${++idCounter}`;
-}
-
-/** Convert raster images (JPEG/PNG) to WebP via Canvas. GIF/SVG are kept as-is. */
-async function convertToWebP(file: File): Promise<File> {
-  const skipTypes = ["image/gif", "image/svg+xml", "image/webp"];
-  if (skipTypes.includes(file.type)) return file;
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { resolve(file); return; }
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob || blob.size >= file.size) { resolve(file); return; }
-          const baseName = file.name.replace(/\.[^.]+$/, "");
-          resolve(new File([blob], `${baseName}.webp`, { type: "image/webp" }));
-        },
-        "image/webp",
-        WEBP_QUALITY,
-      );
-      URL.revokeObjectURL(img.src);
-    };
-    img.onerror = () => { resolve(file); };
-    img.src = URL.createObjectURL(file);
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -141,39 +110,28 @@ export default function ImageUpload({
 
   const uploadToStorage = useCallback(
     async (file: File): Promise<string> => {
-      const supabase = createClient();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bucket", bucket);
 
-      // Sanitize filename: remove special chars, keep extension
-      const sanitized = file.name
-        .replace(/[^a-zA-Z0-9._-]/g, "_")
-        .replace(/_+/g, "_");
-      const filePath = `${Date.now()}_${sanitized}`;
-
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (error) throw new Error(error.message);
-
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
-
-      // Register in media DB for library browsing
-      registerMediaAction({
-        filename: filePath,
-        url: urlData.publicUrl,
-        file_size: file.size,
-        mime_type: file.type,
-        bucket,
-      }).catch(() => {
-        // Non-blocking: if DB insert fails, the upload still succeeds
+      const res = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
       });
 
-      return urlData.publicUrl;
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const body = (await res.json()) as { error?: string };
+          if (body.error) msg = body.error;
+        } catch {
+          /* ignore parse errors */
+        }
+        throw new Error(msg);
+      }
+
+      const { url } = (await res.json()) as { url: string };
+      return url;
     },
     [bucket],
   );
@@ -232,8 +190,7 @@ export default function ImageUpload({
           }, 200);
 
           try {
-            const optimized = await convertToWebP(entry.file);
-            const url = await uploadToStorage(optimized);
+            const url = await uploadToStorage(entry.file);
             clearInterval(progressInterval);
 
             setUploading((prev) =>
@@ -245,13 +202,13 @@ export default function ImageUpload({
             );
 
             newUrls.push(url);
-          } catch {
+          } catch (e) {
             clearInterval(progressInterval);
+            const msg =
+              e instanceof Error && e.message ? e.message : "Upload failed.";
             setUploading((prev) =>
               prev.map((u) =>
-                u.id === entry.id
-                  ? { ...u, status: "error", error: "Upload failed." }
-                  : u,
+                u.id === entry.id ? { ...u, status: "error", error: msg } : u,
               ),
             );
           }

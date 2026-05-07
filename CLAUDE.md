@@ -267,11 +267,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 13 (Compressione Upload). Task 13.1 completata (cleanup massivo storage 1.04 GB → 646 MB). Sprint 0-9+11+12 completati, Sprint 10 al 90%.
-- **Ultima azione**: Modifica #9 registrata. Cleanup storage Supabase tramite script con backup R2 + compressione sharp (q=87, max 1920px). Risparmio 420 MB. Pianificate task 13.2 (route handler upload server-side) e 13.3 (integrazione ImageUpload).
-- **Prossimo step**: Task 13.2 (creare `/api/admin/upload-image` route handler con sharp)
+- **Sprint corrente**: Sprint 13 completato al 100%. Sprint 0-9+11+12+13 completati, Sprint 10 al 90%.
+- **Ultima azione**: Sprint 13 chiuso. Cleanup Storage (1.04 GB→646 MB) + nuovo route handler `/api/admin/upload-image` con sharp server-side + ImageUpload integrato. Da oggi ogni nuovo upload viene compresso automaticamente prima di Supabase Storage. Build OK.
+- **Prossimo step**: Task 10.5 (deploy produzione su Vercel - serve accesso DNS dominio)
 - **Bloccanti**: Task 10.5 bloccata da accesso DNS dominio.
-- **Progresso totale**: 96% (87/~90 task completate).
+- **Progresso totale**: 99% (89/~90 task completate).
 
 ---
 

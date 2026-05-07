@@ -8,9 +8,9 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | █████████████████████░ 96% |
-| **Sprint Corrente** | Sprint 13 (Compressione Upload). Storage cleanup completato (1.04 GB→646 MB). Mancano task 13.2 + 13.3 per garanzia futura. |
-| **Task Completate** | 87 / ~90 |
+| **Progresso Totale** | █████████████████████░ 99% |
+| **Sprint Corrente** | Sprint 13 completato. Sprint 0-9+11+12+13 completati, Sprint 10 al 90% (manca solo deploy produzione). |
+| **Task Completate** | 89 / ~90 |
 | **Task In Corso** | 0 |
 | **Task Bloccate** | 1 (Task 10.5 serve accesso DNS dominio). |
 | **Ultima Attivita** | 2026-05-07 |
@@ -34,7 +34,7 @@
 | 10 | SEO, Performance, Deploy | 🟡 In corso | █████████░ 90% | Task 10.1, 10.2, 10.3, 10.4 completate. Solo 10.5 (deploy produzione - serve DNS) rimasta. |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
 | 12 | Tour con Destinazione Secondaria | ✅ Completato | ██████████ 100% | destination_id_2 + form admin + query OR-match + visualizzazione "X + Y" su tutto il sito. |
-| 13 | Compressione Automatica Upload + Storage Cleanup | 🟡 In corso | █████████░ 67% | Cleanup massivo (1.04 GB→646 MB) + Backup R2 OK. Manca route handler server-side. |
+| 13 | Compressione Automatica Upload + Storage Cleanup | ✅ Completato | ██████████ 100% | Cleanup massivo (1.04 GB→646 MB) + Backup R2 + Route handler `/api/admin/upload-image` con sharp + ImageUpload integrato. Da oggi nessun file pesante entra in Storage. |
 
 ---
 
@@ -201,8 +201,8 @@
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
 | 13.1 | Script compressione massiva storage esistente | ✅ Completata | 2026-05-07 | `scripts/backup-and-compress-storage.ts` con 3 fasi (analyze, backup R2, compress). Backup 1246 file su R2. Compressione 745 file JPG/PNG (q=87, mozjpeg, max 1920px). Risultato: 1.04 GB → 646 MB (-38%). 0 errori. |
-| 13.2 | Route handler upload immagini server-side | ⚪ Da fare | - | `/api/admin/upload-image` con sharp + admin client + auth check. Resize 1920 + q87 garantito. |
-| 13.3 | Integrazione ImageUpload + rimozione convertToWebP client | ⚪ Da fare | - | Rimuovere conversione canvas, sostituire uploadToStorage diretto con fetch al route handler. |
+| 13.2 | Route handler upload immagini server-side | ✅ Completata | 2026-05-07 | `src/app/api/admin/upload-image/route.ts` (Node runtime, maxDuration 60s). Auth check via `getAuthContext` + `ADMIN_ROLES`. sharp con resize 1920 + q87 (mozjpeg) o PNG ottimizzato. SVG/GIF passano intatti. Skip se compresso >= originale. registerMediaAction non bloccante. |
+| 13.3 | Integrazione ImageUpload + rimozione convertToWebP client | ✅ Completata | 2026-05-07 | Tolto helper canvas + import supabase client + import registerMediaAction. `uploadToStorage` ora fa POST FormData a `/api/admin/upload-image` e legge `{ url }`. Errore di upload mostra il messaggio reale del server. maxSize abbassato a 4 MB (limite Vercel Functions). |
 
 ---
 
