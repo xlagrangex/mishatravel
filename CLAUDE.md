@@ -267,11 +267,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 0-9+11 tutti completati. Sprint 10 al 90%.
-- **Ultima azione**: Sprint 9 completato al 100%. Migrazione WordPress→Supabase completa: 31 destinazioni, 9 navi, 34 tour, 28 crociere, 5 blog + 913 immagini migrate su Supabase Storage. 53 regole redirect 301 in next.config.ts per preservare SEO.
-- **Prossimo step**: Task 10.5 (deploy produzione su Vercel - serve accesso DNS dominio)
+- **Sprint corrente**: Sprint 12 (Tour con Destinazione Secondaria) appena pianificato. Sprint 0-9+11 completati, Sprint 10 al 90%.
+- **Ultima azione**: Modifica #8 registrata. Aggiunta del campo `destination_id_2` ai tour: pianificate task 12.1-12.6 (migration, tipi, form, action, query, visualizzazione).
+- **Prossimo step**: Task 12.1 (creare migration `010_tour_secondary_destination.sql`)
 - **Bloccanti**: Task 10.5 bloccata da accesso DNS dominio.
-- **Progresso totale**: 99% (80/~81 task completate). Solo deploy produzione rimasto.
+- **Progresso totale**: 92% (80/~87 task completate).
 
 ---
 
@@ -332,5 +332,5 @@ MISHATRAVEL/
 
 ---
 
-*Ultimo aggiornamento: 2026-02-22*
-*Versione piano: v1.5*
+*Ultimo aggiornamento: 2026-05-07*
+*Versione piano: v1.8*

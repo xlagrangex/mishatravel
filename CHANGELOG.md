@@ -8,12 +8,12 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ██████████████████████ 99% |
-| **Sprint Corrente** | Sprint 0-9+11 tutti completati. Sprint 10 al 90%. Solo Task 10.5 (deploy produzione) rimasta. |
-| **Task Completate** | 80 / ~81 |
+| **Progresso Totale** | ████████████████████░░ 92% |
+| **Sprint Corrente** | Sprint 12 (Tour con Destinazione Secondaria) appena pianificato. Sprint 0-9+11 completati, Sprint 10 al 90%. |
+| **Task Completate** | 80 / ~87 |
 | **Task In Corso** | 0 |
 | **Task Bloccate** | 1 (Task 10.5 serve accesso DNS dominio). |
-| **Ultima Attivita** | 2026-02-22 |
+| **Ultima Attivita** | 2026-05-07 |
 
 ---
 
@@ -33,6 +33,7 @@
 | 9 | Migrazione Dati WordPress | ✅ Completato | ██████████ 100% | 31 dest + 9 navi + 34 tour + 28 crociere + 5 blog importati. 913 immagini migrate su Supabase Storage. |
 | 10 | SEO, Performance, Deploy | 🟡 In corso | █████████░ 90% | Task 10.1, 10.2, 10.3, 10.4 completate. Solo 10.5 (deploy produzione - serve DNS) rimasta. |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
+| 12 | Tour con Destinazione Secondaria | ⚪ Da fare | ░░░░░░░░░░ 0% | Aggiunta destination_id_2 a tours: form, query, visualizzazione |
 
 ---
 
@@ -183,6 +184,17 @@
 | 11.2 | Credenziali demo (utenti Supabase Auth) | ✅ Completata | 2026-02-22 | Super admin: admin@mishatravel.com / MishaAdmin2026! - Agenzia: agenzia@mishatravel.com / MishaAgenzia2026! - Agenzia demo con status active. Credenziali salvate in CREDENTIALS.md. |
 | 11.3 | Flusso approvazione agenzie | ✅ Completata | 2026-02-22 | Middleware blocca agenzie pending → /account-in-attesa. Dashboard admin widget "Agenzie in attesa" con Approva/Dettaglio. Login redirect per pending. Notifica super_admin su nuova registrazione. |
 
+### SPRINT 12 - Tour con Destinazione Secondaria
+
+| ID | Task | Stato | Data Completamento | Note/Errori |
+|----|------|-------|--------------------|-------------|
+| 12.1 | Migration DB: campo destination_id_2 | ⚪ Da fare | - | |
+| 12.2 | Tipi TS aggiornati | ⚪ Da fare | - | |
+| 12.3 | Form Admin: secondo selettore destinazione | ⚪ Da fare | - | |
+| 12.4 | Server Action persistenza | ⚪ Da fare | - | |
+| 12.5 | Query pubbliche aggiornate | ⚪ Da fare | - | |
+| 12.6 | Visualizzazione frontend (card, dettaglio, filtri) | ⚪ Da fare | - | |
+
 ---
 
 ## Registro Errori e Problemi
@@ -200,6 +212,20 @@
 ## Storico Modifiche al Piano
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
+
+### Modifica #8 - Tour con Destinazione Secondaria
+- **Data**: 2026-05-07
+- **File modificati**: SPRINT_PLAN.md, PROJECT_OVERVIEW.md, CHANGELOG.md, CLAUDE.md
+- **Richiesto da**: Utente (Vincenzo)
+- **Motivo**: A volte capita di avere tour con doppia destinazione (es. Giappone + Corea del Sud) e serve poter associare 2 destinazioni a un singolo tour invece di una sola.
+- **Cosa e cambiato**:
+  - **DB**: Nuova migration `010_tour_secondary_destination.sql` aggiunge colonna `destination_id_2 uuid` (nullable, FK a `destinations`) e relativo index su `tours`.
+  - **Form Admin**: Tab "Info Base" del TourForm avra un secondo selettore "Destinazione secondaria (opzionale)". Validazione impedisce di scegliere la stessa destinazione due volte.
+  - **Sito pubblico**: Quando un tour ha 2 destinazioni, vengono mostrate entrambe (es. card tour, hero, breadcrumb). Il tour appare nelle pagine di entrambe le destinazioni e nei filtri.
+  - **Solo Tour**: Le crociere mantengono per ora una sola destinazione.
+  - **SPRINT_PLAN.md**: Aggiunto Sprint 12 con task 12.1-12.6 (DB, tipi, form, action, query, visualizzazione).
+  - **PROJECT_OVERVIEW.md**: Aggiornata descrizione Pagina Dettaglio Tour per riflettere la doppia destinazione.
+- **Versione piano**: v1.8
 
 ### Modifica #7 - Seed Dati Demo + Credenziali Demo + Approvazione Agenzie
 - **Data**: 2026-02-22
@@ -442,3 +468,4 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 
 *Ultimo aggiornamento: 2026-02-22*
 *Versione piano: v1.8*
+*Ultimo aggiornamento: 2026-05-07*

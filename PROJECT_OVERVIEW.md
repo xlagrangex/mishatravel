@@ -123,7 +123,7 @@ Mostra tutti i tour e le crociere fluviali disponibili per una specifica destina
 Pagina completa di un singolo tour con tutte le informazioni:
 
 - **Gallery fotografica**: Slider/lightbox con tutte le foto del tour
-- **Informazioni principali**: Titolo, destinazione, durata (giorni/notti), prezzo a partire da
+- **Informazioni principali**: Titolo, destinazione (un tour puo avere fino a 2 destinazioni: principale + secondaria, es. "Giappone + Corea del Sud"), durata (giorni/notti), prezzo a partire da
 - **Descrizione**: Testo completo descrittivo del tour
 - **Itinerario giorno per giorno**: Elenco dei giorni con titolo e descrizione per ciascun giorno (es. "Giorno 1: Arrivo a Istanbul", "Giorno 2: Visita al Grand Bazaar...")
 - **Cosa e incluso**: Lista puntata di tutto cio che e incluso nel prezzo (voli, hotel, pasti, guide, trasferimenti, etc.)
@@ -675,5 +675,5 @@ L'interfaccia e interamente in **italiano**. Non e prevista al momento una versi
 
 ---
 
-*Documento aggiornato al: 21 Febbraio 2026*
-*Versione piano: v1.5*
+*Documento aggiornato al: 7 Maggio 2026*
+*Versione piano: v1.8*

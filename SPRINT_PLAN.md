@@ -732,6 +732,45 @@
 
 ---
 
+## SPRINT 12 - Tour con Destinazione Secondaria
+
+### TASK 12.1 - Migration DB: campo destination_id_2
+- **Cosa**: Creare migration `010_tour_secondary_destination.sql` che aggiunge a `tours`:
+  - `destination_id_2 uuid REFERENCES destinations(id) ON DELETE SET NULL` (nullable)
+  - `CREATE INDEX idx_tours_destination_2 ON tours(destination_id_2)`
+- **Dipendenze**: 1.1
+
+### TASK 12.2 - Tipi TS aggiornati
+- **Cosa**: Aggiungere `destination_id_2: string | null` a `Tour` in `src/lib/types.ts`. Aggiornare `TourWithRelations` per includere la destinazione secondaria popolata (relazione join).
+- **Dipendenze**: 12.1
+
+### TASK 12.3 - Form Admin: secondo selettore destinazione
+- **Cosa**: In `src/components/admin/forms/TourForm.tsx` (tab Info Base):
+  - Aggiungere secondo `DestinationSelect` "Destinazione secondaria (opzionale)"
+  - Aggiornare schema Zod (`destination_id_2: z.string().nullable()`)
+  - Validazione: deve essere ≠ `destination_id` se valorizzata
+  - Includere `destination_id_2` in default values e payload
+- **Dipendenze**: 12.2
+
+### TASK 12.4 - Server Action persistenza
+- **Cosa**: In `src/app/admin/tours/actions.ts`, persistere `destination_id_2` su INSERT/UPDATE.
+- **Dipendenze**: 12.3
+
+### TASK 12.5 - Query pubbliche aggiornate
+- **Cosa**: 
+  - `src/lib/supabase/queries/tours.ts`: includere join sulla destinazione secondaria in `getTourBySlug`, `getPublishedTours`, `getTours`.
+  - `src/lib/supabase/queries/destinations.ts`: in `getDestinationWithTours`, includere i tour dove `destination_id` OR `destination_id_2` matchano (cosi un tour a doppia destinazione appare in entrambe le pagine destinazione).
+- **Dipendenze**: 12.2
+
+### TASK 12.6 - Visualizzazione frontend
+- **Cosa**:
+  - `TourCard`: mostrare entrambe le destinazioni concatenate (es. "Giappone + Corea del Sud") quando `destination_id_2` e presente.
+  - Pagina dettaglio tour: hero/breadcrumb con entrambe le destinazioni se presenti.
+  - Filtri lista tour per destinazione: il tour appare in entrambe.
+- **Dipendenze**: 12.5
+
+---
+
 ## Note Operative
 
 1. **Ogni sprint produce qualcosa di testabile**: L'utente puo verificare il progresso ad ogni sprint.
@@ -743,5 +782,5 @@
 ---
 
 *Piano creato il: 21 Febbraio 2026*
-*Totale task: ~72 task atomiche*
-*Versione piano: v1.7*
+*Totale task: ~78 task atomiche*
+*Versione piano: v1.8*
