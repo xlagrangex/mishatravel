@@ -8,9 +8,9 @@
 
 | Metrica | Valore |
 |---------|--------|
-| **Progresso Totale** | ████████████████████░░ 92% |
-| **Sprint Corrente** | Sprint 12 (Tour con Destinazione Secondaria) appena pianificato. Sprint 0-9+11 completati, Sprint 10 al 90%. |
-| **Task Completate** | 80 / ~87 |
+| **Progresso Totale** | █████████████████████░ 99% |
+| **Sprint Corrente** | Sprint 12 completato. Sprint 0-9+11+12 completati, Sprint 10 al 90% (manca solo deploy produzione). |
+| **Task Completate** | 86 / ~87 |
 | **Task In Corso** | 0 |
 | **Task Bloccate** | 1 (Task 10.5 serve accesso DNS dominio). |
 | **Ultima Attivita** | 2026-05-07 |
@@ -33,7 +33,7 @@
 | 9 | Migrazione Dati WordPress | ✅ Completato | ██████████ 100% | 31 dest + 9 navi + 34 tour + 28 crociere + 5 blog importati. 913 immagini migrate su Supabase Storage. |
 | 10 | SEO, Performance, Deploy | 🟡 In corso | █████████░ 90% | Task 10.1, 10.2, 10.3, 10.4 completate. Solo 10.5 (deploy produzione - serve DNS) rimasta. |
 | 11 | Seed Dati Demo + Credenziali | ✅ Completato | ██████████ 100% | Seed script, utenti demo, dati realistici |
-| 12 | Tour con Destinazione Secondaria | ⚪ Da fare | ░░░░░░░░░░ 0% | Aggiunta destination_id_2 a tours: form, query, visualizzazione |
+| 12 | Tour con Destinazione Secondaria | ✅ Completato | ██████████ 100% | destination_id_2 + form admin + query OR-match + visualizzazione "X + Y" su tutto il sito. |
 
 ---
 
@@ -188,12 +188,12 @@
 
 | ID | Task | Stato | Data Completamento | Note/Errori |
 |----|------|-------|--------------------|-------------|
-| 12.1 | Migration DB: campo destination_id_2 | ⚪ Da fare | - | |
-| 12.2 | Tipi TS aggiornati | ⚪ Da fare | - | |
-| 12.3 | Form Admin: secondo selettore destinazione | ⚪ Da fare | - | |
-| 12.4 | Server Action persistenza | ⚪ Da fare | - | |
-| 12.5 | Query pubbliche aggiornate | ⚪ Da fare | - | |
-| 12.6 | Visualizzazione frontend (card, dettaglio, filtri) | ⚪ Da fare | - | |
+| 12.1 | Migration DB: campo destination_id_2 | ✅ Completata | 2026-05-07 | `010_tour_secondary_destination.sql` applicata via SQL Editor: colonna nullable, FK ON DELETE SET NULL, index, CHECK distinct. |
+| 12.2 | Tipi TS aggiornati | ✅ Completata | 2026-05-07 | `Tour.destination_id_2`, `TourWithRelations.destination_2`, `TourListItem.destination_name_2`, enriched type esteso con macro_area_2/slug_2. |
+| 12.3 | Form Admin: secondo selettore destinazione | ✅ Completata | 2026-05-07 | TourForm tab "Info Base": secondo `DestinationSelect` accanto al primo, validazione Zod refine (no duplicati), bottone "Rimuovi" condizionale, opzioni filtrate per evitare la stessa scelta. |
+| 12.4 | Server Action persistenza | ✅ Completata | 2026-05-07 | `saveTour`, `duplicateTourAction`, `deleteTourAction`: persistono e tracciano `destination_id_2`. Audit `TOUR_LABELS` esteso. |
+| 12.5 | Query pubbliche aggiornate | ✅ Completata | 2026-05-07 | tutti i join su destinations disambiguati con `!destination_id` / `!destination_id_2`. `getDestinationWithTours`, `getRelatedTours`, `getToursForDestination` usano OR-match. `getTourCountsPerDestination` conta su entrambe. |
+| 12.6 | Visualizzazione frontend (card, dettaglio, filtri) | ✅ Completata | 2026-05-07 | Hero/breadcrumb dettaglio tour, TourCard homepage, ToursPageClient (filtro+chip+card+upcoming) e AdminToursTable mostrano "X + Y". Filtri macro/destinazione matchano su entrambe. |
 
 ---
 
