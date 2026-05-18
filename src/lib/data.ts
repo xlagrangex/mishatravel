@@ -1801,6 +1801,7 @@ export const footerLinkSections: FooterLinkSection[] = [
       { label: "Coperture Assicurative", href: "/coperture-assicurative" },
       { label: "Documenti di Viaggio", href: "/documenti-di-viaggio" },
       { label: "FAQ", href: "/faq" },
+      { label: "Intervista Radio", href: "/chi-siamo/intervista-radio-crociere-fluviali" },
       { label: "Contatti", href: "/contatti" },
     ],
   },

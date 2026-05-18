@@ -14,6 +14,7 @@ import CruiseResultCard from "@/components/cards/CruiseResultCard";
 import FleetStrip from "@/components/shared/FleetStrip";
 import DepartureTimeline from "@/components/shared/DepartureTimeline";
 import FAQSection from "@/components/shared/FAQSection";
+import InterviewQuoteBox from "@/components/interview/InterviewQuoteBox";
 import {
   parseDurationNights,
   durationInRange,
@@ -449,6 +450,12 @@ export default function CrocierePageClient({ cruises, ships, destinations }: Cro
 
       {/* FAQ */}
       <FAQSection items={CRUISE_FAQ} title="Domande frequenti sulle crociere" />
+
+      {/* La parola al nostro responsabile (intervista radio) */}
+      <InterviewQuoteBox
+        quote="Un nuovo modo per vedere l'Europa sotto un altro punto di vista."
+        className="bg-gray-50"
+      />
 
       {/* Quiz CTA */}
       <section className="py-12 bg-white">

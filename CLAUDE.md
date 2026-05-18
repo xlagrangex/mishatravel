@@ -267,11 +267,11 @@ MISHATRAVEL/
 
 ## Stato Attuale (aggiorna questa sezione ad ogni sessione)
 
-- **Sprint corrente**: Sprint 13 completato al 100%. Sprint 0-9+11+12+13 completati, Sprint 10 al 90%.
-- **Ultima azione**: Sprint 13 chiuso. Cleanup Storage (1.04 GB→646 MB) + nuovo route handler `/api/admin/upload-image` con sharp server-side + ImageUpload integrato. Da oggi ogni nuovo upload viene compresso automaticamente prima di Supabase Storage. Build OK.
+- **Sprint corrente**: Sprint 14 (Intervista radio Storytime) completato. Sprint 0-9+11+12+13+14 completati, Sprint 10 al 90%.
+- **Ultima azione**: Modifica #10 - creata pagina hub `/chi-siamo/intervista-radio-crociere-fluviali` con trascrizione integrale + capitoli + schema VideoObject + lite-embed YouTube nocookie. Blocco `InterviewHighlight` in homepage, `InterviewQuoteBox` in /crociere, card su /chi-siamo, link in footer (Info Utili). Aggiunto `i.ytimg.com` ai remotePatterns.
 - **Prossimo step**: Task 10.5 (deploy produzione su Vercel - serve accesso DNS dominio)
 - **Bloccanti**: Task 10.5 bloccata da accesso DNS dominio.
-- **Progresso totale**: 99% (89/~90 task completate).
+- **Progresso totale**: 99% (90/~90 task completate).
 
 ---
 
@@ -332,5 +332,5 @@ MISHATRAVEL/
 
 ---
 
-*Ultimo aggiornamento: 2026-05-07*
-*Versione piano: v1.9*
+*Ultimo aggiornamento: 2026-05-19*
+*Versione piano: v1.10*

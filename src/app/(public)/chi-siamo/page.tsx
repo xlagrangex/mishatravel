@@ -1,3 +1,6 @@
+import Link from "next/link";
+import Image from "next/image";
+import { Radio, ArrowRight } from "lucide-react";
 import PageHero from "@/components/layout/PageHero";
 
 export const metadata = {
@@ -21,6 +24,49 @@ export default function ChiSiamoPage() {
               Contenuti da revisionare &mdash; Questa pagina contiene testi provvisori da verificare e aggiornare.
             </p>
           </div>
+
+          {/* Card richiamo intervista radio */}
+          <Link
+            href="/chi-siamo/intervista-radio-crociere-fluviali"
+            className="group mb-12 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#1B2D4F] to-[#0f1d36] shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+          >
+            <div className="grid sm:grid-cols-5">
+              <div className="relative aspect-video sm:col-span-2 sm:aspect-auto">
+                <Image
+                  src="https://i.ytimg.com/vi/uT8C58QECZw/maxresdefault.jpg"
+                  alt="Intervista a MishaTravel su Storytime"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 40vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#C41E2F] shadow-xl transition-transform duration-300 group-hover:scale-110">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 size-6 text-white">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col justify-center p-6 sm:col-span-3 sm:p-8">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/90">
+                  <Radio className="size-3" />
+                  Storytime &middot; Evoluzione Radio
+                </span>
+                <h3 className="mt-3 font-[family-name:var(--font-poppins)] text-xl font-bold text-white sm:text-2xl">
+                  Ci hanno raccontato in radio
+                </h3>
+                <p className="mt-2 text-sm text-white/80">
+                  Alessia Cardone ospite a Storytime: crociere fluviali, viaggi di gruppo e il valore di un&rsquo;agenzia.
+                </p>
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#C41E2F] transition-all duration-300 group-hover:gap-3 group-hover:text-white">
+                  Guarda l&rsquo;intervista
+                  <ArrowRight className="size-4" />
+                </span>
+              </div>
+            </div>
+          </Link>
 
           <div className="prose prose-lg max-w-none">
             <h2 className="text-2xl font-bold text-[#1B2D4F] font-[family-name:var(--font-poppins)] mb-4">

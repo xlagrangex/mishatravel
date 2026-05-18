@@ -222,6 +222,21 @@
 
 Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.md` rispetto alla versione iniziale.
 
+### Modifica #10 - Pagina Intervista Radio Storytime (Sprint 14)
+- **Data**: 2026-05-19
+- **File modificati**: CHANGELOG.md, CLAUDE.md
+- **Richiesto da**: Utente (Vincenzo)
+- **Motivo**: Disponibile un'intervista radio di 12 minuti ad Alessia Cardone (MishaTravel) andata in onda su Storytime — Evoluzione Radio (YouTube id `uT8C58QECZw`). Asset ad alto valore E-E-A-T e GEO/AI-search: trascrizione integrale come contenuto indicizzabile + video da promuovere come trust signal. Da costruire pagina hub con trascrizione + 3 punti di richiamo (homepage, pagina crociere, footer/chi-siamo).
+- **Cosa e cambiato**:
+  - **Nuova pagina hub** `/chi-siamo/intervista-radio-crociere-fluviali`: hero brandizzato, player YouTube lite-embed (iframe carica solo al click, dominio youtube-nocookie, no impatto LCP), indice 7 capitoli ancorati, trascrizione integrale formattata come dialogo Q&A, 2 pull-quote evidenziate, CTA finale verso `/crociere`, schema `VideoObject` JSON-LD completo (publisher, actor, transcript, embedUrl, thumbnailUrl) per rich results e citabilita da AI search (Google AI Overviews, Perplexity, ChatGPT).
+  - **Nuovo component** `YouTubeLiteEmbed`: lite player con thumbnail + bottone play, iframe nocookie caricato solo on-click.
+  - **Nuovo component homepage** `InterviewHighlight`: blocco navy con thumbnail video + quote forte ("Un nuovo modo per vedere l'Europa sotto un altro punto di vista.") + CTA, inserito tra `AgencyCTA` e "I nostri Tour".
+  - **Nuovo component** `InterviewQuoteBox`: box "La parola al nostro responsabile" inserito nella pagina `/crociere` tra FAQ e Quiz CTA.
+  - **Card richiamo** in cima a `/chi-siamo` con thumbnail + link alla pagina hub.
+  - **Link footer**: aggiunta voce "Intervista Radio" nella colonna "Info Utili" (`src/lib/data.ts`).
+  - **next.config.ts**: aggiunto `i.ytimg.com` ai `remotePatterns` per consentire ottimizzazione delle thumbnail YouTube.
+- **Versione piano**: v1.10
+
 ### Modifica #9 - Compressione Automatica all'Upload + Storage Cleanup
 - **Data**: 2026-05-07
 - **File modificati**: SPRINT_PLAN.md, PROJECT_OVERVIEW.md, CHANGELOG.md, CLAUDE.md
@@ -489,6 +504,5 @@ Registro di tutte le modifiche apportate a `PROJECT_OVERVIEW.md` e `SPRINT_PLAN.
 
 ---
 
-*Ultimo aggiornamento: 2026-02-22*
-*Versione piano: v1.9*
-*Ultimo aggiornamento: 2026-05-07*
+*Ultimo aggiornamento: 2026-05-19*
+*Versione piano: v1.10*

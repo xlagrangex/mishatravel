@@ -8,6 +8,7 @@ import DestinationsCarousel from "@/components/home/DestinationsCarousel";
 import LatestAdditions from "@/components/home/LatestAdditions";
 import DeparturesTimeline from "@/components/home/DeparturesTimeline";
 import AgencyCTA from "@/components/home/AgencyCTA";
+import InterviewHighlight from "@/components/home/InterviewHighlight";
 import SectionReveal from "@/components/home/SectionReveal";
 import { getPublishedDestinations } from "@/lib/supabase/queries/destinations";
 import { getPublishedTours } from "@/lib/supabase/queries/tours";
@@ -49,7 +50,10 @@ export default async function HomePage() {
       {/* 5. CTA Agenzie */}
       <AgencyCTA />
 
-      {/* 6. I nostri Tour */}
+      {/* 6. Intervista radio (highlight) */}
+      <InterviewHighlight />
+
+      {/* 7. I nostri Tour */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <SectionReveal>
@@ -94,7 +98,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 7. Crociere Fluviali */}
+      {/* 8. Crociere Fluviali */}
       <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionReveal>

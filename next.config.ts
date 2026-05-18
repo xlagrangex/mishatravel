@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "mishatravel.com",
       },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+      },
     ],
   },
 
