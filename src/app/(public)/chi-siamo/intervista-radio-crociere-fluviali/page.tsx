@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Radio, ArrowRight, Quote, Mic } from "lucide-react";
+import {
+  Radio,
+  ArrowRight,
+  Quote,
+  Mic,
+  Ship,
+  Users,
+  Compass,
+  Sparkles,
+  Shield,
+  MapPin,
+} from "lucide-react";
 import YouTubeLiteEmbed from "@/components/media/YouTubeLiteEmbed";
 
 const VIDEO_ID = "uT8C58QECZw";
@@ -31,16 +42,15 @@ export const metadata: Metadata = {
 };
 
 const CHAPTERS = [
-  { id: "chi-siamo", label: "Chi è MishaTravel" },
-  { id: "crociere-fluviali", label: "Le crociere fluviali su Danubio, Reno e Douro" },
-  { id: "viaggi-gruppo", label: "I viaggi di gruppo: come funzionano davvero" },
-  { id: "mete", label: "Le mete consigliate: Uzbekistan, safari, Asia" },
-  { id: "trend-europa", label: "Il trend del momento: riscoprire l'Europa" },
-  { id: "valore-agenzia", label: "Perché affidarsi a un'agenzia" },
-  { id: "copertura", label: "Non solo Genova: copertura nazionale" },
+  { id: "chi-siamo", label: "Chi è MishaTravel", icon: Compass },
+  { id: "crociere-fluviali", label: "Le crociere fluviali", icon: Ship },
+  { id: "viaggi-gruppo", label: "I viaggi di gruppo", icon: Users },
+  { id: "mete", label: "Le mete consigliate", icon: Sparkles },
+  { id: "trend-europa", label: "Riscoprire l'Europa", icon: Compass },
+  { id: "valore-agenzia", label: "Il valore di un'agenzia", icon: Shield },
+  { id: "copertura", label: "Copertura nazionale", icon: MapPin },
 ];
 
-// Structured data — VideoObject schema for rich results & AI search
 const videoSchema = {
   "@context": "https://schema.org",
   "@type": "VideoObject",
@@ -80,7 +90,6 @@ export default function IntervistaRadioPage() {
           HERO con player
           ============================================ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#1B2D4F] via-[#162644] to-[#0f1d36] pb-16 pt-28 md:pb-24 md:pt-32">
-        {/* decorative pattern */}
         <div
           aria-hidden
           className="absolute inset-0 opacity-[0.05]"
@@ -104,11 +113,11 @@ export default function IntervistaRadioPage() {
             </h1>
             <p className="mt-6 text-base text-white/80 md:text-lg">
               Alessia Cardone di MishaTravel ospite a <em>Storytime</em> su Evoluzione Radio.
-              Un&rsquo;intervista per chi viaggia e per chi sta pensando di farlo.
+              Dodici minuti per capire come viaggiamo, dove possiamo portarti e perché
+              affidarsi a chi conosce davvero il mestiere fa la differenza.
             </p>
           </div>
 
-          {/* Player */}
           <div className="mx-auto mt-12 max-w-4xl">
             <YouTubeLiteEmbed videoId={VIDEO_ID} title={VIDEO_TITLE} />
           </div>
@@ -120,8 +129,8 @@ export default function IntervistaRadioPage() {
           ============================================ */}
       <section className="border-b border-gray-100 bg-white py-14">
         <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-4xl">
-            <div className="flex items-center gap-3">
+          <div className="mx-auto max-w-5xl">
+            <div className="flex items-center justify-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-full bg-[#C41E2F]/10">
                 <Mic className="size-5 text-[#C41E2F]" />
               </div>
@@ -129,122 +138,273 @@ export default function IntervistaRadioPage() {
                 Di cosa si parla nell&rsquo;intervista
               </h2>
             </div>
-            <ul className="mt-6 grid gap-3 md:grid-cols-2">
-              {CHAPTERS.map((ch, i) => (
-                <li key={ch.id}>
-                  <a
-                    href={`#${ch.id}`}
-                    className="group flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/50 px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#C41E2F] hover:bg-white hover:shadow-md"
-                  >
-                    <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[#1B2D4F] text-xs font-bold text-white transition-colors group-hover:bg-[#C41E2F]">
-                      {i + 1}
-                    </span>
-                    <span className="text-sm font-medium text-gray-700 transition-colors group-hover:text-[#1B2D4F]">
-                      {ch.label}
-                    </span>
-                  </a>
-                </li>
-              ))}
+            <ul className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              {CHAPTERS.map((ch, i) => {
+                const Icon = ch.icon;
+                return (
+                  <li key={ch.id}>
+                    <a
+                      href={`#${ch.id}`}
+                      className="group flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#C41E2F] hover:bg-white hover:shadow-md"
+                    >
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#1B2D4F] shadow-sm transition-colors group-hover:bg-[#C41E2F] group-hover:text-white">
+                        <Icon className="size-4" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 transition-colors group-hover:text-[#1B2D4F]">
+                        <span className="text-[#C41E2F]">{String(i + 1).padStart(2, "0")}.</span> {ch.label}
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
       </section>
 
       {/* ============================================
-          TRASCRIZIONE
+          SEZIONI NARRATIVE
           ============================================ */}
-      <article className="bg-white py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl">
-            <header className="mb-12 text-center">
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#C41E2F]">
-                Trascrizione integrale
+      <div className="bg-white">
+        {/* ───── 1. Chi è MishaTravel ───── */}
+        <ChapterSection
+          id="chi-siamo"
+          number={1}
+          eyebrow="Chi siamo"
+          title="Quarant'anni a portare l'Italia in viaggio"
+          icon={Compass}
+        >
+          <p>
+            MishaTravel nasce a Genova come <strong>tour operator e agenzia viaggi</strong>{" "}
+            e opera in Liguria da <strong>oltre quarant&rsquo;anni</strong>. Nel 2018 abbiamo
+            avviato la partnership con <em>Crucemundo</em>, tour operator spagnolo specializzato
+            in crociere fluviali, da cui nasce il nostro nuovo nome:{" "}
+            <strong>Crucemundo Italia Misha Travel</strong>.
+          </p>
+          <p>
+            Lavoriamo sia con <strong>viaggi individuali</strong> costruiti su misura sia con{" "}
+            <strong>viaggi di gruppo accompagnati</strong> da personale dell&rsquo;agenzia.
+            Le crociere fluviali sono il nostro settore di nicchia: abbiamo navi di proprietà
+            e partenze garantite verso destinazioni in tutto il mondo.
+          </p>
+          <InlineCTA href="/chi-siamo" label="Scopri la nostra storia" />
+        </ChapterSection>
+
+        {/* ───── 2. Crociere fluviali ───── */}
+        <ChapterSection
+          id="crociere-fluviali"
+          number={2}
+          eyebrow="Crociere fluviali"
+          title="Danubio, Reno, Douro: l'Europa vista dall'acqua"
+          icon={Ship}
+          accent
+        >
+          <p>
+            Le nostre <strong>crociere fluviali</strong> attraversano i grandi fiumi europei:{" "}
+            il <strong>Danubio</strong> tra Austria, Ungheria e Slovacchia, il{" "}
+            <strong>Reno</strong> tra Germania, Francia e Paesi Bassi, e il{" "}
+            <strong>Douro</strong> dal Portogallo fino in Spagna.
+          </p>
+          <p>
+            Sono <strong>navi più piccole</strong> delle classiche crociere marittime — perché
+            i fiumi sono più stretti — e questo è il loro vantaggio:{" "}
+            <strong>attraccano direttamente in centro città</strong>, spesso a pochi passi
+            dal cuore storico. Si naviga di notte, la mattina si scende a terra per le
+            escursioni (individuali, di gruppo o acquistate a bordo) e si scoprono città
+            che dalle grandi navi marittime sono semplicemente irraggiungibili.
+          </p>
+          <p>
+            Sono adatte a <strong>qualsiasi età</strong>: dai più giovani a chi cerca un
+            viaggio rilassato senza rinunciare alla cultura e ai panorami.
+          </p>
+        </ChapterSection>
+
+        <PullQuoteSection
+          text="Si possono vedere città dove con una crociera più grande non si può arrivare."
+          author="Alessia Cardone"
+        />
+
+        <CTABand
+          title="Pronto per una crociera fluviale?"
+          description="Esplora gli itinerari su Danubio, Reno, Douro e altri fiumi europei con le navi di proprietà MishaTravel."
+          primaryHref="/crociere"
+          primaryLabel="Vedi le crociere"
+          secondaryHref="/flotta"
+          secondaryLabel="Scopri la nostra flotta"
+        />
+
+        {/* ───── 3. Viaggi di gruppo ───── */}
+        <ChapterSection
+          id="viaggi-gruppo"
+          number={3}
+          eyebrow="Viaggi di gruppo"
+          title="Una ventina di persone, un accompagnatore, zero pensieri"
+          icon={Users}
+        >
+          <p>
+            I nostri viaggi di gruppo non sono mai pullmanate da cinquanta persone.{" "}
+            <strong>Solitamente siamo sulla ventina</strong>, con un{" "}
+            <strong>accompagnatore MishaTravel</strong> che segue il gruppo dall&rsquo;inizio
+            alla fine: prenotazioni, trasferimenti, imprevisti, tutto è gestito.
+          </p>
+          <p>
+            Sono <strong>l&rsquo;ideale per chi viaggia da solo</strong>: molti dei nostri
+            clienti partono in solitaria proprio per <strong>conoscere persone nuove</strong>,
+            e dai nostri gruppi nascono spesso amicizie che durano oltre il viaggio.
+          </p>
+          <p>
+            E no, non sono solo per &ldquo;senior&rdquo;: abbiamo{" "}
+            <strong>molti giovani</strong> che scelgono il viaggio di gruppo per rimanere
+            insieme tra amici o per partire quando nessuno della loro cerchia ha le stesse
+            ferie. Tu scegli la data, noi pensiamo al resto.
+          </p>
+          <InlineCTA href="/calendario-partenze" label="Vedi le prossime partenze di gruppo" />
+        </ChapterSection>
+
+        {/* ───── 4. Mete consigliate ───── */}
+        <ChapterSection
+          id="mete"
+          number={4}
+          eyebrow="Le mete"
+          title="Dall'Uzbekistan ai safari, passando per la Cina"
+          icon={Sparkles}
+          accent
+        >
+          <p>
+            Oltre alle crociere, ci sono destinazioni che <strong>ti consigliamo almeno
+            una volta nella vita</strong>:
+          </p>
+          <ul className="my-4 space-y-2 pl-0">
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#C41E2F]" />
+              <span>
+                <strong>Uzbekistan</strong> — Cultura millenaria della Via della Seta,
+                dormire nelle yurte, escursioni che cambiano la prospettiva del viaggio.
               </span>
-              <h2 className="mt-3 font-[family-name:var(--font-poppins)] text-3xl font-bold text-[#1B2D4F] md:text-4xl">
-                L&rsquo;intervista, parola per parola
-              </h2>
-              <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-[#C41E2F]" />
-            </header>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#C41E2F]" />
+              <span>
+                <strong>Cina e Asia</strong> — Tra i nostri viaggi più richiesti, con itinerari
+                che alternano grandi città e zone meno turistiche.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#C41E2F]" />
+              <span>
+                <strong>Safari in Africa</strong> — Uno dei viaggi più intensi e ricordati
+                tra quelli organizzati direttamente da noi.
+              </span>
+            </li>
+          </ul>
+          <InlineCTA href="/destinazioni" label="Esplora tutte le destinazioni" />
+        </ChapterSection>
 
-            <Dialog speaker="Presentatore" text="Ben ritrovati amici e amiche di Storytime. Oggi siamo qui con una nuova ospite e quindi con una nuova storia. Diamo il benvenuto a Alessia Cardone. Ciao Alessia!" />
-            <Dialog speaker="Alessia" text="Ciao, buongiorno a tutti." />
-            <Dialog speaker="Presentatore" text="Ciao, ben arrivata. Grazie. Come stai?" />
-            <Dialog speaker="Alessia" text="Bene, tutto bene grazie." />
-            <Dialog speaker="Presentatore" text="Ottimo. Allora, Alessia oggi ci fai viaggiare un pochino per il mondo." />
-            <Dialog speaker="Alessia" text="Esatto." />
+        {/* ───── 5. Trend Europa ───── */}
+        <ChapterSection
+          id="trend-europa"
+          number={5}
+          eyebrow="Il trend del momento"
+          title="L'Europa torna ad essere il viaggio"
+          icon={Compass}
+        >
+          <p>
+            Per anni il &ldquo;viaggio importante&rdquo; significava{" "}
+            <strong>cambiare continente</strong>. Oggi le persone stanno riscoprendo
+            l&rsquo;Europa, anche grazie alle <strong>crociere fluviali</strong>: una
+            formula che molti non conoscono e che <strong>incuriosisce</strong> appena
+            ne sentono parlare.
+          </p>
+          <p>
+            Non più solo Mediterraneo o fiordi norvegesi: il Danubio attraversa quattro
+            capitali in una settimana, il Reno collega le città storiche tedesche con
+            i tulipani olandesi, il Douro porta tra le terre del vino portoghese.
+          </p>
+        </ChapterSection>
 
-            <ChapterHeading id="chi-siamo" number={1} title="Chi è MishaTravel" />
+        <PullQuoteSection
+          text="Un nuovo modo per vedere l'Europa sotto un altro punto di vista."
+          author="Alessia Cardone"
+          variant="red"
+        />
 
-            <Dialog speaker="Presentatore" text="Perché raccontiamo un pochino com'è nata, insomma, la tua realtà, perché tu sei un agente di viaggio." />
-            <Dialog speaker="Alessia" text="Esatto, sì." />
-            <Dialog speaker="Presentatore" text="Quindi oggi andiamo a parlare di Misha Travel, giusto?" />
-            <Dialog speaker="Alessia" text="Esatto. Noi siamo un'agenzia viaggi e tour operator a Genova, in Liguria. Siamo specializzati sia nei viaggi individuali che nei viaggi di gruppo. La nostra agenzia opera in Liguria da oltre 40 anni. Nel 2018 poi abbiamo avviato una collaborazione con un tour operator spagnolo che è proprio la Crucemundo, da cui nasce il nostro nuovo nome, e siamo appunto specializzati in crociere fluviali, che è il nostro settore di nicchia. Abbiamo le nostre navi di proprietà e poi abbiamo ovviamente partenze garantite e viaggi in tutto il mondo." />
+        {/* ───── 6. Valore agenzia ───── */}
+        <ChapterSection
+          id="valore-agenzia"
+          number={6}
+          eyebrow="Perché un'agenzia"
+          title="Il mito da sfatare: «mi affido a un'agenzia, pago di più»"
+          icon={Shield}
+          accent
+        >
+          <p>
+            È il dubbio che frena molti viaggiatori. Ma <strong>non è vero</strong>.
+            Quello che paghi è <strong>quarant&rsquo;anni di esperienza nel settore</strong>:
+          </p>
+          <ul className="my-4 space-y-2 pl-0">
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#C41E2F]" />
+              <span>
+                <strong>Strutture testate da noi.</strong> Molto spesso proviamo direttamente
+                gli hotel e i resort che consigliamo, prima di mandarci i clienti.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#C41E2F]" />
+              <span>
+                <strong>Assistenza 24 ore su 24.</strong> Un referente attivo per qualunque
+                problema, anche nei festivi. Volo cancellato? Prenotazione introvabile in
+                aeroporto? Ci chiami e ti aiutiamo.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#C41E2F]" />
+              <span>
+                <strong>Zero truffe online.</strong> Quando prenoti un hotel con noi,
+                quell&rsquo;hotel <em>esiste davvero</em> ed è pronto ad accoglierti.
+                Niente sorprese all&rsquo;arrivo.
+              </span>
+            </li>
+          </ul>
+          <InlineCTA href="/contatti" label="Richiedi un preventivo personalizzato" />
+        </ChapterSection>
 
-            <ChapterHeading id="crociere-fluviali" number={2} title="Le crociere fluviali su Danubio, Reno e Douro" />
-
-            <Dialog speaker="Presentatore" text="Diamo magari qualche esempio di crociera fluviale. Cioè, se qualcuno magari, come posso dire, non è particolarmente avvezzo ai viaggi e quindi, caspita, ascolta queste due parole e dice: «Mi potrebbe interessare ma non so che cos'è». Gli raccontiamo un pochino di che cosa si tratta?" />
-            <Dialog speaker="Alessia" text="Sì. Abbiamo queste crociere che viaggiano appunto sul Danubio, sul Reno e sul Douro, che parte dal Portogallo e arriva in Spagna. Sono navi molto più piccole rispetto alle grandi crociere a cui siamo abituati — e giustamente, d'altronde anche i fiumi sono più vicini, sono più piccoli. Sono adatte a qualsiasi tipologia di clientela, dai più giovani alle persone più adulte. Si viaggia solitamente la notte, la mattina si arriva e si attracca direttamente al porto, che solitamente è molto vicino alla città. Si possono fare escursioni individuali o acquistate a bordo, o direttamente da noi in agenzia." />
-
-            <PullQuote text="Si possono vedere città dove con una crociera più grande non si può arrivare." />
-
-            <Dialog speaker="Alessia" text="E la differenza rispetto a una crociera normale è che si possono vedere altre città dove con una crociera più grande non si può arrivare." />
-            <Dialog speaker="Presentatore" text="Certo, è vero. Sicuramente questo è un aspetto particolare ed importante, proprio perché magari andiamo anche a scoprire città che non sono così particolarmente turistiche, ma sono altrettanto belle." />
-            <Dialog speaker="Alessia" text="Quello sì. E poi durante la navigazione comunque si vedono anche altri panorami. Ci si può avvicinare di più a certi panorami e quindi è un vero spettacolo." />
-
-            <Dialog speaker="Presentatore" text="Beh, immagino che comunque anche tu sia un'appassionata di viaggi. C'è stato magari qualche viaggio che è stato per te il tuo preferito, che vorresti consigliare?" />
-            <Dialog speaker="Alessia" text="Beh, sicuramente uno dei più belli che ho fatto, oltre alle crociere — che ne ho fatte molte, sia come viaggi di gruppo che individualmente — il safari in Africa è stato uno dei più belli che ho fatto. E poi un po' in tutto il mondo, mi piace viaggiare e scoprire nuove culture, quindi… cittadina del mondo proprio!" />
-
-            <ChapterHeading id="viaggi-gruppo" number={3} title="I viaggi di gruppo: come funzionano davvero" />
-
-            <Dialog speaker="Presentatore" text="E tu hai citato un aspetto molto importante che è quello appunto dei viaggi di gruppo. Che cosa sono? Cioè, li raccontiamo un pochino?" />
-            <Dialog speaker="Alessia" text="Allora, noi come agenzia siamo appunto specializzati anche in questi viaggi di gruppo. Sono viaggi dove normalmente noi non lavoriamo con grandi gruppi, quindi 50-60 persone — anche se è capitato quello — ma solitamente rimaniamo sulla ventina di persone. Sono viaggi dove c'è sempre un accompagnatore nostro dell'agenzia che accompagna; io personalmente accompagno questi gruppi. E la differenza è che io mi occupo proprio, seguo tutto il gruppo dall'inizio alla fine. Quindi mi occupo di prenotare gli hotel, i trasferimenti… La differenza magari nel fare un altro viaggio con altri tour operator o altre persone è che noi ti seguiamo dall'inizio alla fine, nel pre e post-vendita. Qualunque problema, abbiamo appunto un nostro assistente direttamente con i clienti, quindi possono essere tranquilli e viaggiare in sicurezza senza dover pensare a nulla." />
-
-            <Dialog speaker="Presentatore" text="Certo, proprio solo presentarsi all'orario di partenza in aeroporto. Che direi, insomma, che non è così scontato, proprio perché è bello affidarsi a persone estremamente competenti e quindi non dover pensare a nulla. Però ti volevo chiedere: viaggi di gruppo, ma le persone in questi viaggi di gruppo già si conoscono, può essere un'occasione… come funziona?" />
-            <Dialog speaker="Alessia" text="No, può essere un'occasione per conoscere anche persone nuove. Molto spesso abbiamo persone che viaggiano anche da sole. Quindi magari per paura di partire da sole, arrivare in una città che non conoscono e trovarsi anche un po' spaesati se non sono abituati, si affidano appunto a noi a questi viaggi di gruppo e molto spesso incontrano nuove amicizie che nascono proprio da questi viaggi. Quindi è un po' il bello di viaggiare con altre persone sconosciute." />
-            <Dialog speaker="Presentatore" text="È interessante, insomma, anche questo aspetto. Infatti ci tenevo a raccontarlo proprio per dare magari anche spunto a chi…" />
-            <Dialog speaker="Alessia" text="Infatti la cosa bella è — ci tengo appunto a dire — che tanti pensano al viaggio di gruppo come un viaggio magari che attrae più le persone diciamo un po' più avanti con l'età. In realtà abbiamo molti giovani anche che si affidano a noi per fare questi viaggi di gruppo, perché è un'occasione anche per rimanere tutti insieme, magari amici in gruppo che vogliono viaggiare, o gente che vuole viaggiare da sola e conoscere nuove persone. Quindi è un'ottima idea di viaggio anche per i giovani." />
-            <Dialog speaker="Presentatore" text="Certo. Anche perché magari, diciamo nella cerchia di amicizie, non a tutti si riesce ad avere le ferie sempre nello stesso periodo, quindi può essere una bella idea per dire: «Beh, io voglio andare via in quella data e quindi vado. Con chi vado non lo so, ma lo scopriamo strada facendo»." />
-
-            <ChapterHeading id="mete" number={4} title="Le mete consigliate: Uzbekistan, safari, Asia" />
-
-            <Dialog speaker="Presentatore" text="Sempre magari parlando invece dell'agenzia, io ti ho chiesto prima qual era il viaggio tuo personale che ti ha colpito di più. Invece quello diciamo da parte dell'agenzia, come viaggio dell'agenzia?" />
-            <Dialog speaker="Alessia" text="Vabbè, le crociere… poi l'Uzbekistan. Noi facciamo molti viaggi anche in Cina." />
-            <Dialog speaker="Presentatore" text="Oh sì, in Cina! In Asia, quindi." />
-            <Dialog speaker="Alessia" text="Sì, in Asia. Quindi l'Uzbekistan è stata una destinazione dove si può mettere insieme la cultura del posto addentrandosi anche un po' in avventure che normalmente non si farebbero, come dormire nelle yurte, fare tipologie di escursioni che magari uno non farebbe mai. Quindi, almeno una volta nella vita, la consiglio di provarla. Assolutamente sì." />
-
-            <ChapterHeading id="trend-europa" number={5} title="Il trend del momento: riscoprire l'Europa" />
-
-            <Dialog speaker="Presentatore" text="E invece ti volevo chiedere per quanto riguarda magari le tendenze. Perché spesso si è parlato di turismo consapevole, quindi magari cercare di trovare anche altre mete rispetto magari a quelle classiche che giustamente rimangono sempre bellissime, però andare un pochino di più per la scoperta del mondo. C'è magari qualche paese ad oggi che noti che le persone stanno riscoprendo?" />
-            <Dialog speaker="Alessia" text="Allora, adesso, visto un po' anche il periodo e tutto, stanno rivalutando tanto l'Europa, che in realtà prima si pensava al viaggio di più giorni come a un viaggio in cui «voglio cambiare continente». Ma in realtà, anche quando parliamo di queste crociere fluviali che tanta gente non le conosce, rimangono poi affascinati e incuriositi anche dal volere provare questa nuova avventura. Perché si pensa sempre alla crociera come la classica che ti fa il Mediterraneo o ti fa magari i fiordi, invece può essere un nuovo modo per vedere l'Europa sotto un altro punto di vista." />
-
-            <PullQuote text="Un nuovo modo per vedere l'Europa sotto un altro punto di vista." />
-
-            <ChapterHeading id="valore-agenzia" number={6} title="Perché affidarsi a un'agenzia" />
-
-            <Dialog speaker="Presentatore" text="Qui concludiamo un pochino con il messaggio di far capire l'importanza di affidarsi a dei professionisti e anche cosa vuol dire quando ci si mette nelle mani di professionisti, però con viaggi di gruppo, ecco. Quindi c'è una certezza, c'è una sicurezza." />
-            <Dialog speaker="Alessia" text="Certo, c'è sicuramente una maggiore sicurezza sia come viaggi di gruppo ma anche come viaggi individuali, perché abbiamo molti clienti che viaggiano individualmente e si affidano a noi. Voglio un po' sfatare il mito della cosa «mi affido a un'agenzia, pago di più, quindi faccio da solo». In realtà non è vero. Noi ovviamente avendo l'esperienza sappiamo consigliare. Molto spesso proviamo direttamente le strutture e i resort che consigliamo ai nostri clienti, quindi…" />
-            <Dialog speaker="Presentatore" text="Esatto!" />
-            <Dialog speaker="Alessia" text="…ci piace sempre avere una sicurezza prima di mandare i clienti in una destinazione." />
-            <Dialog speaker="Presentatore" text="Certo, però come dici tu, questo vi dà proprio l'esperienza di affidare le persone a una struttura che voi conoscete molto bene." />
-            <Dialog speaker="Alessia" text="Certo. E poi è sempre un feedback positivo, quindi questo è la nostra soddisfazione più grande alla fine." />
-
-            <ChapterHeading id="copertura" number={7} title="Non solo Genova: copertura nazionale" />
-
-            <Dialog speaker="Presentatore" text="E mi raccontavi che voi siete a Genova, giusto?" />
-            <Dialog speaker="Alessia" text="A Genova, sì." />
-            <Dialog speaker="Presentatore" text="Da voi arrivano solo persone nel territorio limitrofo?" />
-            <Dialog speaker="Alessia" text="No, noi essendo appunto un tour operator lavoriamo anche con altre agenzie, quindi abbiamo clienti un po' da tutta Italia che spesso si affidano a noi, soprattutto per queste crociere." />
-
-            <Dialog speaker="Presentatore" text="Oh, perfetto. E vorrei concludere questa chiacchierata rimarcando un pochino questo messaggio del viaggio «fatto fai da te». Quindi con un'agenzia qual è il valore aggiunto?" />
-            <Dialog speaker="Alessia" text="Il valore aggiunto è che hai la sicurezza che, qualunque problema, ci chiami e noi siamo sempre operativi. C'è sempre un referente attivo 24 ore su 24 che ti può assistere per qualunque problematica. Non so, sei prenotato all'aeroporto e non lo trovi? Ci chiami e noi ti aiutiamo sempre. Nei festivi, anche, in qualunque momento. E poi ovviamente hai la sicurezza che se tu prenoti un albergo o un villaggio, lo trovi effettivamente, non come spesso si sentono queste truffe su internet che magari uno paga e poi arriva… e tu ad arrivarci ci sei arrivato, e poi la struttura chi lo sa!" />
-
-            <Dialog speaker="Presentatore" text="Va bene. Senti, ti ringrazio tantissimo per averci parlato della vostra realtà e secondo me ci siamo riuscite un pochino a far venir voglia di viaggiare ai nostri ascoltatori. Allora Alessia, io ti ringrazio." />
-            <Dialog speaker="Alessia" text="Grazie a te." />
-            <Dialog speaker="Presentatore" text="Alessia grazie mille, un saluto a te e ai nostri ascoltatori. Ciao!" />
-            <Dialog speaker="Alessia" text="Ciao, ciao a tutti. E vi aspettiamo tutti! Per qualunque informazione potete contattarci, abbiamo tutti i preventivi, tutte le richieste… Speriamo di potervi aiutare." />
+        {/* ───── 7. Copertura nazionale ───── */}
+        <ChapterSection
+          id="copertura"
+          number={7}
+          eyebrow="Dove siamo"
+          title="A Genova, ma lavoriamo con tutta Italia"
+          icon={MapPin}
+        >
+          <p>
+            La nostra sede è a Genova, ma essendo <strong>tour operator</strong>{" "}
+            collaboriamo con <strong>agenzie viaggio su tutto il territorio nazionale</strong>.
+            Ovunque tu sia, c&rsquo;è probabilmente un&rsquo;agenzia partner vicino a te che
+            propone i nostri viaggi.
+          </p>
+          <p>
+            Se preferisci parlare direttamente con noi, ci puoi raggiungere via telefono,
+            email o richiedendo un preventivo dal sito.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/trova-agenzia"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#1B2D4F] px-6 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#162644] hover:shadow-lg"
+            >
+              <MapPin className="size-4" />
+              Trova un&rsquo;agenzia partner
+            </Link>
+            <Link
+              href="/contatti"
+              className="inline-flex items-center gap-2 rounded-lg border-2 border-[#C41E2F] px-6 py-3 font-semibold text-[#C41E2F] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#C41E2F] hover:text-white"
+            >
+              Contattaci direttamente
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
-        </div>
-      </article>
+        </ChapterSection>
+      </div>
 
       {/* ============================================
           CTA finale
@@ -253,24 +413,25 @@ export default function IntervistaRadioPage() {
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-[family-name:var(--font-poppins)] text-3xl font-bold text-white md:text-4xl">
-              Vuoi scoprire le nostre crociere fluviali?
+              Iniziamo a pianificare il tuo prossimo viaggio
             </h2>
             <p className="mt-4 text-base text-white/90 md:text-lg">
-              Danubio, Reno, Douro e altri fiumi europei con navi di proprietà MishaTravel.
+              Crociere fluviali, viaggi di gruppo, itinerari su misura: dicci dove
+              vuoi andare e ci pensiamo noi.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
-                href="/crociere"
+                href="/contatti"
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 font-semibold text-[#C41E2F] shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
               >
-                Vedi le crociere
+                Richiedi un preventivo
                 <ArrowRight className="size-4" />
               </Link>
               <Link
-                href="/contatti"
+                href="/crociere"
                 className="inline-flex items-center gap-2 rounded-lg border-2 border-white px-7 py-3.5 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:text-[#C41E2F]"
               >
-                Richiedi un preventivo
+                Vedi le crociere
               </Link>
             </div>
           </div>
@@ -284,68 +445,150 @@ export default function IntervistaRadioPage() {
 // Local components
 // ============================================
 
-function Dialog({ speaker, text }: { speaker: "Presentatore" | "Alessia"; text: string }) {
-  const isAlessia = speaker === "Alessia";
-  return (
-    <div className={`mb-5 flex gap-4 ${isAlessia ? "flex-row-reverse text-right" : ""}`}>
-      <div
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-bold uppercase tracking-wider ${
-          isAlessia
-            ? "bg-[#C41E2F] text-white"
-            : "bg-gray-200 text-gray-700"
-        }`}
-        aria-hidden="true"
-      >
-        {isAlessia ? "A" : "P"}
-      </div>
-      <div className="flex-1">
-        <span
-          className={`text-[11px] font-semibold uppercase tracking-widest ${
-            isAlessia ? "text-[#C41E2F]" : "text-gray-500"
-          }`}
-        >
-          {isAlessia ? "Alessia Cardone" : "Storytime"}
-        </span>
-        <p
-          className={`mt-1 text-base leading-relaxed text-gray-700 md:text-[17px] ${
-            isAlessia ? "font-medium" : ""
-          }`}
-        >
-          {text}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ChapterHeading({
+function ChapterSection({
   id,
   number,
+  eyebrow,
   title,
+  icon: Icon,
+  accent = false,
+  children,
 }: {
   id: string;
   number: number;
+  eyebrow: string;
   title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accent?: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <div id={id} className="my-12 scroll-mt-20 border-l-4 border-[#C41E2F] pl-5">
-      <span className="text-xs font-semibold uppercase tracking-widest text-[#C41E2F]">
-        Capitolo {number}
-      </span>
-      <h3 className="mt-1 font-[family-name:var(--font-poppins)] text-2xl font-bold text-[#1B2D4F] md:text-3xl">
-        {title}
-      </h3>
+    <section
+      id={id}
+      className={`scroll-mt-20 py-16 md:py-20 ${accent ? "bg-gray-50" : "bg-white"}`}
+    >
+      <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-3xl">
+          <div className="flex items-center gap-4">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[#1B2D4F] text-white shadow-lg">
+              <Icon className="size-6" />
+            </div>
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#C41E2F]">
+                Capitolo {String(number).padStart(2, "0")} · {eyebrow}
+              </span>
+              <h2 className="mt-1 font-[family-name:var(--font-poppins)] text-2xl font-bold leading-tight text-[#1B2D4F] md:text-3xl">
+                {title}
+              </h2>
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-5 text-base leading-relaxed text-gray-700 md:text-[17px]">
+            {children}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InlineCTA({ href, label }: { href: string; label: string }) {
+  return (
+    <div className="mt-2">
+      <Link
+        href={href}
+        className="group inline-flex items-center gap-2 font-semibold text-[#C41E2F] transition-all duration-300 hover:gap-3 hover:text-[#A31825]"
+      >
+        {label}
+        <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+      </Link>
     </div>
   );
 }
 
-function PullQuote({ text }: { text: string }) {
+function PullQuoteSection({
+  text,
+  author,
+  variant = "navy",
+}: {
+  text: string;
+  author: string;
+  variant?: "navy" | "red";
+}) {
+  const isRed = variant === "red";
   return (
-    <div className="my-10 rounded-2xl bg-gradient-to-br from-[#1B2D4F] to-[#0f1d36] p-8 text-center shadow-xl md:p-10">
-      <Quote className="mx-auto size-10 text-[#C41E2F]" />
-      <p className="mt-4 font-[family-name:var(--font-poppins)] text-xl font-bold leading-snug text-white md:text-2xl">
-        {text}
-      </p>
-    </div>
+    <section
+      className={
+        isRed
+          ? "bg-gradient-to-br from-[#C41E2F] to-[#A31825] py-16"
+          : "bg-gradient-to-br from-[#1B2D4F] to-[#0f1d36] py-16"
+      }
+    >
+      <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-3xl text-center">
+          <Quote
+            className={`mx-auto size-12 ${
+              isRed ? "text-white/30" : "text-[#C41E2F]"
+            }`}
+          />
+          <blockquote className="mt-4">
+            <p className="font-[family-name:var(--font-poppins)] text-2xl font-bold leading-snug text-white md:text-3xl lg:text-4xl">
+              &ldquo;{text}&rdquo;
+            </p>
+            <footer className="mt-5 text-sm font-medium uppercase tracking-widest text-white/70">
+              {author} — MishaTravel
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CTABand({
+  title,
+  description,
+  primaryHref,
+  primaryLabel,
+  secondaryHref,
+  secondaryLabel,
+}: {
+  title: string;
+  description: string;
+  primaryHref: string;
+  primaryLabel: string;
+  secondaryHref: string;
+  secondaryLabel: string;
+}) {
+  return (
+    <section className="border-y border-gray-100 bg-white py-14">
+      <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-4xl rounded-2xl bg-gradient-to-br from-[#1B6FA8]/5 to-[#C41E2F]/5 p-8 md:p-12">
+          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex-1">
+              <h3 className="font-[family-name:var(--font-poppins)] text-xl font-bold text-[#1B2D4F] md:text-2xl">
+                {title}
+              </h3>
+              <p className="mt-2 text-base text-gray-600">{description}</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row md:shrink-0">
+              <Link
+                href={primaryHref}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#C41E2F] px-6 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#A31825] hover:shadow-lg"
+              >
+                {primaryLabel}
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href={secondaryHref}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-[#1B2D4F] px-6 py-3 font-semibold text-[#1B2D4F] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#1B2D4F] hover:text-white"
+              >
+                {secondaryLabel}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, ChevronDown, ChevronRight, MapPin, Waves } from "lucide-react";
+import { Menu, ChevronDown, ChevronRight, MapPin, Waves, Radio } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -279,6 +279,15 @@ export default function Header({ destinationsByArea, blogEnabled = true }: Props
 
               {/* Mobile-only links */}
               <div className="border-t border-gray-100 mt-2 pt-2">
+                <SheetClose asChild>
+                  <Link
+                    href="/chi-siamo/intervista-radio-crociere-fluviali"
+                    className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-[#C41E2F] hover:bg-[#C41E2F]/5 transition-colors"
+                  >
+                    <Radio className="size-4" />
+                    Ci hanno intervistato in radio
+                  </Link>
+                </SheetClose>
                 <SheetClose asChild>
                   <Link
                     href="/diventa-partner"

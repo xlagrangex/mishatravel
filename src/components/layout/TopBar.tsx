@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, Mail, MapPin, UserCircle, LayoutDashboard } from "lucide-react";
+import { Phone, Mail, MapPin, UserCircle, LayoutDashboard, Radio } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -37,6 +37,17 @@ export default function TopBar() {
           >
             <MapPin className="size-3.5" />
             <span>Contatti</span>
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link
+            href="/chi-siamo/intervista-radio-crociere-fluviali"
+            className="group flex items-center gap-1.5 font-medium text-[#C41E2F] hover:text-[#A31825] transition-colors"
+          >
+            <Radio className="size-3.5 animate-pulse" />
+            <span>Ci hanno intervistato in radio</span>
+            <span className="ml-1 hidden xl:inline text-[10px] uppercase tracking-wider bg-[#C41E2F] text-white px-1.5 py-0.5 rounded font-semibold">
+              Nuovo
+            </span>
           </Link>
         </div>
 
