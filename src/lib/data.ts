@@ -1728,6 +1728,10 @@ export const navigationItems: NavItem[] = [
     label: "Blog",
     href: "/blog",
   },
+  {
+    label: "Chi Siamo",
+    href: "/chi-siamo",
+  },
 ];
 
 export const topBarLinks: TopBarLink[] = [
