@@ -4,6 +4,7 @@ import "./globals.css";
 import { generateBaseMetadata } from "@/lib/seo/metadata";
 import { organizationSchema } from "@/lib/seo/structured-data";
 import DevTools from "@/components/DevTools";
+import { Analytics } from "@vercel/analytics/next";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -51,6 +52,7 @@ export default function RootLayout({
           }}
         />
         {children}
+        <Analytics />
       </body>
     </html>
   );
